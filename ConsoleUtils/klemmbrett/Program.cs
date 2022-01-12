@@ -98,9 +98,11 @@ namespace klemmbrett
                 {
                     if (ClipboardHelper.ContainsText())
                     {
+                        Console.WriteLine("String:\n");
                         Console.WriteLine(Clipboard.GetText());
                     }
                     else if(ClipboardHelper.ContainsFileDropList()){
+                        Console.WriteLine("Files:\n");
                         foreach (string source in Clipboard.GetFileDropList())
                         {
                             Console.WriteLine(source);

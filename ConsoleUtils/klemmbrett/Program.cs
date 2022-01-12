@@ -44,8 +44,8 @@ namespace klemmbrett
                     string path = Path.GetFullPath(args[1]);
                     if (File.Exists(path))
                     {
-                        string fileStr = File.ReadAllText(path, Encoding.Unicode);
-                        Clipboard.SetText(fileStr, TextDataFormat.UnicodeText);
+                        string fileStr = File.ReadAllText(path);
+                        Clipboard.SetText(fileStr);
                     }
                 }
                 else if (command == "copy" || command == "c")
@@ -98,11 +98,11 @@ namespace klemmbrett
                 {
                     if (ClipboardHelper.ContainsText())
                     {
-                        Console.WriteLine("String:");
-                        Console.WriteLine(Clipboard.GetText());
+                        WriteHeader("String:");
+                        Console.Write(Clipboard.GetText());
                     }
                     else if(ClipboardHelper.ContainsFileDropList()){
-                        Console.WriteLine("Files:");
+                        WriteHeader("Files:");
                         foreach (string source in Clipboard.GetFileDropList())
                         {
                             Console.WriteLine(source);
@@ -118,6 +118,16 @@ namespace klemmbrett
 
 
             return 2;
+        }
+
+        static void WriteHeader(string Text)
+        {
+            if (!Console.IsOutputRedirected)
+            {
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine(Text);
+                Console.ResetColor();
+            }
         }
     }
 }

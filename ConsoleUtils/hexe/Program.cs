@@ -9,9 +9,6 @@ namespace hexe
 {
     internal class Program
     {
-
-        static int chunks = 16;
-
         static void Main(string[] args)
         {
             if (args.Length > 0) {

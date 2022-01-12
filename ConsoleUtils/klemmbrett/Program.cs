@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -8,8 +10,111 @@ namespace klemmbrett
 {
     internal class Program
     {
-        static void Main(string[] args)
+        [STAThread]
+        static int Main(string[] args)
         {
+            /* Read STDIN
+            if (Console.IsInputRedirected)
+            {
+                using (Stream s = Console.OpenStandardInput())
+                {
+                    using (StreamReader reader = new StreamReader(s))
+                    {
+                        Console.Write(reader.ReadToEnd());
+                    }
+                }
+            }
+            */
+            if(args.Length == 0)
+            {
+                Console.WriteLine("No command given!");
+                return 1;
+            }
+            string command = args[0];
+
+            if (args.Length == 2) // command + parameter
+            {
+                if (command == "string" || command == "s")
+                {
+                    string str = args[1];
+                    Clipboard.SetText(str);
+                }
+                else if (command == "text" || command == "t")
+                {
+                    string path = Path.GetFullPath(args[1]);
+                    if (File.Exists(path))
+                    {
+                        string fileStr = File.ReadAllText(path, Encoding.Unicode);
+                        Clipboard.SetText(fileStr, TextDataFormat.UnicodeText);
+                    }
+                }
+                else if (command == "copy" || command == "c")
+                {        // copy files to clipyboard
+                    string path = Path.GetFullPath(args[1]);
+                    if (File.Exists(path))
+                    {
+                        Clipboard.SetFileDropList(new StringCollection() { path });
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        Clipboard.SetFileDropList(new StringCollection() { path });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"File \"{path}\" not found!");
+                        return 1;
+                    }
+
+                }
+            }
+            else if (args.Length == 1) // command only
+            {
+                if (command == "paste" || command == "p")
+                {
+                    if (ClipboardHelper.ContainsFileDropList())
+                    {
+                        foreach (string source in Clipboard.GetFileDropList())
+                        {
+                            var destination = Path.Combine(Environment.CurrentDirectory, Path.GetFileName(source));
+                            try
+                            {
+                                // TODO: Ask for overrite
+                                Console.WriteLine($"Copying \"{source}\" to \"{destination}\"");
+                                File.Copy(source, destination, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else if(command == "show")
+                {
+                    if (ClipboardHelper.ContainsText())
+                    {
+                        Console.WriteLine(Clipboard.GetText());
+                    }
+                    else if(ClipboardHelper.ContainsFileDropList()){
+                        foreach (string source in Clipboard.GetFileDropList())
+                        {
+                            Console.WriteLine(source);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Wat?");
+                return 255;
+            }
+
+
+            return 2;
         }
     }
 }

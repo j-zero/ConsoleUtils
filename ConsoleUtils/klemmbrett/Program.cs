@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -39,17 +41,10 @@ namespace klemmbrett
                     string str = args[1];
                     Clipboard.SetText(str);
                 }
-                else if (command == "text" || command == "t")
-                {
-                    string path = Path.GetFullPath(args[1]);
-                    if (File.Exists(path))
-                    {
-                        string fileStr = File.ReadAllText(path);
-                        Clipboard.SetText(fileStr);
-                    }
-                }
+
                 else if (command == "copy" || command == "c")
-                {        // copy files to clipyboard
+                {        
+                    // copy files to clipyboard
                     string path = Path.GetFullPath(args[1]);
                     if (File.Exists(path))
                     {
@@ -65,6 +60,24 @@ namespace klemmbrett
                         return 1;
                     }
 
+                }
+                else if (command == "text" || command == "t")
+                {
+                    string path = Path.GetFullPath(args[1]);
+                    if (File.Exists(path))
+                    {
+                        string fileStr = File.ReadAllText(path);
+                        Clipboard.SetText(fileStr);
+                    }
+                }
+                else if (command == "image" || command == "i")
+                {
+                    string path = Path.GetFullPath(args[1]);
+                    if (File.Exists(path))
+                    {
+                        Image i = new Bitmap(path);
+                        Clipboard.SetImage(i);
+                    }
                 }
             }
             else if (args.Length == 1) // command only
@@ -101,12 +114,23 @@ namespace klemmbrett
                         WriteHeader("String:");
                         Console.Write(Clipboard.GetText());
                     }
+                    else if (ClipboardHelper.ContainsImage())
+                    {
+                         WriteHeader("Image");
+                        Image i = Clipboard.GetImage();
+                        Image r = ASCIIConverter.ResizeImageKeepAspect(i, Console.WindowWidth, 1000);
+                        Console.WriteLine(ASCIIConverter.GrayscaleImageToASCII(r));
+                    }
                     else if(ClipboardHelper.ContainsFileDropList()){
                         WriteHeader("Files:");
                         foreach (string source in Clipboard.GetFileDropList())
                         {
                             Console.WriteLine(source);
                         }
+                    }
+                    else
+                    {
+                        WriteHeader("Unknown clipboard content!");
                     }
                 }
             }
@@ -128,6 +152,32 @@ namespace klemmbrett
                 Console.WriteLine(Text);
                 Console.ResetColor();
             }
+        }
+
+        public static ImageFormat GetImageFormatFromImage(Image image)
+        {
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Jpeg))
+                return System.Drawing.Imaging.ImageFormat.Jpeg;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Bmp))
+                return System.Drawing.Imaging.ImageFormat.Bmp;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Png))
+                return System.Drawing.Imaging.ImageFormat.Png;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Gif))
+                return System.Drawing.Imaging.ImageFormat.Gif;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Emf))
+                return System.Drawing.Imaging.ImageFormat.Emf;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Exif))
+                return System.Drawing.Imaging.ImageFormat.Exif;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Icon))
+                return System.Drawing.Imaging.ImageFormat.Icon;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.MemoryBmp))
+                return System.Drawing.Imaging.ImageFormat.MemoryBmp;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Tiff))
+                return System.Drawing.Imaging.ImageFormat.Tiff;
+            if (image.RawFormat.Equals(System.Drawing.Imaging.ImageFormat.Wmf))
+                return System.Drawing.Imaging.ImageFormat.Wmf;
+
+            throw new Exception("Image format not supported");
         }
     }
 }

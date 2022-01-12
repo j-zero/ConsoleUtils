@@ -90,7 +90,8 @@ namespace klemmbrett
                     }
                     else
                     {
-
+                        Console.WriteLine("No pastable content!");
+                        return 1;
                     }
                 }
                 else if(command == "show")

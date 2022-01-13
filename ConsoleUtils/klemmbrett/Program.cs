@@ -15,20 +15,11 @@ namespace klemmbrett
         [STAThread]
         static int Main(string[] args)
         {
-            /* Read STDIN
-            if (Console.IsInputRedirected)
-            {
-                using (Stream s = Console.OpenStandardInput())
-                {
-                    using (StreamReader reader = new StreamReader(s))
-                    {
-                        Console.Write(reader.ReadToEnd());
-                    }
-                }
-            }
-            */
+            
+
             if (args.Length == 0)
             {
+                // Read STDIN
                 if (Console.IsInputRedirected)
                 {
                     using (Stream s = Console.OpenStandardInput())
@@ -57,7 +48,7 @@ namespace klemmbrett
                         string str = args[1];
                         Clipboard.SetText(str);
                     }
-                    if (command == "path")
+                    if (command == "path" || command == "P")
                     {
                         string path = Path.GetFullPath(args[1]);
                         Clipboard.SetText(path);
@@ -99,6 +90,66 @@ namespace klemmbrett
                             Clipboard.SetImage(i);
                         }
                     }
+                    else if (command == "save" || command == "S")
+                    {
+                        string path = Path.GetFullPath(args[1]);
+
+
+                        if (ClipboardHelper.ContainsText())
+                        {
+                            string data = Clipboard.GetText();
+                            File.WriteAllText(path, data);
+                            Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        }
+                        else if (ClipboardHelper.ContainsImage())
+                        {
+                            string ext = Path.GetExtension(path);
+                            Image i = Clipboard.GetImage();
+                            switch (ext)
+                            {
+                                case "png":
+                                    i.Save(path, ImageFormat.Png);
+                                    Console.WriteLine($"Saved PNG to \"{path}\"");
+                                    break;
+                                case "jpg":
+                                case "jpeg":
+                                    i.Save(path, ImageFormat.Jpeg);
+                                    Console.WriteLine($"Saved JPEG to \"{path}\"");
+                                    break;
+                                case "gif":
+                                    i.Save(path, ImageFormat.Gif);
+                                    Console.WriteLine($"Saved GIF to \"{path}\"");
+                                    break;
+                                case "bmp":
+                                    i.Save(path, ImageFormat.Bmp);
+                                    Console.WriteLine($"Saved Bitmap to \"{path}\"");
+                                    break;
+                                case "tif":
+                                case "tiff":
+                                    i.Save(path, ImageFormat.Tiff);
+                                    Console.WriteLine($"Saved TIFF to \"{path}\"");
+                                    break;
+                                default:
+                                    i.Save(path, ImageFormat.Png);
+                                    Console.WriteLine($"Saved PNG to \"{path}\"");
+                                    break;
+                            }
+                            
+                        }
+                        else
+                        {
+
+                            byte[] data = GetBytesFromClipboardRaw();
+                            if (data != null)
+                            {
+                                File.WriteAllBytes(path, data);
+                                Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                            }
+                            else
+                                Console.WriteLine("No data!");
+                        }
+
+                    }
                 }
                 else if (args.Length == 1) // command only
                 {
@@ -127,11 +178,11 @@ namespace klemmbrett
                             return 1;
                         }
                     }
-                    if (command == "path")
+                    if (command == "path" || command == "P")
                     {
                         Clipboard.SetText(Environment.CurrentDirectory);
                     }
-                    else if (command == "show")
+                    else if (command == "show" || command == "S")
                     {
                         if (ClipboardHelper.ContainsText())
                         {
@@ -140,10 +191,12 @@ namespace klemmbrett
                         }
                         else if (ClipboardHelper.ContainsImage())
                         {
-                            WriteHeader("Image");
                             Image i = Clipboard.GetImage();
-                            Image r = ASCIIConverter.ResizeImageKeepAspect(i, Console.WindowWidth, 1000);
-                            Console.WriteLine(ASCIIConverter.GrayscaleImageToASCII(r));
+
+                            WriteHeader($"Image ({i.Width}x{i.Height}@{i.HorizontalResolution}dpi)");
+                            
+                            //Image r = ASCIIConverter.ResizeImageKeepAspect(i, Console.WindowWidth, 1000);
+                            //Console.WriteLine(ASCIIConverter.GrayscaleImageToASCII(r));
                         }
                         else if (ClipboardHelper.ContainsFileDropList())
                         {
@@ -172,10 +225,21 @@ namespace klemmbrett
         {
             if (!Console.IsOutputRedirected)
             {
-                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(Text);
                 Console.ResetColor();
             }
+        }
+
+        static byte[] GetBytesFromClipboardRaw()
+        {
+            DataObject retrievedData = Clipboard.GetDataObject() as DataObject;
+            if (retrievedData == null || !retrievedData.GetDataPresent("rawbinary", false))
+                return null;
+            MemoryStream byteStream = retrievedData.GetData("rawbinary", false) as MemoryStream;
+            if (byteStream == null)
+                return null;
+            return byteStream.ToArray();
         }
 
     }

@@ -33,7 +33,7 @@ namespace klemmbrett
                 }
                 else
                 {
-                    _Show(null, true);
+                    _Show(null, false);
                 }
             }
             else
@@ -49,13 +49,29 @@ namespace klemmbrett
                 {
                     _Path(parameters);
                 }
-                else if (command == "copy" || command == "c")
+                else if (command == "copy" || command == "cp")
                 {
                     _Copy(parameters);
                 }
                 else if (command == "text" || command == "t")
                 {
                     _Text(parameters);
+                }
+                else if (command == "html")
+                {
+                    _Text(parameters, TextDataFormat.Html);
+                }
+                else if (command == "rtf")
+                {
+                    _Text(parameters, TextDataFormat.Rtf);
+                }
+                else if (command == "csv")
+                {
+                    _Text(parameters, TextDataFormat.CommaSeparatedValue);
+                }
+                else if (command == "unicode")
+                {
+                    _Text(parameters, TextDataFormat.UnicodeText);
                 }
                 else if (command == "image" || command == "i")
                 {
@@ -65,6 +81,10 @@ namespace klemmbrett
                 {
                     _Save(parameters);
                 }
+                else if (command == "load" || command == "L")
+                {
+                    _Load(parameters);
+                }
                 else if (command == "paste" || command == "p")
                 {
                     _Paste(parameters);
@@ -73,7 +93,7 @@ namespace klemmbrett
                 {
                     _Show(parameters, false);
                 }
-                else if (command == "show")
+                else if (command == "raw")
                 {
                     _Raw(parameters);
                 }
@@ -85,19 +105,95 @@ namespace klemmbrett
             return _ErrorLevel;
         }
 
+        #region Functions
+
+        static void _Load(string[] p)
+        {
+            string path = null;
+            string ext = null;
+
+            if (p.Length == 1)
+            {
+                path = Path.GetFullPath(p[0]);
+                string dotExt = Path.GetExtension(path);
+                if (dotExt != string.Empty)
+                    ext = dotExt.Substring(1);
+
+                switch (ext)
+                {
+                    case "html":
+                    case "htm":
+                        _Text(new string[] { path }, TextDataFormat.Html);
+                        break;
+                    case "rtf":
+                        _Text(new string[] { path }, TextDataFormat.Rtf);
+                        break;
+                    case "csv":
+                        _Text(new string[] { path }, TextDataFormat.CommaSeparatedValue);
+                        break;
+                    default:
+                        _Text(new string[] { path });
+                        break;
+                }
+            }
+        }
+
         static void _Save(string[] p)
         {
-            string path = Path.GetFullPath(p[0]);
+            string path = null;
+            string ext = null;
+
+            if (p.Length == 1)
+            {
+                path = Path.GetFullPath(p[0]);
+                string dotExt = Path.GetExtension(path);
+                if (dotExt != string.Empty)
+                    ext = dotExt.Substring(1);
+
+            }
+            else if(p.Length == 2)
+            {
+                path = Path.GetFullPath(p[1]);
+                ext = p[0];
+            }
+            else
+            {
+                WriteError("Wat?", 255);
+                return;
+            }
+
+            string data = null;
 
             if (ClipboardHelper.ContainsText())
             {
-                string data = Clipboard.GetText();
-                File.WriteAllText(path, data);
-                Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                switch (ext)
+                {
+                    case "html":
+                    case "htm":
+                        data = Clipboard.GetText(TextDataFormat.Html);
+                        File.WriteAllText(path, ExtractBetweenTwoStrings(data, "<!--StartFragment-->", "<!--EndFragment-->", false, false),Encoding.Unicode);
+                        Console.WriteLine($"Saved HTML to \"{path}\"");
+                        break;
+                    case "rtf":
+                        data = Clipboard.GetText(TextDataFormat.UnicodeText);
+                        File.WriteAllText(path, data, Encoding.Unicode);
+                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        break;
+                    case "csv":
+                        data = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                        File.WriteAllText(path, data, Encoding.Unicode);
+                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        break;
+                    default:
+                        data = Clipboard.GetText(TextDataFormat.UnicodeText);
+                        File.WriteAllText(path, data, Encoding.Unicode);
+                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        break;
+                }
+
             }
             else if (ClipboardHelper.ContainsImage())
             {
-                string ext = Path.GetExtension(path);
                 Image i = Clipboard.GetImage();
                 switch (ext)
                 {
@@ -131,13 +227,6 @@ namespace klemmbrett
             }
             else
             {
-                byte[] data = GetBytesFromClipboardRaw();
-                if (data != null)
-                {
-                    File.WriteAllBytes(path, data);
-                    Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
-                }
-                else
                     Console.WriteLine("No data!");
             }
         }
@@ -156,17 +245,40 @@ namespace klemmbrett
             }
         }
 
-        static void _Text(string[] p)
+        static void _Text(string[] p, TextDataFormat format = TextDataFormat.Text)
         {
-            string path = Path.GetFullPath(p[0]);
-            if (File.Exists(path))
+
+            if(p == null || p.Length == 0)
             {
-                string fileStr = File.ReadAllText(path);
-                Clipboard.SetText(fileStr);
+                if(format == TextDataFormat.Rtf && ClipboardHelper.ContainsText(TextDataFormat.Rtf))
+                {
+                    string content = Clipboard.GetText(format);
+                    Console.Write(content);
+                }
+                else if (format == TextDataFormat.Html && ClipboardHelper.ContainsText(TextDataFormat.Html))
+                {
+                    string content = Clipboard.GetText(format);
+                    content = ExtractBetweenTwoStrings(content, "<!--StartFragment-->", "<!--EndFragment-->", false, false);
+                    Console.Write(content);
+                }
+                else
+                {
+                    string content = Clipboard.GetText();
+                    Console.Write(content);
+                }
             }
-            else
+            else if (p.Length == 1)
             {
-                WriteError($"File \"{path}\" not found!");
+                string path = Path.GetFullPath(p[0]);
+                if (File.Exists(path))
+                {
+                    string fileStr = File.ReadAllText(path);
+                    Clipboard.SetText(fileStr, format);
+                }
+                else
+                {
+                    WriteError($"File \"{path}\" not found!");
+                }
             }
         }
         static void _Copy(string[] p)
@@ -188,16 +300,28 @@ namespace klemmbrett
         }
         static void _Paste(string[] p)
         {
+            bool overwrite = false;
+            if (p.Length > 0 && (p[0] == "force" || p[0] == "f"))
+                overwrite = true;
             if (ClipboardHelper.ContainsFileDropList())
             {
                 foreach (string source in Clipboard.GetFileDropList())
                 {
                     var destination = Path.Combine(Environment.CurrentDirectory, Path.GetFileName(source));
+                    if(source == destination)
+                    {
+                        WriteError("Same files? Fuckup?");
+                        return;
+                    }
                     try
                     {
-                        // TODO: Ask for overrite
-                        Console.WriteLine($"Copying \"{source}\" to \"{destination}\"");
-                        File.Copy(source, destination, true);
+                        Console.WriteLine($"\"{source}\" -> \"{destination}\"");
+                        File.Copy(source, destination, overwrite);
+                    }
+                    catch(IOException iox)
+                    {
+                        WriteError("File already exists. Use the force!");
+                        WriteError(iox.Message);
                     }
                     catch (Exception ex)
                     {
@@ -234,23 +358,33 @@ namespace klemmbrett
 
         static void _Show(string[] p, bool headless)
         {
-            if (ClipboardHelper.ContainsText())
+            if (ClipboardHelper.ContainsText(TextDataFormat.Rtf))
             {
-                if(!headless) WriteHeader("String:");
-                Console.Write(Clipboard.GetText());
+                if (!headless) WriteHeader("RTF:");
+                _Text(null, TextDataFormat.Rtf);
+            }
+            else if (ClipboardHelper.ContainsText(TextDataFormat.Html))
+            {
+                if (!headless) WriteHeader("HTML:");
+                _Text(null, TextDataFormat.Html);
+            }
+            else if (ClipboardHelper.ContainsText())
+            {
+                if (!headless) WriteHeader("Text:");
+                Console.Write(Clipboard.GetText(TextDataFormat.UnicodeText));
             }
             else if (ClipboardHelper.ContainsImage())
             {
                 Image i = Clipboard.GetImage();
 
-                WriteHeader($"Image ({i.Width}x{i.Height}@{i.HorizontalResolution}dpi)");
+                WriteHeader($"Image ({i.Width}x{i.Height} {i.HorizontalResolution}dpi)");
 
                 //Image r = ASCIIConverter.ResizeImageKeepAspect(i, Console.WindowWidth, 1000);
                 //Console.WriteLine(ASCIIConverter.GrayscaleImageToASCII(r));
             }
             else if (ClipboardHelper.ContainsFileDropList())
             {
-                if (!headless) WriteHeader("Files:");
+                WriteHeader("Files:");
                 foreach (string source in Clipboard.GetFileDropList())
                 {
                     Console.WriteLine(source);
@@ -262,8 +396,24 @@ namespace klemmbrett
             }
         }
 
+        #endregion
 
-        // Helper
+        #region Helper
+        // https://stackoverflow.com/a/68299877
+        public static string ExtractBetweenTwoStrings(string FullText, string StartString, string EndString, bool IncludeStartString, bool IncludeEndString)
+        {
+            try
+            {
+                int Pos1 = FullText.IndexOf(StartString) + StartString.Length; int Pos2 = FullText.IndexOf(EndString, Pos1); return ((IncludeStartString) ? StartString : "")
+                  + FullText.Substring(Pos1, Pos2 - Pos1) + ((IncludeEndString) ? EndString : "");
+            }
+            catch (Exception ex) { return ""; }
+        }
+
+        static void WriteDebug(string msg)
+        {
+            Console.WriteLine($"DEBUG:{msg}", ConsoleColor.Magenta);
+        }
 
         static void WriteError(string Message, int ErrorLevel = 1)
         {
@@ -294,5 +444,6 @@ namespace klemmbrett
             return byteStream.ToArray();
         }
 
+        #endregion
     }
 }

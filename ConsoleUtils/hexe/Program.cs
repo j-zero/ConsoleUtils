@@ -20,6 +20,7 @@ namespace hexe
 
         static char[] HexChars = "0123456789abcdef".ToCharArray();
         static bool noOffset = false;
+        static int startOffset = 0;
 
         static void Main(string[] args)
         {
@@ -38,18 +39,34 @@ namespace hexe
                 if(command == "bin")
                 {
                     string path = args[1];
-                    byte[] data = File.ReadAllBytes(path);
+                    byte[] data = ReadFile(path);
 
-                    int binLineLength = Console.WindowWidth - 1;
-                    BinDump(data, binLineLength);
-
+                    int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2);
+                    BinDump(data, binLineLength - 4);
                 }
                 else if(command == "hex")
                 {
-                    
-                    string path = args[1];
-                    byte[] data = File.ReadAllBytes(path);
-                    WriteHexDump(data,16);
+                    string path = null;
+                    int offset = 0;
+                    int length = 0;
+
+                    if (parameters.Length == 1)
+                    {
+                        path = parameters[0];
+                    }
+                    if (parameters.Length == 2)
+                    {
+                        offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
+                        path = parameters[1];
+                    }
+                    if (parameters.Length == 3)
+                    {
+                        offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
+                        length = int.Parse(parameters[1]);
+                        path = parameters[2];
+                    }
+                    byte[] data = ReadFile(path, offset, length);
+                    WriteHexDump(data, 16);
                 }
  
 
@@ -57,8 +74,8 @@ namespace hexe
             else if (args.Length == 1)
             {
                 string path = args[0];
-                byte[] data = File.ReadAllBytes(path);
-                WriteHexDump(data,0);
+                byte[] data = ReadFile(path);
+                WriteHexDump(data,16);
             }
             else   // no parameters
             {
@@ -66,8 +83,9 @@ namespace hexe
             }
 
 #if DEBUG
-            Console.WriteLine("DEBUG:");
-            Console.WriteLine($"Console.WindowWidth = {Console.WindowWidth}");
+            //Console.WriteLine("DEBUG:");
+            //Console.WriteLine($"Console.WindowWidth = {Console.WindowWidth}");
+            //Console.ReadLine();
 #endif
         }
 
@@ -79,6 +97,44 @@ namespace hexe
             BinDump(data, binLineLength);
         }
         */
+
+        static byte[] ReadFile(string path, int offset = 0, int length = 0)
+        {
+            startOffset = offset;
+            byte[] result = new byte[0];
+            if (File.Exists(path))
+            {
+                if (offset == 0 && length == 0)
+                {
+                    result = File.ReadAllBytes(path);
+                }
+                else
+                {
+                    long size = new FileInfo(path).Length;
+                    if (length == 0)
+                    {
+                        length = (int)size - offset;
+                    }
+
+                    if(offset > size)
+                        throw new Exception("Offset out of range.");
+                    if (offset + length > size)
+                        length = (int)size - offset;
+
+                    result = new byte[length];
+                    using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
+                    {
+                        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+                        reader.Read(result, 0, length);
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("File not found!");
+            }
+            return result;
+        }
 
         static void WriteHexDump(byte[] data, int BytesPerLine)
         {
@@ -168,19 +224,21 @@ namespace hexe
             //int expectedLines = (bytesLength + bytesPerLine - 1) / bytesPerLine;
             //StringBuilder result = new StringBuilder(expectedLines * lineLength);
 
+
+
             for (int i = 0; i < bytesLength; i += bytesPerLine)
             {
                 // Offset
                 if (!noOffset)
                 {
-                    line[0] = HexChars[(i >> 28) & 0xF];
-                    line[1] = HexChars[(i >> 24) & 0xF];
-                    line[2] = HexChars[(i >> 20) & 0xF];
-                    line[3] = HexChars[(i >> 16) & 0xF];
-                    line[4] = HexChars[(i >> 12) & 0xF];
-                    line[5] = HexChars[(i >> 8) & 0xF];
-                    line[6] = HexChars[(i >> 4) & 0xF];
-                    line[7] = HexChars[(i >> 0) & 0xF];
+                    line[0] = HexChars[((i + startOffset) >> 28) & 0xF];
+                    line[1] = HexChars[((i + startOffset) >> 24) & 0xF];
+                    line[2] = HexChars[((i + startOffset) >> 20) & 0xF];
+                    line[3] = HexChars[((i + startOffset) >> 16) & 0xF];
+                    line[4] = HexChars[((i + startOffset) >> 12) & 0xF];
+                    line[5] = HexChars[((i + startOffset) >> 8) & 0xF];
+                    line[6] = HexChars[((i + startOffset) >> 4) & 0xF];
+                    line[7] = HexChars[((i + startOffset) >> 0) & 0xF];
                     // End Offset
                 }
                 int hexColumn = firstHexColumn;

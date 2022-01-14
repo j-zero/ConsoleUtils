@@ -14,6 +14,8 @@ namespace klemmbrett
     {
 
         static int _ErrorLevel = 0;
+        static bool force = false;
+        static bool silent = false;
 
         [STAThread]
         static int Main(string[] args)
@@ -33,13 +35,28 @@ namespace klemmbrett
                 }
                 else
                 {
-                    _Show(null, false);
+                    _Show(null, true);
                 }
             }
             else
             {
                 string command = args[0];
                 string[] parameters = args.Skip(1).ToArray();
+
+                if(command == "force")
+                {
+                    force = true;
+                    if (args.Length > 1)
+                    {
+                        command = args[1];
+                        parameters = args.Skip(2).ToArray();
+                    }
+                    else
+                    {
+                        Die($"May the force be with you!", 255);
+                    }
+
+                }
 
                 if (command == "string" || command == "s")
                 {
@@ -87,7 +104,15 @@ namespace klemmbrett
                 }
                 else if (command == "paste" || command == "p")
                 {
-                    _Paste(parameters);
+                    _Paste(parameters, false);
+                }
+                else if (command == "move" || command == "mv")
+                {
+                    _Paste(parameters, true);
+                }
+                else if (command == "remove" || command == "rm" || command == "delete" || command == "del")
+                {
+                    _Delete(parameters);
                 }
                 else if (command == "show")
                 {
@@ -97,9 +122,14 @@ namespace klemmbrett
                 {
                     _Raw(parameters);
                 }
+                else if (command == "help")
+                {
+                    // TODO print help!
+                }
                 else
                 {
                     WriteError($"{command}? Wat?", 255);
+                    //_Load(new string[] { command });  // load file per default
                 }
             }
             return _ErrorLevel;
@@ -131,9 +161,19 @@ namespace klemmbrett
                     case "csv":
                         _Text(new string[] { path }, TextDataFormat.CommaSeparatedValue);
                         break;
+                    case "png":
+                    case "jpg":
+                    case "jpeg":
+                    case "gif":
+                    case "bmp":
+                    case "tif":
+                    case "tiff":
+                        _Image(new string[] { path });
+                        break;
                     default:
                         _Text(new string[] { path });
                         break;
+
                 }
             }
         }
@@ -142,6 +182,9 @@ namespace klemmbrett
         {
             string path = null;
             string ext = null;
+
+            bool overwrite = false;
+
 
             if (p.Length == 1)
             {
@@ -154,7 +197,26 @@ namespace klemmbrett
             else if(p.Length == 2)
             {
                 path = Path.GetFullPath(p[1]);
-                ext = p[0];
+
+                if ((p[0] == "force" || p[0] == "f"))
+                {
+                    string dotExt = Path.GetExtension(path);
+                    if (dotExt != string.Empty)
+                        ext = dotExt.Substring(1);
+
+                    overwrite = true;
+                }
+                else
+                    ext = p[0];
+
+            }
+            else if (p.Length == 3)
+            {
+                path = Path.GetFullPath(p[2]);
+                ext = p[1];
+
+                if ((p[0] == "force" || p[0] == "f"))
+                    overwrite = true;
             }
             else
             {
@@ -164,6 +226,12 @@ namespace klemmbrett
 
             string data = null;
 
+            if(File.Exists(path) && !overwrite)
+            {
+                WriteError("File already exists. Use the force!");
+                return;
+            }
+
             if (ClipboardHelper.ContainsText())
             {
                 switch (ext)
@@ -172,22 +240,22 @@ namespace klemmbrett
                     case "htm":
                         data = Clipboard.GetText(TextDataFormat.Html);
                         File.WriteAllText(path, ExtractBetweenTwoStrings(data, "<!--StartFragment-->", "<!--EndFragment-->", false, false),Encoding.Unicode);
-                        Console.WriteLine($"Saved HTML to \"{path}\"");
+                        WriteLine($"Saved HTML to \"{path}\"");
                         break;
                     case "rtf":
                         data = Clipboard.GetText(TextDataFormat.UnicodeText);
                         File.WriteAllText(path, data, Encoding.Unicode);
-                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                     case "csv":
                         data = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
                         File.WriteAllText(path, data, Encoding.Unicode);
-                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                     default:
                         data = Clipboard.GetText(TextDataFormat.UnicodeText);
                         File.WriteAllText(path, data, Encoding.Unicode);
-                        Console.WriteLine($"Saved {data.Length} bytes to \"{path}\"");
+                        WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                 }
 
@@ -199,29 +267,29 @@ namespace klemmbrett
                 {
                     case "png":
                         i.Save(path, ImageFormat.Png);
-                        Console.WriteLine($"Saved PNG to \"{path}\"");
+                        WriteLine($"Saved PNG to \"{path}\"");
                         break;
                     case "jpg":
                     case "jpeg":
                         i.Save(path, ImageFormat.Jpeg);
-                        Console.WriteLine($"Saved JPEG to \"{path}\"");
+                        WriteLine($"Saved JPEG to \"{path}\"");
                         break;
                     case "gif":
                         i.Save(path, ImageFormat.Gif);
-                        Console.WriteLine($"Saved GIF to \"{path}\"");
+                        WriteLine($"Saved GIF to \"{path}\"");
                         break;
                     case "bmp":
                         i.Save(path, ImageFormat.Bmp);
-                        Console.WriteLine($"Saved Bitmap to \"{path}\"");
+                        WriteLine($"Saved Bitmap to \"{path}\"");
                         break;
                     case "tif":
                     case "tiff":
                         i.Save(path, ImageFormat.Tiff);
-                        Console.WriteLine($"Saved TIFF to \"{path}\"");
+                        WriteLine($"Saved TIFF to \"{path}\"");
                         break;
                     default:
                         i.Save(path, ImageFormat.Png);
-                        Console.WriteLine($"Saved PNG to \"{path}\"");
+                        WriteLine($"Saved PNG to \"{path}\"");
                         break;
                 }
             }
@@ -253,18 +321,18 @@ namespace klemmbrett
                 if(format == TextDataFormat.Rtf && ClipboardHelper.ContainsText(TextDataFormat.Rtf))
                 {
                     string content = Clipboard.GetText(format);
-                    Console.Write(content);
+                    Write(content);
                 }
                 else if (format == TextDataFormat.Html && ClipboardHelper.ContainsText(TextDataFormat.Html))
                 {
                     string content = Clipboard.GetText(format);
                     content = ExtractBetweenTwoStrings(content, "<!--StartFragment-->", "<!--EndFragment-->", false, false);
-                    Console.Write(content);
+                    Write(content);
                 }
                 else
                 {
                     string content = Clipboard.GetText();
-                    Console.Write(content);
+                    Write(content);
                 }
             }
             else if (p.Length == 1)
@@ -273,7 +341,15 @@ namespace klemmbrett
                 if (File.Exists(path))
                 {
                     string fileStr = File.ReadAllText(path);
-                    Clipboard.SetText(fileStr, format);
+                    if (format == TextDataFormat.Html)
+                    {
+                        // TODO, copy plaintext from html
+                        HTMLHelper.CopyToClipboard(fileStr, fileStr);
+                    }
+                    else
+                    {
+                        Clipboard.SetText(fileStr, format);
+                    }
                 }
                 else
                 {
@@ -281,47 +357,99 @@ namespace klemmbrett
                 }
             }
         }
+
         static void _Copy(string[] p)
         {
             // copy files to clipyboard
-            string path = Path.GetFullPath(p[0]);
-            if (File.Exists(path))
+
+            try
             {
-                Clipboard.SetFileDropList(new StringCollection() { path });
+                StringCollection files = FileAndDirectoryFilter.Get(p, FileAndDirectoryFilter.FileAndDirectoryMode.Directories | FileAndDirectoryFilter.FileAndDirectoryMode.Files);
+                
+                if (files.Count > 0)
+                {
+                    
+                    Clipboard.SetFileDropList(files);
+                    WriteLine($"{files.Count} entries copied.");
+                   
+                }
+                else
+                {
+                    foreach(string file in p)
+                        WriteError($"\"{file}\" not found!");
+                }
+            
             }
-            else if (Directory.Exists(path))
+            catch(Exception ex)
             {
-                Clipboard.SetFileDropList(new StringCollection() { path });
+                WriteError($"Error {ex.Message}");
             }
-            else
-            {
-                WriteError($"File \"{path}\" not found!");
-            }
+
         }
-        static void _Paste(string[] p)
+
+        static void _Delete(string[] p)
         {
-            bool overwrite = false;
-            if (p.Length > 0 && (p[0] == "force" || p[0] == "f"))
-                overwrite = true;
+            try
+            {
+                StringCollection files = FileAndDirectoryFilter.Get(p, FileAndDirectoryFilter.FileAndDirectoryMode.Directories | FileAndDirectoryFilter.FileAndDirectoryMode.Files);
+                foreach (var file in files)
+                    if (force)
+                        FileOperationAPIWrapper.DeleteCompletelySilent(file);
+                    else
+                        FileOperationAPIWrapper.Recylce(file);
+            }
+            catch (Exception ex)
+            {
+                WriteError($"Error {ex.Message}");
+            }
+
+        }
+
+
+        static void _Paste(string[] p, bool move)
+        {
             if (ClipboardHelper.ContainsFileDropList())
             {
                 foreach (string source in Clipboard.GetFileDropList())
                 {
                     var destination = Path.Combine(Environment.CurrentDirectory, Path.GetFileName(source));
-                    if(source == destination)
+                    if (p.Length > 0)
+                    {
+                        destination = p[0];
+
+                        if (!Directory.Exists(p[0]) && force)
+                            Directory.CreateDirectory(p[0]);
+                    }
+ 
+                    WriteLine($"\"{source}\" -> \"{destination}\"");
+
+                    if (source == destination)
                     {
                         WriteError("Same files? Fuckup?");
                         return;
                     }
+                    if (!File.Exists(source))
+                    {
+                        WriteError("Source is gone :(");
+                        return;
+                    }
+                    if (!Directory.Exists(destination))
+                    {
+                        WriteError("Destination not found.");
+                        return;
+                    }
                     try
                     {
-                        Console.WriteLine($"\"{source}\" -> \"{destination}\"");
-                        File.Copy(source, destination, overwrite);
+                        
+
+                        File.Copy(source, destination, force);
+                        if (move)
+                            File.Delete(source);
                     }
                     catch(IOException iox)
                     {
                         WriteError("File already exists. Use the force!");
-                        WriteError(iox.Message);
+                        //WriteError(iox.Message);
                     }
                     catch (Exception ex)
                     {
@@ -361,17 +489,17 @@ namespace klemmbrett
             if (ClipboardHelper.ContainsText(TextDataFormat.Rtf))
             {
                 if (!headless) WriteHeader("RTF:");
-                _Text(null, TextDataFormat.Rtf);
+                _Text(null);
             }
             else if (ClipboardHelper.ContainsText(TextDataFormat.Html))
             {
                 if (!headless) WriteHeader("HTML:");
-                _Text(null, TextDataFormat.Html);
+                _Text(null);
             }
             else if (ClipboardHelper.ContainsText())
             {
                 if (!headless) WriteHeader("Text:");
-                Console.Write(Clipboard.GetText(TextDataFormat.UnicodeText));
+                Write(Clipboard.GetText(TextDataFormat.UnicodeText));
             }
             else if (ClipboardHelper.ContainsImage())
             {
@@ -384,10 +512,22 @@ namespace klemmbrett
             }
             else if (ClipboardHelper.ContainsFileDropList())
             {
-                WriteHeader("Files:");
+                WriteHeader("Files/Directories:");
                 foreach (string source in Clipboard.GetFileDropList())
                 {
-                    Console.WriteLine(source);
+                    bool isFile = File.Exists(source);
+                    bool isDir = Directory.Exists(source);
+
+                    string info = "";
+
+                    if (isFile)
+                        info = "f";
+                    else if (isDir)
+                        info = "d";
+
+
+                    Write($"{info} ");
+                    WriteLine($"{source}", isFile || isDir ? ConsoleColor.Green : ConsoleColor.Red);
                 }
             }
             else
@@ -415,22 +555,46 @@ namespace klemmbrett
             Console.WriteLine($"DEBUG:{msg}", ConsoleColor.Magenta);
         }
 
-        static void WriteError(string Message, int ErrorLevel = 1)
+        static void Write(string Message)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            if (silent) return;
+            Console.ResetColor();
+            Console.WriteLine(Message);
+        }
+        static void Write(string Message, ConsoleColor color)
+        {
+            if (silent) return;
+            Console.ForegroundColor = color;
             Console.WriteLine(Message);
             Console.ResetColor();
+        }
+
+        static void WriteLine(string Message)
+        {
+            Write(Message + Environment.NewLine);
+        }
+
+        static void WriteLine(string Message, ConsoleColor color)
+        {
+            Write(Message + Environment.NewLine, color);
+        }
+
+        static void WriteError(string Message, int ErrorLevel = 1)
+        {
+            WriteLine(Message, ConsoleColor.Red);
             _ErrorLevel = ErrorLevel;
         }
 
-        static void WriteHeader(string Text)
+        static void Die(string Message, int ErrorLevel)
+        {
+            WriteError(Message, ErrorLevel);
+            Environment.Exit(ErrorLevel);
+        }
+        static void WriteHeader(string Message)
         {
             if (!Console.IsOutputRedirected)
-            {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(Text);
-                Console.ResetColor();
-            }
+                WriteLine(Message, ConsoleColor.Cyan);
+            
         }
 
         static byte[] GetBytesFromClipboardRaw()

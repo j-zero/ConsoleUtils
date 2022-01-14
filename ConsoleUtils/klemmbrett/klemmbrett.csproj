@@ -49,6 +49,9 @@
     <Compile Include="ASCIIConverter.cs" />
     <Compile Include="ClipboardHelper.cs" />
     <Compile Include="CopyDialog.cs" />
+    <Compile Include="FileAndDirectoryFilter.cs" />
+    <Compile Include="FileOperationApiWrapper.cs" />
+    <Compile Include="HTMLHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

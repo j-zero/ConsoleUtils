@@ -413,6 +413,7 @@ namespace klemmbrett
                 foreach (string source in Clipboard.GetFileDropList())
                 {
                     var destination = Path.Combine(Environment.CurrentDirectory, Path.GetFileName(source));
+
                     if (p.Length > 0)
                     {
                         destination = p[0];
@@ -433,11 +434,13 @@ namespace klemmbrett
                         WriteError("Source is gone :(");
                         return;
                     }
-                    if (!Directory.Exists(destination))
+                    /*
+                    if (!Directory.Exists(destination))         // fix!
                     {
                         WriteError("Destination not found.");
                         return;
                     }
+                    */
                     try
                     {
                         
@@ -559,13 +562,13 @@ namespace klemmbrett
         {
             if (silent) return;
             Console.ResetColor();
-            Console.WriteLine(Message);
+            Console.Write(Message);
         }
         static void Write(string Message, ConsoleColor color)
         {
             if (silent) return;
             Console.ForegroundColor = color;
-            Console.WriteLine(Message);
+            Console.Write(Message);
             Console.ResetColor();
         }
 

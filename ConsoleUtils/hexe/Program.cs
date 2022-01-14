@@ -23,6 +23,8 @@ namespace hexe
         static bool noOffset = false;
         static int startOffset = 0;
 
+
+
         static void Main(string[] args)
         {
 
@@ -56,13 +58,20 @@ namespace hexe
                 string command = args[0];
                 string[] parameters = args.Skip(1).ToArray();
 
+
+
+                if(command == "cut" && parameters.Length >= 2)
+                {
+                    offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
+                    length = int.Parse(parameters[1]);
+                }
+
                 // Get Data
                 if (Console.IsInputRedirected)
                 {
                     using (Stream s = Console.OpenStandardInput())
                     {
                         data = ReadByteStream(s);
-                        WriteHexDump(data, 16);
                     }
                 }
                 else
@@ -79,14 +88,17 @@ namespace hexe
                     data = ReadFile(path, offset, length);
                 }
 
-                if()
-
-
-                Console.WriteLine($"Command {command}");
-
                 
+                if(command == "bin")
+                {
+                    int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                    BinDump(data, binLineLength);
+                }
+                else
+                {
+                    WriteHexDump(data, 16);
+                }
 
-                WriteHexDump(data, 16);
 
 
 

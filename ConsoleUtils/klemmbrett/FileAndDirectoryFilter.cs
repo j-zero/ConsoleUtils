@@ -22,12 +22,12 @@ namespace klemmbrett
 
                 if (File.Exists(path) && mode.HasFlag(FileAndDirectoryMode.Files))
                 {
-                    result.Add(path);
+                    result.Add(Path.GetFullPath(path));
                     return result;
                 }
                 else if (Directory.Exists(path) && mode.HasFlag(FileAndDirectoryMode.Directories))
                 {
-                    result.Add(path);
+                    result.Add(Path.GetFullPath(path));
                     return result;
                 }
                 else

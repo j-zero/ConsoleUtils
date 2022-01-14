@@ -1,16 +1,13 @@
 ﻿using System;
 
-namespace open
+static class Program
 {
-    static class Program
+    [STAThread]
+    static void Main(string[] args)
     {
-        [STAThread]
-        static void Main(string[] args)
-        {
-            if (args.Length > 0)
-                System.Diagnostics.Process.Start(args[0]);
-            else
-                System.Diagnostics.Process.Start(Environment.CurrentDirectory);
-        }
+        if (args.Length > 0)
+            System.Diagnostics.Process.Start(args[0]);
+        else
+            System.Diagnostics.Process.Start(Environment.CurrentDirectory);
     }
 }

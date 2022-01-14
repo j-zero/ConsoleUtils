@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace hexe
 {
+    // TODO cut to binary, patch
     internal class Program
     {
         static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
@@ -24,95 +25,92 @@ namespace hexe
 
         static void Main(string[] args)
         {
-            
 
             if (noOffset)
-            {
                 firstHexColumn = 0;
-            }
 
-            if (args.Length > 1)
+            if (args.Length == 0)
             {
+                // Read STDIN
+                if (Console.IsInputRedirected)
+                {
+                    using (Stream s = Console.OpenStandardInput())
+                    {
+                        byte[] data = ReadByteStream(s);
+                        WriteHexDump(data, 16);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No input given."); // line input?
+                    Environment.Exit(255);
+                }
+            }
+            else
+            {
+                string path = null;
+                int offset = 0;
+                int length = 0;
+                byte[] data;
+
                 string command = args[0];
                 string[] parameters = args.Skip(1).ToArray();
 
-                if(command == "bin")
+                // Get Data
+                if (Console.IsInputRedirected)
                 {
-                    string path = args[1];
-                    byte[] data = ReadFile(path);
-
-                    int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2);
-                    BinDump(data, binLineLength - 4);
+                    using (Stream s = Console.OpenStandardInput())
+                    {
+                        data = ReadByteStream(s);
+                        WriteHexDump(data, 16);
+                    }
                 }
-                else if(command == "hex")
+                else
                 {
-                    string path = null;
-                    int offset = 0;
-                    int length = 0;
-
-                    if (parameters.Length == 1)
+                    if (parameters.Length > 0)
                     {
-                        path = parameters[0];
-                    }
-                    if (parameters.Length == 2)
-                    {
-                        offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
-                        path = parameters[1];
-                    }
-                    if (parameters.Length == 3)
-                    {
-                        offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
-                        length = int.Parse(parameters[1]);
-                        path = parameters[2];
-                    }
-                    byte[] data = ReadFile(path, offset, length);
-                    WriteHexDump(data, 16);
-                }
- 
-
-            }
-            else if (args.Length == 1)
-            {
-                string path = args[0];
-                byte[] data = ReadFile(path);
-                WriteHexDump(data,16);
-            }
-            else   // no parameters
-            {
-                if (args.Length == 0)
-                {
-                    // Read STDIN
-                    if (Console.IsInputRedirected)
-                    {
-                        using (Stream s = Console.OpenStandardInput())
-                        {
-                            byte[] data = ReadByteStream(s);
-                            WriteHexDump(data, 16);
-                        }
+                        path = parameters.Last();
                     }
                     else
                     {
-                        Console.WriteLine("No file given."); // line input?
+                        path = command;
                     }
+
+                    data = ReadFile(path, offset, length);
                 }
+
+                if()
+
+
+                Console.WriteLine($"Command {command}");
+
                 
+
+                WriteHexDump(data, 16);
+
+
+
+                /*
+                // offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
+                // byte[] data = ReadFile(path, offset, length);
+
+                if (command == "bin")
+                {
+                    //int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                    //BinDump(data, binLineLength);
+                }
+                else if(command == "hex")
+                {
+                    WriteHexDump(data, 16);
+                }
+                */
+
+
+
             }
-
-#if DEBUG
-            //Console.WriteLine("DEBUG:");
-            //Console.WriteLine($"Console.WindowWidth = {Console.WindowWidth}");
-            //Console.ReadLine();
-#endif
         }
 
-        /*
-        static void WriteBinDump(byte[] data, int length)
-        {
-            // Bin
-            int binLineLength = Console.WindowWidth - 1;
-            BinDump(data, binLineLength);
-        }
-        */
+
         public static byte[] ReadByteStream(Stream stream)
         {
             byte[] buffer = new byte[32768];
@@ -145,7 +143,7 @@ namespace hexe
                         length = (int)size - offset;
                     }
 
-                    if(offset > size)
+                    if (offset > size)
                         throw new Exception("Offset out of range.");
                     if (offset + length > size)
                         length = (int)size - offset;
@@ -218,7 +216,7 @@ namespace hexe
             // line[charColumn] = (b < 32 ? '·' : (char)b);
 
             char[] line = (new String(spaceChar, lineLength - Environment.NewLine.Length) + Environment.NewLine).ToCharArray();
-            
+
 
             for (int i = 0; i < bytes.Length; i += lineLength)
             {
@@ -236,14 +234,14 @@ namespace hexe
                     {
                         line[charColumn] = spaceChar;
                     }
-                    
+
                     charColumn++;
                 }
                 Console.WriteLine(line);
             }
         }
 
-        /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
+            /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
         public static void HexDump(byte[] bytes)
         {
             if (bytes == null) return;
@@ -275,7 +273,7 @@ namespace hexe
 
                 for (int j = 0; j < bytesPerLine; j++)
                 {
-                    if (j > 0 && (j & (dynamicSteps - 1)) == 0) 
+                    if (j > 0 && (j & (dynamicSteps - 1)) == 0)
                         hexColumn++;
 
                     if (i + j >= bytesLength)

@@ -79,7 +79,23 @@ namespace hexe
             }
             else   // no parameters
             {
-                Console.WriteLine("No file given.");
+                if (args.Length == 0)
+                {
+                    // Read STDIN
+                    if (Console.IsInputRedirected)
+                    {
+                        using (Stream s = Console.OpenStandardInput())
+                        {
+                            byte[] data = ReadByteStream(s);
+                            WriteHexDump(data, 16);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No file given."); // line input?
+                    }
+                }
+                
             }
 
 #if DEBUG
@@ -97,7 +113,20 @@ namespace hexe
             BinDump(data, binLineLength);
         }
         */
-
+        public static byte[] ReadByteStream(Stream stream)
+        {
+            byte[] buffer = new byte[32768];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, 0, buffer.Length);
+                    if (read <= 0)
+                        return ms.ToArray();
+                    ms.Write(buffer, 0, read);
+                }
+            }
+        }
         static byte[] ReadFile(string path, int offset = 0, int length = 0)
         {
             startOffset = offset;

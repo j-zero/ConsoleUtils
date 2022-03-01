@@ -91,6 +91,8 @@ public class CmdOption
             return false;
     }
 
+
+
 }
 
 public class CmdParser : KeyedCollection<string, CmdOption>
@@ -98,6 +100,16 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     private Queue<string> fifo = new Queue<string>();
 
     public string DefaultParameter { get; set; }
+    
+
+
+    public string[] Verbs
+    {
+        get
+        {
+            return this.Where(c => c.CmdType == CmdCommandTypes.VERB).Select(x => x.Name).ToArray();
+        }
+    }
 
     public CmdParser(string[] Args)
     {
@@ -129,7 +141,6 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 if (arg.CmdType == CmdCommandTypes.FLAG)
                 {
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
-                    
                     this[currentArgument].Parameters.Add(cmdParam);
                 }
                 else

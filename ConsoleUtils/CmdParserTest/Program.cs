@@ -1,6 +1,6 @@
-﻿//string[] testArgs = new string[] { "cut", "0x123", "32", "n", "5", "flag", "foo.dat" };
+﻿string[] testArgs = new string[] { "cut", "0x123", "32", "n", "5", "flag", "foo.dat" };
 
-string[] testArgs = new string[] { "flag" };
+//string[] testArgs = new string[] { "flag" };
 
 CmdParser cmdParser = new CmdParser(testArgs)
 {
@@ -18,6 +18,10 @@ CmdParser cmdParser = new CmdParser(testArgs)
 cmdParser.DefaultParameter = "file";
 
 cmdParser.Parse();
+
+var verbs = cmdParser.Verbs;
+
+;
 
 int offset = cmdParser["cut"].GetInt(0);
 int length = cmdParser["cut"].GetInt(1);

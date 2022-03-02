@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pastel;
 
 namespace hexe
 {
@@ -21,7 +22,7 @@ namespace hexe
 
         static char[] HexChars = "0123456789abcdef".ToCharArray();
         static bool noOffset = false;
-        static int startOffset = 0;
+        static long startOffset = 0;
 
 
 
@@ -64,6 +65,18 @@ namespace hexe
                 {
                     offset = int.Parse(parameters[0], System.Globalization.NumberStyles.HexNumber);
                     length = int.Parse(parameters[1]);
+                }
+
+                if (command == "head")
+                {
+                    offset = 0;
+                    length = 256;
+                }
+
+                if (command == "tail")
+                {
+                    offset = -256;
+                    length = 256;
                 }
 
                 // Get Data
@@ -117,7 +130,7 @@ namespace hexe
                 }
                 */
 
-
+                Console.ReadLine();
 
             }
         }
@@ -137,9 +150,9 @@ namespace hexe
                 }
             }
         }
-        static byte[] ReadFile(string path, int offset = 0, int length = 0)
+        static byte[] ReadFile(string path, long offset = 0, long length = 0)
         {
-            startOffset = offset;
+            
             byte[] result = new byte[0];
             if (File.Exists(path))
             {
@@ -150,10 +163,17 @@ namespace hexe
                 else
                 {
                     long size = new FileInfo(path).Length;
+
+                    if (offset < 0)
+                        offset = size + offset;
+
+                    startOffset = offset;
+
                     if (length == 0)
                     {
                         length = (int)size - offset;
                     }
+
 
                     if (offset > size)
                         throw new Exception("Offset out of range.");
@@ -164,7 +184,7 @@ namespace hexe
                     using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
                     {
                         reader.BaseStream.Seek(offset, SeekOrigin.Begin);
-                        reader.Read(result, 0, length);
+                        reader.Read(result, 0, (int)length);
                     }
                 }
             }
@@ -253,8 +273,73 @@ namespace hexe
             }
         }
 
-            /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
         public static void HexDump(byte[] bytes)
+        {
+            if (bytes == null) return;
+
+            int bytesLength = bytes.Length;
+
+            for (int i = 0; i < bytesLength; i += bytesPerLine)
+            {
+                char[] offsetPart = new char[8];
+                string hexPart = string.Empty;
+                string asciiPart = string.Empty;
+
+                offsetPart[0] = HexChars[((i + startOffset) >> 28) & 0xF];
+                offsetPart[1] = HexChars[((i + startOffset) >> 24) & 0xF];
+                offsetPart[2] = HexChars[((i + startOffset) >> 20) & 0xF];
+                offsetPart[3] = HexChars[((i + startOffset) >> 16) & 0xF];
+                offsetPart[4] = HexChars[((i + startOffset) >> 12) & 0xF];
+                offsetPart[5] = HexChars[((i + startOffset) >> 8) & 0xF];
+                offsetPart[6] = HexChars[((i + startOffset) >> 4) & 0xF];
+                offsetPart[7] = HexChars[((i + startOffset) >> 0) & 0xF];
+
+
+                for (int j = 0; j < bytesPerLine; j++)
+                {
+                    if (j > 0 && (j & (dynamicSteps - 1)) == 0)
+                        hexPart += spaceChar;
+
+                    if (i + j >= bytesLength)
+                    {
+                        hexPart += spaceChar;
+                    }
+                    else
+                    {
+                        byte b = bytes[i + j];
+
+                        string newHexPart = string.Empty;
+
+                        newHexPart += (HexChars[(b >> 4) & 0xF]);
+                        newHexPart += (HexChars[b & 0xF]);
+
+                        string color = "";
+
+                        bool isOdd = j % 2 == 0;
+
+
+                        if (b == 0x00)
+                            color = isOdd ? "D7DDEB" : "B0BAD7";
+                        else if (b == 0x10 || b == 0x13)    // CR LF
+                            color = isOdd ? "FFE39D" : "FEB80A";
+                        else if(b < 32)
+                            color = isOdd ? "E17B7C" : "EBA7A8";
+                        else
+                            color = isOdd ? "9CDCFE" : "569CD6";
+
+                        hexPart += newHexPart.Pastel(color);
+                        hexPart += spaceChar;
+
+                        asciiPart += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
+
+                    }
+                }
+                Console.WriteLine(new string(offsetPart).Pastel("DCDCDC") + "   " + hexPart + "   " + asciiPart); ;
+            }
+        }
+
+        /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
+        public static void HexDump2(byte[] bytes)
         {
             if (bytes == null) return;
             int bytesLength = bytes.Length;

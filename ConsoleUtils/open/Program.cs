@@ -22,12 +22,21 @@ static class Program
                 {
                     if (ex.NativeErrorCode == 0x02) //https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/18d8fbe8-a967-4f1c-ae50-99ca8e491d2d
                     {
-                        Console.Write($"File \"{f}\" not found, create? [y/N]");
+                        Console.Write($"\"{f}\" not found, create? [y/N] ");
                         ConsoleKey response = Console.ReadKey(false).Key;
+                        Console.WriteLine();
                         if (response == ConsoleKey.Y)
                         {
-                            System.IO.File.Create(f);
-                            System.Diagnostics.Process.Start(f);
+                            try
+                            {
+                                System.IO.File.Create(f);
+                                System.Diagnostics.Process.Start(f);
+                            }
+                            catch(Exception ex2)
+                            {
+                                Console.Write($"Error: {ex2.Message}");
+                                Environment.Exit(1);
+                            }
                         }
                     }
                 }
@@ -35,5 +44,7 @@ static class Program
         }
         else
             System.Diagnostics.Process.Start(Environment.CurrentDirectory);
+
+        Environment.Exit(0);
     }
 }

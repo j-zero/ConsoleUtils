@@ -2,7 +2,7 @@
   "profiles": {
     "CmdParserTest": {
       "commandName": "Project",
-      "commandLineArgs": "c 0x123 32 lines 5 switch Program.cs"
+      "commandLineArgs": "Program.cs cut 0 256"
     }
   }
 }

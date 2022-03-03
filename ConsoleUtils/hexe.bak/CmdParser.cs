@@ -136,7 +136,10 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
     public string DefaultParameter { get; set; }
     
-
+    public bool HasFlag(string flag)
+    {
+        return this[flag].GetBool(0);
+    }
 
     public string[] Verbs
     {

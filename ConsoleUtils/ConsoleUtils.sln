@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CmdParser", "CmdParserTest\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hexe", "hexe\hexe.csproj", "{24621B6B-1ACA-46D5-B5AC-54AA012C7968}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "subnet", "subnet\subnet.csproj", "{D4D77C73-4649-43F2-A898-1B410D61386B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{24621B6B-1ACA-46D5-B5AC-54AA012C7968}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24621B6B-1ACA-46D5-B5AC-54AA012C7968}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24621B6B-1ACA-46D5-B5AC-54AA012C7968}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -364,7 +364,7 @@ namespace hexe
             else if (b == 0x10 || b == 0x13)    // CR LF
                 color = isOdd ? "FFE39D" : "FEB80A";
             else if (b < 32)
-                color = isOdd ? "E17B7C" : "EBA7A8";
+                color = isOdd ? "EBA7A8" : "E17B7C";
             else
                 color = isOdd ? "9CDCFE" : "569CD6";
 
@@ -373,7 +373,8 @@ namespace hexe
 
         public static void WriteError(string msg)
         {
-            Console.Write(msg.Pastel(System.Drawing.Color.Salmon)); // TODO STDERR
+            string doggo = @"            \\n             \\n            /^-----^\\n            V  o o  V\n             |  Y  |\n              \ Q /\n              / - \\n              |    \\n              |     \     )\n              || (___\====\n\n";
+            Console.Write($"{msg}\n{doggo}".Pastel(System.Drawing.Color.Salmon)); // TODO STDERR
         }
 
         public static void Die(string msg, int errorcode)

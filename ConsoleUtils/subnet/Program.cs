@@ -22,6 +22,11 @@ namespace subnet
                     Console.Write("net: ");
                     getIpCidrFromNetString(Console.ReadLine());
                 }
+                else if (args.Length == 1 && args[0] == "--help")
+                {
+                    WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+                    Environment.Exit(1);
+                }
                 else if (args.Length == 1)
                 {
                     ip_net = getIpCidrFromNetString(args[0]);

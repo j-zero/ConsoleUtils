@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{24621B6B-1ACA-46D5-B5AC-54AA012C7968}</ProjectGuid>
+    <ProjectGuid>{D4D77C73-4649-43F2-A898-1B410D61386B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>hexe</RootNamespace>
-    <AssemblyName>hexe</AssemblyName>
+    <RootNamespace>subnet</RootNamespace>
+    <AssemblyName>subnet</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -44,7 +44,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLineParser.cs" />
     <Compile Include="ConsoleExtensions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

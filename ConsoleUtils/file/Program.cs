@@ -11,11 +11,21 @@ namespace file
     {
         static int Main(string[] args)
         {
-            if(args.Length > 0)
+            Magic magic = null;
+            if (args.Length > 0)
             {
                 string path = args[0];
-                var magic = new Magic(MagicOpenFlags.MAGIC_NONE);
-                Console.WriteLine(magic.Read(path));
+
+                magic = new Magic(MagicOpenFlags.MAGIC_NONE);
+                Console.WriteLine("Info:      " + magic.Read(path));
+
+                magic = new Magic(MagicOpenFlags.MAGIC_MIME_ENCODING);
+                Console.WriteLine("Encoding:  " + magic.Read(path));
+
+                magic = new Magic(MagicOpenFlags.MAGIC_MIME_TYPE);
+                Console.WriteLine("MIME-Type: " + magic.Read(path)); 
+
+                //Console.WriteLine(magicStr);
                 return 0;
             }
             else

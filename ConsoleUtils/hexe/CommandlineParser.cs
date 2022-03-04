@@ -29,7 +29,7 @@ public class CmdParameter
     public long IntValue { get; set; }
     public bool BoolValue { get; set; }
     public decimal DecimalValue { get; set; }
-    public string String { get { return Value.ToString(); } }
+    public string String { get { return Value != null ? Value.ToString() : null; } }
 
     public CmdParameter(CmdParameterTypes Type, object Value)
     {
@@ -63,6 +63,7 @@ public class CmdOption
     public CmdParameters Parameters { get; set; }
     public string Description { get; set; }
 
+    public bool WasUserSet { get; set; }
 
     public CmdOption(string Name)
     {
@@ -83,7 +84,7 @@ public class CmdOption
     }
     public string[] Strings
     {
-        get { return this.Parameters.Select(x => x.String).ToArray(); }
+        get { return this.Parameters.Where(x=> x.String != null).Select(x => x.String).ToArray(); }
     }
 
     public bool[] Bools
@@ -135,14 +136,19 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     private Queue<string> fifo = new Queue<string>();
 
     public string DefaultParameter { get; set; }
-    
+    public string DefaultVerb { get; set; }
 
+    public bool HasFlag(string flag)
+    {
+        return this[flag].GetBool(0);
+    }
 
     public string[] Verbs
     {
         get
-        {
-            return this.Where(c => c.CmdType == CmdCommandTypes.VERB).Select(x => x.Name).ToArray();
+        {   
+            string[] verbs = this.Where(c => c.CmdType == CmdCommandTypes.VERB && c.WasUserSet).Select(x => x.Name).ToArray();
+            return verbs.Length > 0 ? verbs : DefaultVerb != null ? new string[] { DefaultVerb } : new string[0];
         }
     }
 
@@ -151,6 +157,21 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         foreach (var arg in Args)
             fifo.Enqueue(arg);
 
+    }
+
+    private bool TryGetValue(string key, out CmdOption item)
+    {
+
+        if (this.Contains(key))
+        {
+            item = this[key];
+            return true;
+        }
+        else
+        {
+            item = null;
+            return false;
+        }
     }
 
     public void Parse()
@@ -172,6 +193,8 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 int parameterCount = arg.Parameters.Count;
                 string expectedParamsString = string.Join(", ", arg.Parameters.Select(x => x.Type.ToString()).ToArray());
 
+                arg.WasUserSet = true;
+
                 if (arg.CmdType == CmdCommandTypes.FLAG)
                 {
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
@@ -182,6 +205,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                     foreach (var p in this[currentArgument].Parameters)
                     {
                         string f = fifo.Dequeue();
+
 
                         if (p.Type == CmdParameterTypes.BOOL)
                         {

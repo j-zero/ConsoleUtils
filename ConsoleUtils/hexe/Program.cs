@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pastel;
+using System.Drawing;
 
 namespace hexe
 {
@@ -371,10 +372,11 @@ namespace hexe
             return color;
         }
 
-        public static void WriteError(string msg)
+        public static void WriteError(string message)
         {
-            string doggo = @"            \\n             \\n            /^-----^\\n            V  o o  V\n             |  Y  |\n              \ Q /\n              / - \\n              |    \\n              |     \     )\n              || (___\====\n\n";
-            Console.Write($"{msg}\n{doggo}".Pastel(System.Drawing.Color.Salmon)); // TODO STDERR
+            string doggo = "            \\\n             \\\n            /^-----^\\\n            V  o o  V\n             |  Y  |\n              \\ Q /\n              / - \\\n              |    \\\n              |     \\     )\n              || (___\\====";
+            string msg = message.Length < 12 ? message.PadLeft(11) : message;
+            Console.Write($"\n   {msg.Pastel(Color.Salmon)}\n{doggo.Pastel(Color.White)}\n\n"); // TODO STDERR
         }
 
         public static void Die(string msg, int errorcode)

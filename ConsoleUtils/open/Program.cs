@@ -20,6 +20,7 @@ static class Program
                 }
                 catch (System.ComponentModel.Win32Exception ex)
                 {
+                    // File not found
                     if (ex.NativeErrorCode == 0x02) //https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/18d8fbe8-a967-4f1c-ae50-99ca8e491d2d
                     {
                         Console.Write($"\"{f}\" not found, create? [y/N] ");

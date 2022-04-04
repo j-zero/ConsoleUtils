@@ -307,20 +307,11 @@ namespace hexe
 
             for (int i = 0; i < bytesLength; i += bytesPerLine)
             {
-                //char[] offsetPart = new char[offsetLength];
                 string offsetPart = string.Empty;
                 string hexPart = string.Empty;
                 string asciiPart = string.Empty;
 
                 int offsetShift = 0;
-
-                /*
-                for (int o = (offsetLength - 1); o >= 0; o--)
-                {
-                    offsetPart[o] = HexChars[((i + startOffset) >> offsetShift) & 0xF];
-                    offsetShift += 4;
-                }
-                */
 
                 offsetPart = (i + startOffset).ToString("X").ToLower().PadLeft(offsetLength, '0');
 
@@ -370,6 +361,24 @@ namespace hexe
                 color = isOdd ? "9CDCFE" : "569CD6";
 
             return color;
+        }
+
+        public static int Search(byte[] src, byte[] pattern)
+        {
+            int maxFirstCharSlot = src.Length - pattern.Length + 1;
+            for (int i = 0; i < maxFirstCharSlot; i++)
+            {
+                if (src[i] != pattern[0]) // compare only first byte
+                    continue;
+
+                // found a match on first byte, now try to match rest of the pattern
+                for (int j = pattern.Length - 1; j >= 1; j--)
+                {
+                    if (src[i + j] != pattern[j]) break;
+                    if (j == 1) return i;
+                }
+            }
+            return -1;
         }
 
         public static void WriteError(string message)

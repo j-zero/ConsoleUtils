@@ -70,9 +70,13 @@ namespace klemmbrett
                 {
                     _Copy(parameters);
                 }
+                else if (command == "unicode" || command == "u")
+                {
+                    _Text(parameters, TextDataFormat.UnicodeText);
+                }
                 else if (command == "text" || command == "t")
                 {
-                    _Text(parameters);
+                    _Text(parameters,TextDataFormat.Text);
                 }
                 else if (command == "html")
                 {
@@ -121,6 +125,10 @@ namespace klemmbrett
                 else if (command == "raw")
                 {
                     _Raw(parameters);
+                }
+                else if (command == "info")
+                {
+                    _Info(parameters);
                 }
                 else if (command == "help")
                 {
@@ -325,8 +333,9 @@ namespace klemmbrett
                 }
                 else if (format == TextDataFormat.Html && ClipboardHelper.ContainsText(TextDataFormat.Html))
                 {
-                    string content = Clipboard.GetText(format);
+                    string content = Clipboard.GetText(TextDataFormat.UnicodeText);
                     content = ExtractBetweenTwoStrings(content, "<!--StartFragment-->", "<!--EndFragment-->", false, false);
+                    
                     Write(content);
                 }
                 else
@@ -465,11 +474,63 @@ namespace klemmbrett
                 WriteError("No pastable content!");
             }
         }
-
-        static void _Raw(string[] p)
+        static void _Info(string[] p)
         {
-            WriteError("???", 255);
+            var data = Clipboard.GetDataObject();
+            string[] formats = data.GetFormats();
+
+            Console.WriteLine("Formats:");
+            foreach (string f in formats)
+            {
+                Console.WriteLine($"\t{f}");
+            }
+            //WriteError("???", 255);
         }
+        static object _Raw(string[] p)
+        {
+            if (p.Length != 0)
+            {
+                string format = p[0];
+                object returnObject = null;
+                if (Clipboard.ContainsData(format))
+                {
+                    returnObject = Clipboard.GetData(format);
+                    Console.WriteLine("Type: " + returnObject.GetType().ToString());
+                }
+                else
+                {
+                    Console.WriteLine($"Format \"{format}\" not found!?");
+                }
+                return returnObject;
+            }
+            WriteError("???", 255);
+            return null;
+        }
+
+        public static void BinDump(byte[] bytes, int lineLength)
+        {
+            if (bytes == null) return;
+
+
+            for (int i = 0; i < bytes.Length; i += lineLength)
+            {
+                string line = "";
+                for (int j = 0; j < lineLength; j++)
+                {
+                    if (!(i + j >= bytes.Length))
+                    {
+                        byte b = bytes[i + j];
+                        line += ("" + (b < 32 ? '·' : (char)b));
+                    }
+                    else
+                    {
+                        line += " ";
+                    }
+                }
+                Console.WriteLine(line);
+            }
+        }
+
         static void _String(string[] p)
         {
             string str = p[0];
@@ -503,6 +564,7 @@ namespace klemmbrett
             {
                 if (!headless) WriteHeader("Text:");
                 Write(Clipboard.GetText(TextDataFormat.UnicodeText));
+                //Write(Clipboard.GetText());
             }
             else if (ClipboardHelper.ContainsImage())
             {

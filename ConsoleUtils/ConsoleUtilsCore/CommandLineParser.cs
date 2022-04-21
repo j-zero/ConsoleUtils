@@ -84,6 +84,23 @@ public class CmdOption
         this.Description = Description;
     }
 
+    public long Long
+    {
+        get { return this.Values.Select(x => x.IntValue).Single(); }
+    }
+    public string String
+    {
+        get { return this.Values.Where(x => x.String != null).Select(x => x.String).Single(); }
+    }
+    public bool Bool
+    {
+        get { return this.Values.Select(x => x.BoolValue).Single(); }
+    }
+    public decimal Decimal
+    {
+        get { return this.Values.Select(x => x.DecimalValue).Single(); }
+    }
+
     public long[] Longs
     {
         get { return this.Values.Select(x => x.IntValue).ToArray(); }

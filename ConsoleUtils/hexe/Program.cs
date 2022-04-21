@@ -26,7 +26,6 @@ namespace hexe
         static bool noAscii = false;
         static long startOffset = 0;
         static long defaultLength = 256;
-        static long defaultLineCount = 10;
 
         static CmdParser cmd;
 
@@ -36,27 +35,38 @@ namespace hexe
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
                 { "show", null, CmdCommandTypes.VERB, $"Show complete file, default." },
+                { "bin", "b", CmdCommandTypes.VERB, "Binary mode" },
 
-                { "cut", "c", CmdCommandTypes.VERB, new CmdParameters() {
+                { "cut", "c", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 0},
                     { CmdParameterTypes.INT, defaultLength},
                 }, "Cut from here to there" },
 
-                { "head", "h", CmdCommandTypes.VERB, $"Show first {defaultLength} bytes" },
-                { "tail", "t", CmdCommandTypes.VERB, $"Show least {defaultLength} bytes" },
+                { "head", "h", CmdCommandTypes.FLAG, $"Show first X bytes, can be modified with --count."},
+                { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with --count."},
 
-                { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
                 { "debug", "d", CmdCommandTypes.FLAG, "Debug mode" },
 
-                { "nooffset", "n", CmdCommandTypes.FLAG, "Show no offset" },
-                { "noascii", "a", CmdCommandTypes.FLAG, "Show no ascii" },
-                { "nonasciigremlin", "", CmdCommandTypes.FLAG, "Everythin above 0xff is gremlin" },
+                { "no-offset", "", CmdCommandTypes.FLAG, "Show no offset" },
+                { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
 
-                { "match", "m", CmdCommandTypes.FLAG, "show only matching values" },
-                { "nocr", "", CmdCommandTypes.FLAG, "show carrige return" },
-                { "bytes", null, CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "count", "n", CmdCommandTypes.PARAMETER,
+                    new CmdParameters() {
+                        { CmdParameterTypes.INT, 0},
+                    },
+                    $"Number of bytes to show"
+                },
+                { "offset", "o", CmdCommandTypes.PARAMETER,
+                    new CmdParameters() {
+                        { CmdParameterTypes.INT, 0},
+                    },
+                    $"Offset to start with"
+                },
+
+                { "bytes-per-line", null, CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
-                }, "File to read" },
+                }, "bytes per line" },
+
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
                 }, "File to read" }
@@ -65,89 +75,91 @@ namespace hexe
 
             cmd.DefaultParameter = "file";
             cmd.DefaultVerb = "show";
-
-            cmd.Parse();
-
-            noAscii = cmd.HasFlag("noascii");
-            noOffset = cmd.HasFlag("nooffset");
-            bytesPerLine = (int)cmd["bytes"].Longs[0];
-
-
-            byte[] data = new byte[0];
-            long offset = 0;
-            long length = 0;
-
-            if (noOffset)
-                firstHexColumn = 0;
-
             try
             {
-                foreach (string verb in cmd.Verbs)
+                cmd.Parse();
+
+                noAscii = cmd.HasFlag("no-ascii");
+                noOffset = cmd.HasFlag("no-offset");
+
+                bytesPerLine = (int)cmd["bytes-per-line"].Longs[0];
+
+
+                byte[] data = new byte[0];
+                long offset = 0;
+                long length = 0;
+
+                if (noOffset)
+                    firstHexColumn = 0;
+
+                //long count = cmd["count"].Longs[0];
+                offset = cmd["offset"].Long;
+                length = cmd["count"].Long;
+                /*
+                offset = cmd["cut"].Longs[0];
+                length = cmd["cut"].Longs[1];
+                */
+                if (cmd["cut"].WasUserSet)
                 {
-                    if (verb == "show" || verb == "cut" || verb == "head" || verb == "tail")
+                    offset = cmd["cut"].Longs[0];
+                    length = cmd["cut"].Longs[1];
+                }
+
+                if (cmd.HasFlag("tail"))
+                {
+                    offset = (cmd["count"].WasUserSet ? length : defaultLength) * -1;
+                    length = defaultLength;
+                }
+                else if (cmd.HasFlag("head"))
+                {
+                    offset = 0;
+                    length = cmd["count"].WasUserSet ? length : defaultLength;
+                }
+
+
+
+                if (Console.IsInputRedirected)
+                {
+                    using (Stream s = Console.OpenStandardInput())
                     {
-                        switch (verb)
-                        {
-                            case "show":
-                                offset = 0;
-                                length = 0;
-                                break;
-                            case "cut":
-                                offset = cmd[verb].Longs[0];
-                                length = cmd[verb].Longs[1];
-                                break;
-                            case "head":
-                                offset = 0;
-                                length = cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength;
-                                break;
-                            case "tail":
-                                offset = (cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength) * -1;
-                                length = cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength;
-                                break;
-
-                        }
-
-
-
-                        if (Console.IsInputRedirected)
-                        {
-                            using (Stream s = Console.OpenStandardInput())
-                            {
-                                data = ReadByteStream(s);
-                            }
-                        }
-                        else
-                        {
-                            if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
-                            {
-                                string path = cmd["file"].Strings[0];
-                                data = ReadFile(path, offset, length);
-                            }
-                        }
-
-                        if (cmd.HasFlag("bin"))
-                        {
-                            int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
-                            BinDump(data, binLineLength);
-                        }
-                        else
-                        {
-                            WriteHexDump(data, bytesPerLine);
-                        }
-                        
-
-
-
+                        data = ReadByteStream(s);
+                    }
+                }
+                else
+                {
+                    if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
+                    {
+                        string path = cmd["file"].Strings[0];
+                        data = ReadFile(path, offset, length);
                     }
                 }
 
-                
-                
+                if (cmd.Verbs.Length > 1)
+                    throw new ArgumentException("You can't use more than one verb!");
+
+                string verb = cmd.Verbs[0];
+
+                if (verb == "bin")
+                {
+                    int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                    BinDump(data, binLineLength);
+                }
+                else
+                {
+                    WriteHexDump(data, bytesPerLine);
+                }
+                        
+
             }
-            catch(Exception ex)
+            catch (ArgumentException ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteError(ex.Message);
+                if(cmd.HasFlag("debug"))
+                    Console.WriteLine(ex.StackTrace);
             }
 
             if (cmd.HasFlag("debug"))

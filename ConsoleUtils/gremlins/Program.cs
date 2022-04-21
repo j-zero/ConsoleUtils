@@ -30,13 +30,8 @@ namespace gremlins
                     "Look from here to there." 
                 },
 
-                { "head", "h", CmdCommandTypes.FLAG, 
-                    $"Show first X lines, can be modified with --lines."
-                },
-
-                { "tail", "t", CmdCommandTypes.FLAG,
-                    $"Show first X lines, can be modified with --lines."
-                },
+                { "head", "h", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with --lines."},
+                { "tail", "t", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with --lines."},
 
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
 
@@ -87,7 +82,6 @@ namespace gremlins
                     Console.WriteLine($"Options:");
                     foreach (CmdOption c in cmd.OrderBy(x => x.Name))
                     {
-                        //"9CDCFE" : "569CD6";
                         string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
                         Console.WriteLine(l);
                     }

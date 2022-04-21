@@ -15,5 +15,9 @@ public class ConsoleHelper
         string msg = message.Length < 12 ? message.PadLeft(11) : message;
         Console.Error.Write($"\n   {msg.Pastel(Color.Salmon)}\n{doggo.Pastel(Color.White)}\n\n");
     }
+    public static string GetVersionString()
+    {
+        return "ConsoleUtils (https://github.com/j-zero/ConsoleUtils)";
+    }
 }
 

@@ -18,7 +18,7 @@ public enum CmdCommandTypes
     VERB,
     PARAMETER,
     FLAG,
-    ALIAS,
+    MULTIPE_PARAMETER,
     UNNAMED
 }
 
@@ -59,10 +59,13 @@ public class CmdParameters : List<CmdParameter>
 
 public class CmdOption
 {
+
+
     public string Name { get; set; }
     public string ShortName { get; set; }
     public CmdCommandTypes CmdType { get; set; }
     public CmdParameters Parameters { get; set; }
+    public CmdParameters Values { get; set; }
     public string Description { get; set; }
 
     public bool WasUserSet { get; set; }
@@ -77,56 +80,57 @@ public class CmdOption
         this.ShortName = Shortname;
         this.CmdType = CmdType;
         this.Parameters = CmdParams;
+        this.Values = CmdParams;
         this.Description = Description;
     }
 
     public long[] Longs
     {
-        get { return this.Parameters.Select(x => x.IntValue).ToArray(); }
+        get { return this.Values.Select(x => x.IntValue).ToArray(); }
     }
     public string[] Strings
     {
-        get { return this.Parameters.Where(x=> x.String != null).Select(x => x.String).ToArray(); }
+        get { return this.Values.Where(x=> x.String != null).Select(x => x.String).ToArray(); }
     }
 
     public bool[] Bools
     {
-        get { return this.Parameters.Select(x => x.BoolValue).ToArray(); }
+        get { return this.Values.Select(x => x.BoolValue).ToArray(); }
     }
 
     public decimal[] Decimals
     {
-        get { return this.Parameters.Select(x => x.DecimalValue).ToArray(); }
+        get { return this.Values.Select(x => x.DecimalValue).ToArray(); }
     }
 
     public long GetLong(int index)
     {
-        if (index < this.Parameters.Count)
-            return this.Parameters[index].IntValue;
+        if (index < this.Values.Count)
+            return this.Values[index].IntValue;
         else
             return 0;
     }
 
     public bool GetBool(int index)
     {
-        if (index < this.Parameters.Count)
-            return this.Parameters[index].BoolValue;
+        if (index < this.Values.Count)
+            return this.Values[index].BoolValue;
         else
             return false;
     }
 
     public string GetString(int index)
     {
-        if (index < this.Parameters.Count)
-            return this.Parameters[index].String;
+        if (index < this.Values.Count)
+            return this.Values[index].String;
         else
             return null;
     }
 
     public decimal GetDecimal(int index)
     {
-        if (index < this.Parameters.Count)
-            return this.Parameters[index].DecimalValue;
+        if (index < this.Values.Count)
+            return this.Values[index].DecimalValue;
         else
             return 0;
     }
@@ -135,6 +139,9 @@ public class CmdOption
 
 public class CmdParser : KeyedCollection<string, CmdOption>
 {
+    private string _longParamPrefix = "--";
+    private string _shortParamPrefix = "-";
+
     private Queue<string> fifo = new Queue<string>();
 
     public string DefaultParameter { get; set; }
@@ -150,6 +157,20 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         return this[flag].GetBool(0);
     }
 
+    public bool IsParameterNullOrEmpty(string parameter)
+    {
+        if (!this.Contains(parameter))
+            return true;
+        if (this[parameter].Strings.Length < 1)
+            return true;
+        if (string.IsNullOrEmpty(this[parameter].Strings[0])) 
+            return true;
+        return false;
+    }
+    public bool Exists(string parameter)
+    {
+        return !IsParameterNullOrEmpty(parameter);
+    }
 
     public string[] Verbs
     {
@@ -186,13 +207,14 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     {
         while (fifo.Count > 0)
         {
-            var currentArgument = fifo.Dequeue();
+            var inputArgument = fifo.Dequeue();
+            var currentArgument = inputArgument;
 
             string parseKey = null;
             string longName = null;
             string shortName = null;
 
-            if (currentArgument != null && currentArgument.StartsWith("--"))
+            if (currentArgument != null && currentArgument.StartsWith(_longParamPrefix))
             {
                 longName = currentArgument.Substring(2);
                 IsVerb = false;
@@ -200,7 +222,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 if (parseKey != null)
                     currentArgument = parseKey;
             }
-            else if (currentArgument != null && currentArgument.StartsWith("-"))
+            else if (currentArgument != null && currentArgument.StartsWith(_shortParamPrefix))
             {
                 shortName = currentArgument.Substring(1);
                 IsVerb = false;
@@ -219,7 +241,6 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
             ;
 
-
             if (this.TryGetValue(currentArgument, out CmdOption arg))     // known command
             {
                 string name = arg.Name;
@@ -233,28 +254,25 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
                     this[currentArgument].Parameters.Add(cmdParam);
                 }
-                else if (arg.CmdType == CmdCommandTypes.ALIAS)
-                {
-                    CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
-                    this[currentArgument].Parameters.Add(cmdParam);
-                }
                 else
                 {
-                    foreach (var p in this[currentArgument].Parameters)
+                    //CmdParameters c = this[currentArgument].Parameters;
+                    for(int i = 0; i < this[currentArgument].Parameters.Count; i++)
+                    //foreach (var p in this[currentArgument].Parameters)
                     {
+                        CmdParameter r = new CmdParameter(this[currentArgument].Parameters[i].Type, null);
                         string f = fifo.Dequeue();
-
-                        if (p.Type == CmdParameterTypes.BOOL)
+                        if (r.Type == CmdParameterTypes.BOOL)
                         {
                             string low = f.ToLower().Trim();
                             if (low == "0" || low == "false" || low == "off" || low == "disabled" || low == "disable" || low == "no")
-                                p.Value = false;
+                                r.Value = false;
                             else if (low == "1" || low == "true" || low == "on" || low == "enabled" || low == "enable" || low == "yes")
-                                p.Value = true;
+                                r.Value = true;
                             else
-                                throw new Exception($"Can't parse \"{f}\" as {p.Type.ToString()}, {name} expects: {expectedParamsString}.");
+                                throw new Exception($"Can't parse \"{f}\" as {r.Type.ToString()}, {name} expects: {expectedParamsString}.");
                         }
-                        else if (p.Type == CmdParameterTypes.INT)
+                        else if (r.Type == CmdParameterTypes.INT)
                         {
                             int v = 0;
                             bool success = false;
@@ -265,39 +283,50 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                                 success = int.TryParse(f, out v);
 
                             if (!success)
-                                throw new Exception($"Can't parse \"{f}\" as {p.Type.ToString()}, {name} expects: {expectedParamsString}.");
+                                throw new Exception($"Can't parse \"{f}\" as {r.Type.ToString()}, {name} expects: {expectedParamsString}.");
 
-                            p.Value = v;
-                            p.IntValue = v;
-                            p.DecimalValue = v;
-                            p.BoolValue = Convert.ToBoolean(v);
+                            r.Value = v;
+                            r.IntValue = v;
+                            r.DecimalValue = v;
+                            r.BoolValue = Convert.ToBoolean(v);
 
                         }
-                        else if (p.Type == CmdParameterTypes.DECIMAL)
+                        else if (r.Type == CmdParameterTypes.DECIMAL)
                         {
                             decimal v = 0;
 
                             if (!decimal.TryParse(f, out v))
-                                throw new Exception($"Can't parse \"{f}\" as {p.Type.ToString()}, {name} expects: {expectedParamsString}.");
+                                throw new Exception($"Can't parse \"{f}\" as {r.Type.ToString()}, {name} expects: {expectedParamsString}.");
 
-                            p.Value = v;
-                            p.IntValue = (int)v;
-                            p.DecimalValue = v;
-                            p.BoolValue = Convert.ToBoolean(v);
+                            r.Value = v;
+                            r.IntValue = (int)v;
+                            r.DecimalValue = v;
+                            r.BoolValue = Convert.ToBoolean(v);
                         }
-                        else if (p.Type == CmdParameterTypes.STRING)
+                        else if (r.Type == CmdParameterTypes.STRING)
                         {
-                            p.Value = f;
+                            r.Value = f;
                         }
-                        
+
+                        if (i < this[currentArgument].Values.Count)
+                            this[currentArgument].Values[i] = r;
+                        else if (i > this[currentArgument].Values.Count - 1 && arg.CmdType == CmdCommandTypes.MULTIPE_PARAMETER)
+                            this[currentArgument].Values.Add(r);
+                        else
+                            throw new ArgumentException("multiple parameter fuckup!");
                     }
+
+
                 }
             } 
+            else if (inputArgument.StartsWith(_longParamPrefix) || inputArgument.StartsWith(_shortParamPrefix)){
+                throw new ArgumentException($"unknown parameter \"{inputArgument}\"");
+            }
             else                                                // unnamed
             {
                 if(this.DefaultParameter != null)
                 {
-                    this[this.DefaultParameter].Parameters.Add(CmdParameterTypes.STRING, currentArgument);
+                    this[this.DefaultParameter].Values.Add(CmdParameterTypes.STRING, currentArgument);
                 }                    
             }
  

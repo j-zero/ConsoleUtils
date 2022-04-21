@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace gremlins
 {
@@ -26,16 +27,18 @@ namespace gremlins
                         { CmdParameterTypes.INT, 0},
                         { CmdParameterTypes.INT, 0},
                     }, 
-                    "Cut from here to there" 
+                    "Look from here to there." 
                 },
 
                 { "head", "h", CmdCommandTypes.FLAG, 
-                    $"Show first {defaultLineCount} lines"
+                    $"Show first X lines, can be modified with --lines."
                 },
 
                 { "tail", "t", CmdCommandTypes.FLAG,
-                    $"Show first {defaultLineCount} lines"
+                    $"Show first X lines, can be modified with --lines."
                 },
+
+                { "help", "", CmdCommandTypes.FLAG, "Show this help." },
 
                 { "lines", "n", CmdCommandTypes.PARAMETER,
                     new CmdParameters() {
@@ -44,69 +47,112 @@ namespace gremlins
                     $"Number of lines for head/tail. Default: {defaultLineCount}"
                 },
 
-                { "no-line-numbers", "l", CmdCommandTypes.FLAG, "No line numbers" },
-                { "non-ascii-gremlins", "", CmdCommandTypes.FLAG, "Everythin above 0xff is gremlin" },
+                
+                { "only-non-ascii", "", CmdCommandTypes.FLAG, "Everything above 0xff is gremlin" },
+                { "empty-lines", "", CmdCommandTypes.FLAG, "Parse empty lines as gremlins" },
+                { "no-space-on-line-end", "", CmdCommandTypes.FLAG, "Parse spaces on line end not as gremlin" },
 
-                { "all", "a", CmdCommandTypes.FLAG, "show all lines" },
+                { "all", "a", CmdCommandTypes.FLAG, "Show all lines" },
+                { "invert", "v", CmdCommandTypes.FLAG, "Show all lines but no gremlins" },
 
-                { "no-cr", "", CmdCommandTypes.FLAG, "don't show carrige return" },
-                { "no-space", "", CmdCommandTypes.FLAG, "don't mark space" },
-                { "no-tab", "", CmdCommandTypes.FLAG, "don't mark space" },
+                { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
+                { "no-space", "", CmdCommandTypes.FLAG, "Don't mark space" },
+                { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
+
+                { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
+
+                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers" },
+
+                { "regex", "r", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Additional regex for gremlin detection" }, 
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
-                    { CmdParameterTypes.STRING, null }
-                }, "File to read" }
+                        { CmdParameterTypes.STRING, null }
+                    }, "File to read" }
 
+                
             };
 
             cmd.DefaultParameter = "file";
-            cmd.Parse();
-
-            string[] lines = new string[0];
-
-            long lineCount = cmd["lines"].Longs[0];
-
-            long offset = cmd["cut"].Longs[0];
-            long length = cmd["cut"].Longs[1];
-
-            if (cmd.HasFlag("tail"))
+            try
             {
-                offset = lineCount * -1;
-                length = lineCount;
-            }
-            else if (cmd.HasFlag("head")){
-                offset = 0;
-                length = lineCount;
-            }
+                cmd.Parse();
 
-
-            if (Console.IsInputRedirected)
-            {
-                using (Stream s = Console.OpenStandardInput())
+                // HELP
+                if (cmd.HasFlag("help"))
                 {
-                    using (StreamReader reader = new StreamReader(s))
+                    Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
+                    Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
+                    Console.WriteLine($"Options:");
+                    foreach (CmdOption c in cmd.OrderBy(x => x.Name))
                     {
-                        lines = reader.ReadToEnd().Split('\n');
+                        //"9CDCFE" : "569CD6";
+                        string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                        Console.WriteLine(l);
+                    }
+                    //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+                    Environment.Exit(0);
+                }
+
+                string[] lines = new string[0];
+
+                long lineCount = cmd["lines"].Longs[0];
+
+                long offset = cmd["cut"].Longs[0];
+                long length = cmd["cut"].Longs[1];
+
+                if (cmd.HasFlag("tail"))
+                {
+                    offset = lineCount * -1;
+                    length = lineCount;
+                }
+                else if (cmd.HasFlag("head"))
+                {
+                    offset = 0;
+                    length = lineCount;
+                }
+
+
+                if (Console.IsInputRedirected)
+                {
+                    using (Stream s = Console.OpenStandardInput())
+                    {
+                        using (StreamReader reader = new StreamReader(s))
+                        {
+                            lines = reader.ReadToEnd().Split('\n');
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
+                else
                 {
-                    string path = cmd["file"].Strings[0];
-                    try
+                    if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                     {
+                        string path = cmd["file"].Strings[0];
                         lines = File.ReadAllText(path).Split('\n');
                     }
-                    catch(Exception ex)
-                    {
-                        ConsoleHelper.WriteError(ex.Message);
-                    }
                 }
-            }
 
-            GremlinDump(lines, (int)offset, (int)length);
+
+                GremlinDump(lines, (int)offset, (int)length);
+            }
+            catch (FileNotFoundException ex)
+            {
+                ConsoleHelper.WriteError(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                ConsoleHelper.WriteError(ex.Message);
+                Environment.Exit(255);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteError(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Environment.Exit(255);
+            }
+            if (System.Diagnostics.Debugger.IsAttached)
+                Console.ReadLine();
         }
 
         public static void GremlinDump(string[] lines, int start = 0, int length = 0)
@@ -116,7 +162,8 @@ namespace gremlins
             int lineNumberLength = (int)Math.Log10(lines.Length) + 1;
             //.PadLeft(offsetLength, '0')
             int offset = start;
-            bool utf8Gremlin = cmd.HasFlag("non-ascii-gremlins");
+            bool utf8Gremlin = cmd.HasFlag("only-non-ascii");
+
             if (offset < 0)
             {
                 if (lines.Length < (start * -1))
@@ -138,14 +185,17 @@ namespace gremlins
                
                 bool lineEndsWithSpace = lines[l].EndsWith("\t\r") || lines[l].EndsWith(" \r") || lines[l].EndsWith(" ") || lines[l].EndsWith("\t");
 
-                bool isGremlin = lineEndsWithSpace;
+                bool isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(lines[l]) || Regex.IsMatch(lines[l], @"^\s*$"));
+                bool isCustomGremlin = false;
 
                 //if ((l == lastLine - 1) && (lines[l] == string.Empty))
                 //    continue;
 
                 lineNumber++;
-                
+
                 //string l = line.Replace("\r", "\\r".Pastel("80ff80"));
+
+
 
                 foreach (char c in lines[l])
                 {
@@ -153,27 +203,57 @@ namespace gremlins
                     string color = ColorTheme.GetColor(i, true);
                     //color = "9CDCFE";
 
-                    if (isGremlin == false)                                       //LF        //CR          //TAB
-                        isGremlin = (i < 32 || (utf8Gremlin || i > 127)) && (i != 0x0a && i != 0x0d && i != 0x09);
+                    if (!isGremlin)
+                    {
+                        if(utf8Gremlin)
+                        //                                                LF           CR           TAB
+                            isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
+                        else
+                            isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
 
+                    }
                     if (i == 0x0d)    // CR
-                        newLine += ((cmd.HasFlag("no-cr") ? "\r" : "¬").Pastel("606060"));
+                        newLine += ((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x09)    // Tab
-                        newLine += ((cmd.HasFlag("no-tab") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel("606060"));
+                        newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x20)    // Space
-                        newLine += ((cmd.HasFlag("no-space") ? " " : "_").Pastel("606060"));
+                        newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor));
                     else if (i > 255)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel("E17B7C");
+                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
                     else if (i < 32)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel("E17B7C");
+                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
                     else
                         newLine += ($"{c}".Pastel(color));
 
                 }
-                if ((!cmd.HasFlag("all") && isGremlin) || cmd.HasFlag("all"))
+
+                if (cmd.Exists("regex"))
+                {   /* Doesn't work because of coloring every character before
+                    Regex r = new Regex(cmd["regex"].Strings[0]);
+                    isCustomGremlin = r.IsMatch(lines[l]);
+
+                    
+                    foreach (Match match in r.Matches(lines[l]))
+                    {
+                        newLine = lines[l].Replace(match.Value, match.Value.Pastel(ColorTheme.HighLight2));
+                    }
+                    */
+                    foreach(string pattern in cmd["regex"].Strings)
+                        isCustomGremlin |= Regex.IsMatch(lines[l], pattern);
+                    if (!isGremlin)
+                        isGremlin = isCustomGremlin;
+
+                }
+
+                if ((!cmd.HasFlag("invert") && isGremlin) ^ (cmd.HasFlag("invert") && !isGremlin) || cmd.HasFlag("all"))
                 {
-                    string strLineNumber = lineNumber.ToString().PadLeft(lineNumberLength, '0').Pastel(isGremlin ? "ffff80" : "eeeeee");
-                    Console.Write((!cmd.HasFlag("no-line-numbers") ? $"{strLineNumber}: " : "") + $"{newLine}\n");
+                    string lineColor = isGremlin ? ColorTheme.OffsetColorHighlight : ColorTheme.OffsetColor;
+                    if (isCustomGremlin)
+                        lineColor = ColorTheme.HighLight2;
+                    string strLineNumber = lineNumber.ToString().PadLeft(lineNumberLength, '0').Pastel(lineColor);
+                    Console.Write(
+                        (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"
+                       );
                 }
             }
         }

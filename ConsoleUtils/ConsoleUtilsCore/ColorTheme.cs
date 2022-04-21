@@ -1,5 +1,10 @@
 ﻿public class ColorTheme
 {
+    public static string DarkColor { get { return "268C96"; } }
+    public static string HighLight2 { get { return "E17B7C"; } }
+    public static string OffsetColor {  get { return "eeeeee";} }
+    public static string OffsetColorHighlight { get { return "ffff80"; } }
+
     public static string GetColor(byte b, bool isOdd)
     {
         return GetColor((int)b, isOdd);

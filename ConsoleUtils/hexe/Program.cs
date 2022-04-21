@@ -26,6 +26,7 @@ namespace hexe
         static bool noAscii = false;
         static long startOffset = 0;
         static long defaultLength = 256;
+        static long defaultLineCount = 10;
 
         static CmdParser cmd;
 
@@ -43,14 +44,16 @@ namespace hexe
 
                 { "head", "h", CmdCommandTypes.VERB, $"Show first {defaultLength} bytes" },
                 { "tail", "t", CmdCommandTypes.VERB, $"Show least {defaultLength} bytes" },
+
                 { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
                 { "debug", "d", CmdCommandTypes.FLAG, "Debug mode" },
 
                 { "nooffset", "n", CmdCommandTypes.FLAG, "Show no offset" },
                 { "noascii", "a", CmdCommandTypes.FLAG, "Show no ascii" },
-                { "gremlins", "g", CmdCommandTypes.FLAG, "mark non printable/unicode chars" },
+                { "nonasciigremlin", "", CmdCommandTypes.FLAG, "Everythin above 0xff is gremlin" },
+
                 { "match", "m", CmdCommandTypes.FLAG, "show only matching values" },
-                //{ "nocr", "", CmdCommandTypes.FLAG, "show carrige return" },
+                { "nocr", "", CmdCommandTypes.FLAG, "show carrige return" },
                 { "bytes", null, CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
                 }, "File to read" },
@@ -95,68 +98,43 @@ namespace hexe
                                 break;
                             case "head":
                                 offset = 0;
-                                length = defaultLength;
+                                length = cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength;
                                 break;
                             case "tail":
-                                offset = defaultLength * -1;
-                                length = defaultLength;
+                                offset = (cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength) * -1;
+                                length = cmd.HasFlag("gremlins") ? defaultLineCount : defaultLength;
                                 break;
 
                         }
 
 
-                        if (cmd.HasFlag("gremlins"))
-                        {
-                            string[] lines = new string[0];
 
-                            if (Console.IsInputRedirected)
+                        if (Console.IsInputRedirected)
+                        {
+                            using (Stream s = Console.OpenStandardInput())
                             {
-                                using (Stream s = Console.OpenStandardInput())
-                                {
-                                    using (StreamReader reader = new StreamReader(s))
-                                    {
-                                        lines = reader.ReadToEnd().Split('\n');
-                                    }
-                                }
+                                data = ReadByteStream(s);
                             }
-                            else
-                            {
-                                if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
-                                {
-                                    string path = cmd["file"].Strings[0];
-                                    lines = File.ReadAllText(path).Split('\n');
-                                }
-                            }
-                            GremlinDump(lines, (int)offset, (int)length);
                         }
                         else
                         {
-                            if (Console.IsInputRedirected)
+                            if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                             {
-                                using (Stream s = Console.OpenStandardInput())
-                                {
-                                    data = ReadByteStream(s);
-                                }
-                            }
-                            else
-                            {
-                                if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
-                                {
-                                    string path = cmd["file"].Strings[0];
-                                    data = ReadFile(path, offset, length);
-                                }
-                            }
-
-                            if (cmd.HasFlag("bin"))
-                            {
-                                int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
-                                BinDump(data, binLineLength);
-                            }
-                            else
-                            {
-                                WriteHexDump(data, bytesPerLine);
+                                string path = cmd["file"].Strings[0];
+                                data = ReadFile(path, offset, length);
                             }
                         }
+
+                        if (cmd.HasFlag("bin"))
+                        {
+                            int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                            BinDump(data, binLineLength);
+                        }
+                        else
+                        {
+                            WriteHexDump(data, bytesPerLine);
+                        }
+                        
 
 
 
@@ -168,7 +146,7 @@ namespace hexe
             }
             catch(Exception ex)
             {
-                WriteError(ex.Message);
+                ConsoleHelper.WriteError(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
 
@@ -315,7 +293,7 @@ namespace hexe
                     if (!(i + j >= bytes.Length))
                     {
                         byte b = bytes[i + j];
-                        string color = GetColor(b, j % 2 == 0);
+                        string color = ColorTheme.GetColor(b, j % 2 == 0);
 
                         line += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
                     }
@@ -328,54 +306,7 @@ namespace hexe
             }
         }
 
-        public static void GremlinDump(string[] lines, int offset = 0, int length = 0)
-        {
-            if (lines.Length == 0) return;
-            //string[] lines = Encoding.UTF8.GetString(bytes).Split('\n');
-            int lineNumberLength = (int)Math.Log10(lines.Length) + 1;
-            //.PadLeft(offsetLength, '0')
-            int lineNumber = offset;
-
-
-            int lastLine = offset + length;
-
-            if (lastLine > lines.Length || lastLine == 0)
-                lastLine = lines.Length;
-
-            for (int l = offset; l < lastLine; l++)
-            {
-                string newLine = ""; 
-                bool isGremlin = false;
-                lineNumber++;
-                //string l = line.Replace("\r", "\\r".Pastel("80ff80"));
-                foreach (char c in lines[l])
-                {
-                    int i = (int)c;
-                    string color = GetColor(i,true);
-                    //color = "9CDCFE";
-                    
-                    if(isGremlin == false)
-                        isGremlin = (i < 32 || i > 127) && (i != 0x0a && i != 0x0d);
-
-                    if (i == 0x0d)    // CR LF
-                        newLine += ($"\\r".Pastel("80ff80"));
-                    else if (i == 0x09)    // Tab
-                        newLine += ($"\\t{nonPrintableChar}{nonPrintableChar}{nonPrintableChar}".Pastel("80ff80"));
-                    else if (i > 255)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel("E17B7C");
-                    else if (i < 32)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel("E17B7C");
-                    else
-                        newLine += ($"{c}".Pastel(color));
-                    
-                }
-                if ((cmd.HasFlag("match") && isGremlin) || !cmd.HasFlag("match"))
-                {
-                    string strLineNumber = lineNumber.ToString().PadLeft(lineNumberLength, '0').Pastel(isGremlin ? "EBA7A8" : "eeeeee");
-                    Console.Write($"{strLineNumber}: {newLine}\n");
-                }
-            }
-        }
+        
 
         public static void HexDump(byte[] bytes, bool header = false)
         {
@@ -435,7 +366,7 @@ namespace hexe
                         newHexPart += (HexChars[(b >> 4) & 0xF]);
                         newHexPart += (HexChars[b & 0xF]);
 
-                        string color = GetColor(b, j % 2 == 0);
+                        string color = ColorTheme.GetColor(b, j % 2 == 0);
 
 
                         hexPart += newHexPart.Pastel(color);
@@ -450,27 +381,7 @@ namespace hexe
             }
         }
 
-        public static string GetColor(byte b, bool isOdd)
-        {
-            return GetColor((int)b, isOdd);
-        }
-        public static string GetColor(int b, bool isOdd)
-        {
-            string color = isOdd ? "9CDCFE" : "569CD6";    // default blue;
 
-            if (b == 0x00)
-                color = isOdd ? "D7DDEB" : "B0BAD7";
-            else if (b == 0x0d || b == 0x0a)    // CR LF
-                color = isOdd ? "80ff80" : "66ff66";
-            else if (b < 32)
-                color = isOdd ? "EBA7A8" : "E17B7C";
-            else if (b > 127 && b <= 255)                   // US-ASCII
-                color = isOdd ? "ffffcc" : "ffff80";
-            else if(b > 255)
-                color = isOdd ? "ffc299" : "ffa366";
-
-            return color;
-        }
 
 
         public static int Search(byte[] src, byte[] pattern)
@@ -491,16 +402,11 @@ namespace hexe
             return -1;
         }
 
-        public static void WriteError(string message)
-        {
-            string doggo = "            \\\n             \\\n            /^-----^\\\n            V  o o  V\n             |  Y  |\n              \\ Q /\n              / - \\\n              |    \\\n              |     \\     )\n              || (___\\====";
-            string msg = message.Length < 12 ? message.PadLeft(11) : message;
-            Console.Write($"\n   {msg.Pastel(Color.Salmon)}\n{doggo.Pastel(Color.White)}\n\n"); // TODO STDERR
-        }
+
 
         public static void Die(string msg, int errorcode)
         {
-            WriteError(msg);
+            ConsoleHelper.WriteError(msg);
             Environment.Exit(errorcode);
         }
 

@@ -18,6 +18,7 @@ public enum CmdCommandTypes
     VERB,
     PARAMETER,
     FLAG,
+    ALIAS,
     UNNAMED
 }
 
@@ -53,6 +54,7 @@ public class CmdParameters : List<CmdParameter>
         base.Add(new CmdParameter(type, value));
         return this;
     }
+
 }
 
 public class CmdOption
@@ -69,7 +71,7 @@ public class CmdOption
     {
         this.Name = Name;
     }
-    public CmdOption(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameters CmdParams, string Description)
+    public CmdOption(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameters CmdParams, string Description, string aliasFor = null)
     {
         this.Name = Name;
         this.ShortName = Shortname;
@@ -138,10 +140,16 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     public string DefaultParameter { get; set; }
     public string DefaultVerb { get; set; }
 
+    public bool IsVerb
+    {
+        get; private set;
+    }
+
     public bool HasFlag(string flag)
     {
         return this[flag].GetBool(0);
     }
+
 
     public string[] Verbs
     {
@@ -179,13 +187,38 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         while (fifo.Count > 0)
         {
             var currentArgument = fifo.Dequeue();
-            
-            var parseKey = this.Where(
-                x => x.ShortName == currentArgument || x.Name == currentArgument
-                ).Select(x => x.Name).FirstOrDefault();
 
-            if(parseKey != null)
-                currentArgument = parseKey;
+            string parseKey = null;
+            string longName = null;
+            string shortName = null;
+
+            if (currentArgument != null && currentArgument.StartsWith("--"))
+            {
+                longName = currentArgument.Substring(2);
+                IsVerb = false;
+                parseKey = this.Where(x => x.Name == longName).Select(x => x.Name).FirstOrDefault();
+                if (parseKey != null)
+                    currentArgument = parseKey;
+            }
+            else if (currentArgument != null && currentArgument.StartsWith("-"))
+            {
+                shortName = currentArgument.Substring(1);
+                IsVerb = false;
+                parseKey = this.Where(x => x.ShortName == shortName).Select(x => x.Name).FirstOrDefault();
+                if (parseKey != null)
+                    currentArgument = parseKey;
+            }
+            else
+            {
+                parseKey = this.Where(x => x.Name == currentArgument).Select(x => x.Name).FirstOrDefault();
+                if (parseKey != null)
+                    currentArgument = parseKey;
+                IsVerb = true;
+            }
+
+
+            ;
+
 
             if (this.TryGetValue(currentArgument, out CmdOption arg))     // known command
             {
@@ -200,12 +233,16 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
                     this[currentArgument].Parameters.Add(cmdParam);
                 }
+                else if (arg.CmdType == CmdCommandTypes.ALIAS)
+                {
+                    CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
+                    this[currentArgument].Parameters.Add(cmdParam);
+                }
                 else
                 {
                     foreach (var p in this[currentArgument].Parameters)
                     {
                         string f = fifo.Dequeue();
-
 
                         if (p.Type == CmdParameterTypes.BOOL)
                         {
@@ -255,9 +292,6 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                         
                     }
                 }
-
-
-                
             } 
             else                                                // unnamed
             {

@@ -70,6 +70,7 @@ namespace Pastel
         private static readonly string _formatStringFull    = $"{_formatStringStart}{_formatStringColor}{_formatStringContent}{_formatStringEnd}";
 
 
+
         private static readonly ReadOnlyDictionary<ColorPlane, string> _planeFormatModifiers = new ReadOnlyDictionary<ColorPlane, string>(new Dictionary<ColorPlane, string>
         {
             [ColorPlane.Foreground] = "38",
@@ -232,5 +233,8 @@ namespace Pastel
 
             return closedString;
         }
+
+
+
     }
 }

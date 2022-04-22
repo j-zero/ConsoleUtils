@@ -182,8 +182,6 @@ namespace hexe
                         string path = cmd["file"].Strings[0];
                         foreach(Selection s in parts)
                             data.Add(ReadFile(path, s.Offset, s.Length));
-
-                        
                     }
                 }
 

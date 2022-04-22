@@ -91,7 +91,10 @@ public class CmdOption
         //this.Values.Add(new CmdParameters());
         this.Values.AddRange(this.Parameters);
     }
-
+    public long Int
+    {
+        get { return Ints.Single(); }
+    }
     public long Long
     {
         get { return Longs.Single(); }
@@ -108,7 +111,10 @@ public class CmdOption
     {
         get { return Decimals.Single(); }
     }
-
+    public int[] Ints
+    {
+        get { return GetInts(); }
+    }
     public long[] Longs
     {
         get { return GetLongs(); }
@@ -131,6 +137,10 @@ public class CmdOption
     public long[] GetLongs()
     {
         return this.Values.Select(x => x.IntValue).ToArray(); 
+    }
+    public int[] GetInts()
+    {
+        return this.Values.Select(x => (int)x.IntValue).ToArray();
     }
 
     public bool[] GetBools()

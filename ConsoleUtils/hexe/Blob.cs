@@ -3,7 +3,7 @@
     class Blob
     {
 
-        public long Offset { get; set; }
+        public int Offset { get; set; }
         public byte[] Data { get; set; }
         public int Length {
             get
@@ -19,7 +19,7 @@
         {
             this.Data = Data;
         }
-        public Blob(long Offset, byte[] Data)
+        public Blob(int Offset, byte[] Data)
         {
             this.Offset = Offset;
             this.Data = Data;
@@ -28,11 +28,11 @@
 
     class Selection
     {
-        public long Offset { get; set; }
-        public long Length { get; set; }
+        public int Offset { get; set; }
+        public int Length { get; set; }
         public Selection(){
         }
-        public Selection(long Offset, long Length)
+        public Selection(int Offset, int Length)
         {
             this.Offset = Offset;
             this.Length = Length;

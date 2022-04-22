@@ -25,7 +25,7 @@ namespace hexe
         static bool noOffset = false;
         static bool noAscii = false;
         //static long startOffset = 0;
-        static long defaultLength = 256;
+        static int defaultLength = 256;
 
         static CmdParser cmd;
 
@@ -102,8 +102,8 @@ namespace hexe
                     firstHexColumn = 0;
 
                 //long count = cmd["count"].Longs[0];
-                parts[0].Offset = cmd["offset"].Long;
-                parts[0].Length = cmd["count"].Long;
+                parts[0].Offset = (int)cmd["offset"].Long;
+                parts[0].Length = (int)cmd["count"].Long;
                 /*
                 offset = cmd["cut"].Longs[0];
                 length = cmd["cut"].Longs[1];
@@ -118,8 +118,8 @@ namespace hexe
                         if (parts.Count <= k)
                             parts.Add(new Selection(0, 0));
 
-                        parts[k].Offset = cmd["cut"].Longs[i++];
-                        parts[k].Length = cmd["cut"].Longs[i++];
+                        parts[k].Offset = cmd["cut"].Ints[i++];
+                        parts[k].Length = cmd["cut"].Ints[i++];
                         k++;
                     }
                 }
@@ -164,7 +164,15 @@ namespace hexe
                 {
                     using (Stream s = Console.OpenStandardInput())
                     {
-                        data.Add(new Blob(ReadByteStream(s)));
+                        byte[] allData = ReadByteStream(s);
+                        foreach (Selection p in parts)
+                        {
+                            if (p.Length == 0)
+                                p.Length = allData.Length - p.Offset;
+                            Blob blob = new Blob(p.Offset, new byte[p.Length]);
+                            Buffer.BlockCopy(allData, p.Offset, blob.Data, 0, p.Length);
+                            data.Add(blob);
+                        }
                     }
                 }
                 else
@@ -272,7 +280,7 @@ namespace hexe
             else
                 throw new Exception($"File \"{path}\" not found!");
 
-            return new Blob(offset, result);
+            return new Blob((int)offset, result);
         }
 
         static string[] ReadLines(string path, int offset = 0, int length = 0)

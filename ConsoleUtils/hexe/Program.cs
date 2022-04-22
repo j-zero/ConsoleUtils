@@ -24,20 +24,25 @@ namespace hexe
         static char[] HexChars = "0123456789abcdef".ToCharArray();
         static bool noOffset = false;
         static bool noAscii = false;
-        static long startOffset = 0;
+        //static long startOffset = 0;
         static long defaultLength = 256;
 
         static CmdParser cmd;
+
+
 
         static void Main(string[] args)
         {
 
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
-                { "show", null, CmdCommandTypes.VERB, $"Show complete file, default." },
-                { "bin", "b", CmdCommandTypes.VERB, "Binary mode" },
+                { "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
+                { "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
 
-                { "cut", "c", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "short", null, CmdCommandTypes.FLAG, $"Show head and tail" },
+                { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
+
+                { "cut", "c", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 0},
                     { CmdParameterTypes.INT, defaultLength},
                 }, "Cut from here to there" },
@@ -63,7 +68,7 @@ namespace hexe
                     $"Offset to start with"
                 },
 
-                { "bytes-per-line", null, CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "bytes-per-line", "B", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
                 }, "bytes per line" },
 
@@ -85,44 +90,81 @@ namespace hexe
                 bytesPerLine = (int)cmd["bytes-per-line"].Longs[0];
 
 
-                byte[] data = new byte[0];
-                long offset = 0;
-                long length = 0;
+                List<Blob> data = new List<Blob>();
+                List<Selection> parts = new List<Selection>();
+
+                //long offset = 0;
+                //long length = 0;
+
+                parts.Add(new Selection(0, 0));
 
                 if (noOffset)
                     firstHexColumn = 0;
 
                 //long count = cmd["count"].Longs[0];
-                offset = cmd["offset"].Long;
-                length = cmd["count"].Long;
+                parts[0].Offset = cmd["offset"].Long;
+                parts[0].Length = cmd["count"].Long;
                 /*
                 offset = cmd["cut"].Longs[0];
                 length = cmd["cut"].Longs[1];
                 */
+
                 if (cmd["cut"].WasUserSet)
                 {
-                    offset = cmd["cut"].Longs[0];
-                    length = cmd["cut"].Longs[1];
-                }
+                    int k = 0;
+                    int i = 0;
+                    while(i < cmd["cut"].Longs.Length)
+                    {
+                        if (parts.Count <= k)
+                            parts.Add(new Selection(0, 0));
 
-                if (cmd.HasFlag("tail"))
+                        parts[k].Offset = cmd["cut"].Longs[i++];
+                        parts[k].Length = cmd["cut"].Longs[i++];
+                        k++;
+                    }
+                }
+                else if (cmd.HasFlag("tail"))
                 {
-                    offset = (cmd["count"].WasUserSet ? length : defaultLength) * -1;
-                    length = defaultLength;
+                    parts[0].Offset = (cmd["count"].WasUserSet ? parts[0].Length : defaultLength) * -1;
+                    parts[0].Length = defaultLength;
                 }
                 else if (cmd.HasFlag("head"))
                 {
-                    offset = 0;
-                    length = cmd["count"].WasUserSet ? length : defaultLength;
+                    parts[0].Offset = 0;
+                    parts[0].Length = cmd["count"].WasUserSet ? parts[0].Length : defaultLength;
                 }
 
+
+
+                if (cmd.Verbs.Length > 1)
+                    throw new ArgumentException("You can't use more than one verb!");
+
+                string verb = cmd.Verbs[0];
+
+
+                // TODO: alle offsets vorher speichern, daten je nach input-stream einlesen und dann im loop ausgeben
+
+                if (cmd.HasFlag("short"))
+                {
+                    int cHeight = (Console.WindowHeight / 2 - 1);
+                    defaultLength = cHeight * bytesPerLine;
+
+                    //head
+                    parts[0].Offset = 0;
+                    parts[0].Length = cmd["count"].WasUserSet ? parts[0].Length : defaultLength;
+
+                    parts.Add(new Selection(0, 0));
+                    //tail
+                    parts[1].Offset = (cmd["count"].WasUserSet ? parts[0].Length : defaultLength) * -1;
+                    parts[1].Length = defaultLength;
+                }
 
 
                 if (Console.IsInputRedirected)
                 {
                     using (Stream s = Console.OpenStandardInput())
                     {
-                        data = ReadByteStream(s);
+                        data.Add(new Blob(ReadByteStream(s)));
                     }
                 }
                 else
@@ -130,24 +172,30 @@ namespace hexe
                     if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                     {
                         string path = cmd["file"].Strings[0];
-                        data = ReadFile(path, offset, length);
+                        foreach(Selection s in parts)
+                            data.Add(ReadFile(path, s.Offset, s.Length));
+
+                        
                     }
                 }
 
-                if (cmd.Verbs.Length > 1)
-                    throw new ArgumentException("You can't use more than one verb!");
 
-                string verb = cmd.Verbs[0];
 
-                if (verb == "bin")
+                for(int i = 0; i < data.Count; i++)
                 {
-                    int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
-                    BinDump(data, binLineLength);
+                    if (cmd.HasFlag("bin"))
+                    {
+                        int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                        BinDump(data[i].Data, binLineLength);
+                    }
+                    else
+                    {
+                        HexDump(data[i], bytesPerLine, false, (ulong)(data.Last().Offset + data.Last().Length));
+                    }
+                    if(i != data.Count - 1)
+                        Console.WriteLine("...");
                 }
-                else
-                {
-                    WriteHexDump(data, bytesPerLine);
-                }
+                
                         
 
             }
@@ -158,11 +206,11 @@ namespace hexe
             catch (Exception ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
-                if(cmd.HasFlag("debug"))
+                if(cmd.HasFlag("debug") || System.Diagnostics.Debugger.IsAttached)
                     Console.WriteLine(ex.StackTrace);
             }
 
-            if (cmd.HasFlag("debug"))
+            if (System.Diagnostics.Debugger.IsAttached)
                 Console.ReadLine();
         }
 
@@ -184,7 +232,7 @@ namespace hexe
             }
         }
 
-        static byte[] ReadFile(string path, long offset = 0, long length = 0)
+        static Blob ReadFile(string path, long offset = 0, long length = 0)
         {
             byte[] result = new byte[0];
             if (File.Exists(path))
@@ -200,8 +248,6 @@ namespace hexe
                     if (offset < 0)
                         offset = size + offset;
 
-                    startOffset = offset;
-
                     if (length == 0)
                     {
                         length = (int)size - offset;
@@ -212,6 +258,8 @@ namespace hexe
                         throw new Exception("Offset out of range.");
                     if (offset + length > size)
                         length = (int)size - offset;
+
+                    ;
 
                     result = new byte[length];
                     using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
@@ -224,8 +272,9 @@ namespace hexe
             else
                 throw new Exception($"File \"{path}\" not found!");
 
-            return result;
+            return new Blob(offset, result);
         }
+
         static string[] ReadLines(string path, int offset = 0, int length = 0)
         {
             string[] result = new string[0];
@@ -245,40 +294,6 @@ namespace hexe
                 throw new Exception($"File \"{path}\" not found!");
 
             return result.ToArray();
-        }
-
-
-        static void WriteHexDump(byte[] data, int BytesPerLine)
-        {
-
-            if (BytesPerLine == 0)  // dynamic
-            {
-                int dynWidth = Console.WindowWidth;
-                int minWidth = 32;
-                //dynWidth = 31;
-
-                // Hex
-
-                while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
-                {
-                    SetBytesPerLine(bytesPerLine += dynamicSteps);
-                    if (lineLength > dynWidth)
-                    {
-                        SetBytesPerLine(bytesPerLine -= dynamicSteps);
-                        break;
-                    }
-
-                }
-                if (lineLength < minWidth)
-                    SetBytesPerLine(dynamicSteps);
-            }
-            else
-            {
-                SetBytesPerLine(BytesPerLine);
-            }
-
-
-            HexDump(data);
         }
 
         static int SetBytesPerLine(int bPerLine)
@@ -320,14 +335,42 @@ namespace hexe
 
         
 
-        public static void HexDump(byte[] bytes, bool header = false)
+        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0)
         {
             if (bytes == null) return;
+
             string spacer = "   ";
             string offsetPrefix = "0x";
             int bytesLength = bytes.Length;
-            int offsetLength = (startOffset + bytes.Length - 1).ToString("X").Length; // todo offset length by parameter
+
+            int offsetLength = largestOffset != 0 ? (largestOffset).ToString("X").Length : (bytes.Offset + bytes.Length - 1).ToString("X").Length;
+
             if (offsetLength % 2 != 0) offsetLength++;
+
+            if (BytesPerLine == 0)  // dynamic
+            {
+                int dynWidth = Console.WindowWidth;
+                int minWidth = 32;
+                while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
+                {
+                    SetBytesPerLine(bytesPerLine += dynamicSteps);
+                    if (lineLength > dynWidth)
+                    {
+                        SetBytesPerLine(bytesPerLine -= dynamicSteps);
+                        break;
+                    }
+
+                }
+                if (lineLength < minWidth)
+                    SetBytesPerLine(dynamicSteps);
+            }
+            else
+            {
+                SetBytesPerLine(BytesPerLine);
+            }
+
+            
+
             //Console.WriteLine(bytes.Length.ToString("X"));
 
             // header
@@ -356,9 +399,9 @@ namespace hexe
                 string hexPart = string.Empty;
                 string asciiPart = string.Empty;
 
-                int offsetShift = 0;
+                //int offsetShift = 0;
 
-                offsetPart = (i + startOffset).ToString("X").ToLower().PadLeft(offsetLength, '0');
+                offsetPart = (i + Math.Abs(bytes.Offset)).ToString("X").ToLower().PadLeft(offsetLength, '0');
 
                 for (int j = 0; j < bytesPerLine; j++)
                 {
@@ -371,7 +414,7 @@ namespace hexe
                     }
                     else
                     {
-                        byte b = bytes[i + j];
+                        byte b = bytes.Data[i + j];
 
                         string newHexPart = string.Empty;
 
@@ -394,20 +437,19 @@ namespace hexe
         }
 
 
-
-
-        public static int Search(byte[] src, byte[] pattern)
+        // based on https://stackoverflow.com/a/38625726
+        public static long Find(byte[] needle, byte[] haystack, long offset = 0)
         {
-            int maxFirstCharSlot = src.Length - pattern.Length + 1;
-            for (int i = 0; i < maxFirstCharSlot; i++)
+            int c = haystack.Length - needle.Length + 1;
+            for (long i = offset; i < c; i++)
             {
-                if (src[i] != pattern[0]) // compare only first byte
+                if (haystack[i] != needle[0]) // compare only first byte
                     continue;
 
                 // found a match on first byte, now try to match rest of the pattern
-                for (int j = pattern.Length - 1; j >= 1; j--)
+                for (int j = needle.Length - 1; j >= 1; j--)
                 {
-                    if (src[i + j] != pattern[j]) break;
+                    if (haystack[i + j] != needle[j]) break;
                     if (j == 1) return i;
                 }
             }
@@ -457,6 +499,7 @@ namespace hexe
         }
 
         /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
+        /*
         public static void HexDump2(byte[] bytes)
         {
             if (bytes == null) return;
@@ -512,5 +555,6 @@ namespace hexe
             }
             //return result.ToString();
         }
+        */
     }
 }

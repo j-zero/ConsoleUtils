@@ -20,7 +20,7 @@ namespace gremlins
         static void Main(string[] args)
         {
             cmd = new CmdParser(args)
-            { // Todo: is default[verb|parameter]
+            { 
 
                 { "cut", "c", CmdCommandTypes.PARAMETER, 
                     new CmdParameters() {

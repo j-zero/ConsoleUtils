@@ -67,7 +67,7 @@ public class CmdOption
     public CmdParameters Parameters { get; set; }
     public CmdParameters Values { get; set; }
     public string Description { get; set; }
-
+    public int Count { get; set; }
     public bool WasUserSet { get; set; }
 
     public CmdOption(string Name)
@@ -80,76 +80,80 @@ public class CmdOption
         this.ShortName = Shortname;
         this.CmdType = CmdType;
         this.Parameters = CmdParams;
-        this.Values = CmdParams;
+        this.Values = new CmdParameters();
         this.Description = Description;
+
+        InitDefaultValues();
+    }
+
+    public void InitDefaultValues()
+    {
+        //this.Values.Add(new CmdParameters());
+        this.Values.AddRange(this.Parameters);
     }
 
     public long Long
     {
-        get { return this.Values.Select(x => x.IntValue).Single(); }
+        get { return Longs.Single(); }
     }
     public string String
     {
-        get { return this.Values.Where(x => x.String != null).Select(x => x.String).Single(); }
+        get { return Strings.Single(); }
     }
     public bool Bool
     {
-        get { return this.Values.Select(x => x.BoolValue).Single(); }
+        get { return Bools.Single(); }
     }
     public decimal Decimal
     {
-        get { return this.Values.Select(x => x.DecimalValue).Single(); }
+        get { return Decimals.Single(); }
     }
 
     public long[] Longs
     {
-        get { return this.Values.Select(x => x.IntValue).ToArray(); }
+        get { return GetLongs(); }
     }
     public string[] Strings
     {
-        get { return this.Values.Where(x=> x.String != null).Select(x => x.String).ToArray(); }
+        get { return GetStrings(); }
     }
 
     public bool[] Bools
     {
-        get { return this.Values.Select(x => x.BoolValue).ToArray(); }
+        get { return GetBools(); }
     }
 
     public decimal[] Decimals
     {
-        get { return this.Values.Select(x => x.DecimalValue).ToArray(); }
+        get { return GetDecimals(); }
     }
 
-    public long GetLong(int index)
+    public long[] GetLongs()
     {
-        if (index < this.Values.Count)
-            return this.Values[index].IntValue;
-        else
-            return 0;
+        return this.Values.Select(x => x.IntValue).ToArray(); 
     }
 
-    public bool GetBool(int index)
+    public bool[] GetBools()
     {
-        if (index < this.Values.Count)
-            return this.Values[index].BoolValue;
-        else
-            return false;
+        
+        try
+        {
+            return this.Values.Select(x => x.BoolValue).ToArray();
+        }
+        catch
+        {
+            return new bool[] { false };
+        }
     }
 
-    public string GetString(int index)
+    public string[] GetStrings()
     {
-        if (index < this.Values.Count)
-            return this.Values[index].String;
-        else
-            return null;
+        return this.Values.Where(x => x.String != null).Select(x => x.String).ToArray();
     }
 
-    public decimal GetDecimal(int index)
+    public decimal[] GetDecimals()
     {
-        if (index < this.Values.Count)
-            return this.Values[index].DecimalValue;
-        else
-            return 0;
+        return this.Values.Select(x => x.DecimalValue).ToArray();
     }
 
 }
@@ -171,7 +175,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
     public bool HasFlag(string flag)
     {
-        return this[flag].GetBool(0);
+        return this[flag].Bool;
     }
 
     public bool IsParameterNullOrEmpty(string parameter)
@@ -265,11 +269,18 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 string expectedParamsString = string.Join(", ", arg.Parameters.Select(x => x.Type.ToString()).ToArray());
 
                 arg.WasUserSet = true;
+                
+
+                /*
+                if (arg.CmdType != CmdCommandTypes.MULTIPE_PARAMETER)
+                    this[currentArgument].Values.Add(r);
+                */
+
 
                 if (arg.CmdType == CmdCommandTypes.FLAG)
                 {
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
-                    this[currentArgument].Parameters.Add(cmdParam);
+                    this[currentArgument].Values[0] = cmdParam;
                 }
                 else
                 {
@@ -325,15 +336,29 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                             r.Value = f;
                         }
 
-                        if (i < this[currentArgument].Values.Count)
+                        //if (i < this[currentArgument].Values.Count)
+                        //this[currentArgument].Values[i] = r;
+                        if (arg.CmdType == CmdCommandTypes.MULTIPE_PARAMETER)
+                        {   if(this[currentArgument].Count == 0)
+                                this[currentArgument].Values[i] = r;
+                            else
+                            { 
+                                this[currentArgument].Values.Add(r);
+                            }
+                                
+
+                        }
+                        else if (this[currentArgument].Values.Count == 1)
+                        {
                             this[currentArgument].Values[i] = r;
-                        else if (i > this[currentArgument].Values.Count - 1 && arg.CmdType == CmdCommandTypes.MULTIPE_PARAMETER)
-                            this[currentArgument].Values.Add(r);
+                        }
                         else
-                            throw new ArgumentException("multiple parameter fuckup!");
+                            throw new ArgumentException($"Multiple parameter fuckup @\"{currentArgument}\"!");
+
+                        
                     }
 
-
+                    this[currentArgument].Count++;
                 }
             } 
             else if (inputArgument.StartsWith(_longParamPrefix) || inputArgument.StartsWith(_shortParamPrefix)){
@@ -363,7 +388,13 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
     public new CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, string Description)
     {
-        base.Add(new CmdOption(Name, Shortname, CmdType, new CmdParameters(), Description));
+        CmdParameters defParam = new CmdParameters();
+
+        if (CmdType == CmdCommandTypes.FLAG)
+            base.Add(new CmdOption(Name, Shortname, CmdType, new CmdParameters() { { CmdParameterTypes.BOOL, false } }, Description));
+        else
+            base.Add(new CmdOption(Name, Shortname, CmdType, new CmdParameters(), Description));
+        
         return this;
     }
 

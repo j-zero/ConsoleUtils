@@ -183,6 +183,10 @@ namespace hexe
                         foreach(Selection s in parts)
                             data.Add(ReadFile(path, s.Offset, s.Length));
                     }
+                    else
+                    {
+                        ShowHelp();
+                    }
                 }
 
 
@@ -502,6 +506,20 @@ namespace hexe
                 }
                 Console.WriteLine(line);
             }
+        }
+
+        static void ShowHelp()
+        {
+            Console.WriteLine($"hexe, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file}}");
+            Console.WriteLine($"Options:");
+            foreach (CmdOption c in cmd.OrderBy(x => x.Name))
+            {
+                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                Console.WriteLine(l);
+            }
+            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+            Environment.Exit(0);
         }
 
         /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array

@@ -77,16 +77,7 @@ namespace gremlins
                 // HELP
                 if (cmd.HasFlag("help"))
                 {
-                    Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
-                    Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
-                    Console.WriteLine($"Options:");
-                    foreach (CmdOption c in cmd.OrderBy(x => x.Name))
-                    {
-                        string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
-                        Console.WriteLine(l);
-                    }
-                    //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
-                    Environment.Exit(0);
+                    ShowHelp();
                 }
 
                 string[] lines = new string[0];
@@ -125,8 +116,13 @@ namespace gremlins
                         string path = cmd["file"].Strings[0];
                         lines = File.ReadAllText(path).Split('\n');
                     }
-                }
+                    else
+                    {
+                        ShowHelp(); 
+                        // Exit
+                    }
 
+                }
 
                 GremlinDump(lines, (int)offset, (int)length);
             }
@@ -250,6 +246,20 @@ namespace gremlins
                        );
                 }
             }
+        }
+
+        static void ShowHelp()
+        {
+            Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
+            Console.WriteLine($"Options:");
+            foreach (CmdOption c in cmd.OrderBy(x => x.Name))
+            {
+                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                Console.WriteLine(l);
+            }
+            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+            Environment.Exit(0);
         }
     }
 }

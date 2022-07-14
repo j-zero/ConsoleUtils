@@ -53,10 +53,10 @@ namespace gremlins
                 { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
                 { "no-space", "", CmdCommandTypes.FLAG, "Don't mark space" },
                 { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
-
+                { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
 
-                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers" },
+                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors" },
 
                 { "regex", "r", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
@@ -68,7 +68,7 @@ namespace gremlins
 
                 
             };
-
+   
             cmd.DefaultParameter = "file";
             try
             {
@@ -79,6 +79,9 @@ namespace gremlins
                 {
                     ShowHelp();
                 }
+
+                if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain"))
+                    Pastel.ConsoleExtensions.Disable();
 
                 string[] lines = new string[0];
 
@@ -101,6 +104,7 @@ namespace gremlins
 
                 if (Console.IsInputRedirected)
                 {
+                    Pastel.ConsoleExtensions.Disable();
                     using (Stream s = Console.OpenStandardInput())
                     {
                         using (StreamReader reader = new StreamReader(s))

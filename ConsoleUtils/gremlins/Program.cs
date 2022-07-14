@@ -14,8 +14,11 @@ namespace gremlins
     {
         static CmdParser cmd;
         static int defaultLineCount = 10;
-
         static char nonPrintableChar = '·';
+        static char[] trimArray = new char[] { ' ', '\t', '\r' };
+
+        static string outputFile = null;
+
 
         static void Main(string[] args)
         {
@@ -55,18 +58,31 @@ namespace gremlins
                 { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
+                { "no-hex", "", CmdCommandTypes.FLAG, "Don't show unprintable chars as hex values" },
 
-                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors" },
+                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors, --no-hex" },
 
                 { "regex", "r", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
-                    }, "Additional regex for gremlin detection" }, 
+                    }, "Additional regex for gremlin detection" },
+
+                { "regex-only", "R", CmdCommandTypes.FLAG, "Only use regex detection" },
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
-                    }, "File to read" }
+                    }, "File to read" },
 
-                
+                { "output", "o", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Output file" },
+
+                { "output-append", "A", CmdCommandTypes.FLAG, "Append to output file" },
+                { "trim-end", "", CmdCommandTypes.FLAG, "Trim spaces at end of line for output" },
+                { "trim-start", "", CmdCommandTypes.FLAG, "Trim spaces at start of line for output" },
+                { "trim", "", CmdCommandTypes.FLAG, "Trim spaces at start/end of line for output" },
+
+                { "remove-cr", "", CmdCommandTypes.FLAG, "Remove carrige return in output" }
+
             };
    
             cmd.DefaultParameter = "file";
@@ -80,7 +96,7 @@ namespace gremlins
                     ShowHelp();
                 }
 
-                if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain"))
+                if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain") || cmd.HasFlag("output") || Console.IsOutputRedirected)
                     Pastel.ConsoleExtensions.Disable();
 
                 string[] lines = new string[0];
@@ -126,6 +142,13 @@ namespace gremlins
                         // Exit
                     }
 
+                }
+
+                if (cmd["output"].Strings.Length > 0 && cmd["output"].Strings[0] != null)
+                {  // output file
+                    outputFile = cmd["output"].Strings[0];
+                    if(!cmd.HasFlag("output-append"))
+                        System.IO.File.WriteAllText(outputFile, string.Empty); 
                 }
 
                 GremlinDump(lines, (int)offset, (int)length);
@@ -178,8 +201,11 @@ namespace gremlins
                 string newLine = "";
                
                 bool lineEndsWithSpace = lines[l].EndsWith("\t\r") || lines[l].EndsWith(" \r") || lines[l].EndsWith(" ") || lines[l].EndsWith("\t");
+                bool isGremlin = false;
 
-                bool isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(lines[l]) || Regex.IsMatch(lines[l], @"^\s*$"));
+                if (!cmd.HasFlag("regex-only"))
+                    isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(lines[l]) || Regex.IsMatch(lines[l], @"^\s*$"));
+
                 bool isCustomGremlin = false;
 
                 //if ((l == lastLine - 1) && (lines[l] == string.Empty))
@@ -189,38 +215,55 @@ namespace gremlins
 
                 //string l = line.Replace("\r", "\\r".Pastel("80ff80"));
 
+                string line = lines[l];
+                bool hadCR = line.EndsWith("\r");
 
+                if (cmd.HasFlag("trim-end"))
+                    line = line.TrimEnd(trimArray);
+                if (cmd.HasFlag("trim-start"))
+                    line = line.TrimStart(trimArray);
+                if (cmd.HasFlag("trim"))
+                    line = line.Trim(trimArray);
 
-                foreach (char c in lines[l])
+                bool hasCR = line.EndsWith("\r");
+
+                if (hadCR && !hasCR) // add CR if it was removed
+                    line += "\r";
+
+                if (cmd.HasFlag("remove-cr"))
+                    line = line.TrimEnd('\r');
+
+                foreach (char c in line)
                 {
                     int i = (int)c;
                     string color = ColorTheme.GetColor(i, true);
+
                     //color = "9CDCFE";
-
-                    if (!isGremlin)
+                    if (!cmd.HasFlag("regex-only"))
                     {
-                        if(utf8Gremlin)
-                        //                                                LF           CR           TAB
-                            isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
-                        else
-                            isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
-
+                        if (!isGremlin)
+                        {
+                            if (utf8Gremlin)
+                                //                                                LF           CR           TAB
+                                isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
+                            else
+                                isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
+                        }
                     }
+
                     if (i == 0x0d)    // CR
                         newLine += ((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x09)    // Tab
                         newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x20)    // Space
                         newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor));
-                    else if (i > 255)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
-                    else if (i < 32)    // UTF-8
-                        newLine += ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
+                    else if ((i < 32) || (i > 255))    // Unprintable (control chars, UTF-8, etc.)
+                        newLine += (cmd.HasFlag("plain") || cmd.HasFlag("no-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2);
                     else
                         newLine += ($"{c}".Pastel(color));
 
                 }
-
+                
                 if (cmd.Exists("regex"))
                 {   /* Doesn't work because of coloring every character before
                     Regex r = new Regex(cmd["regex"].Strings[0]);
@@ -245,10 +288,22 @@ namespace gremlins
                     if (isCustomGremlin)
                         lineColor = ColorTheme.HighLight2;
                     string strLineNumber = lineNumber.ToString().PadLeft(lineNumberLength, '0').Pastel(lineColor);
-                    Console.Write(
+                    Write(
                         (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"
                        );
                 }
+            }
+        }
+
+        static void Write(string output)
+        {
+            if (outputFile != null)
+            {
+                File.AppendAllText(outputFile, output);
+            }
+            else
+            {
+                Console.Write(output);
             }
         }
 

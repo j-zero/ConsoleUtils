@@ -343,6 +343,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                         }
                         else if (r.Type == CmdParameterTypes.STRING)
                         {
+                            r.BoolValue = f != null;
                             r.Value = f;
                         }
 

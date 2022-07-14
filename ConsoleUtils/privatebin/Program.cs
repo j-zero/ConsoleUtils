@@ -60,7 +60,7 @@ namespace privatebin
 
             byte[] pData = System.Text.Encoding.UTF8.GetBytes(pastedata);
 
-            $ciphterText = AESGCM.GcmEncrypt(pData,key, nonce, tag,
+            //ciphterText = AESGCM.GcmEncrypt(pData,key, nonce, tag,
 
 
             Console.WriteLine(passhash);

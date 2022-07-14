@@ -1,12 +1,15 @@
 ﻿using System;
+using System.IO;
 
 static class Program
 {
     [STAThread]
     static void Main(string[] args)
     {
+
         if (args.Length > 0) {
-            string f = args[0];
+            var f = Environment.CommandLine.Replace("\"" + Environment.GetCommandLineArgs()[0] + "\"", "").TrimStart();
+            //string f = args[0];
             if (f == "--help")
             {
                 Console.Write($"Usage: open [file|url]\nIf no parameter is given, the current directory will be opened.");
@@ -16,6 +19,7 @@ static class Program
             {
                 try
                 {
+                    
                     System.Diagnostics.Process.Start(f);
                 }
                 catch (System.ComponentModel.Win32Exception ex)

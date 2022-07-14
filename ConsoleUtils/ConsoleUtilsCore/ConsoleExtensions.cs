@@ -197,7 +197,8 @@ namespace Pastel
         /// <param name="hexColor">The color to use on the specified string.<para>Supported format: [#]RRGGBB.</para></param>
         public static string Pastel(this string input, string hexColor)
         {
-            return _hexColorFormatFuncs[_enabled][ColorPlane.Foreground](input, hexColor);
+            string result = _hexColorFormatFuncs[_enabled][ColorPlane.Foreground](input, hexColor);
+            return result;
         }
 
 

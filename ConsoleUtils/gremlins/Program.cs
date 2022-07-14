@@ -47,8 +47,8 @@ namespace gremlins
 
                 
                 { "only-non-ascii", "", CmdCommandTypes.FLAG, "Everything above 0xff is gremlin" },
-                { "empty-lines", "", CmdCommandTypes.FLAG, "Parse empty lines as gremlins" },
-                { "no-space-on-line-end", "", CmdCommandTypes.FLAG, "Parse spaces on line end not as gremlin" },
+                { "empty-lines", "E", CmdCommandTypes.FLAG, "Parse empty lines as gremlins" },
+                { "no-space-on-line-end", "S", CmdCommandTypes.FLAG, "Parse spaces on line end not as gremlin" },
 
                 { "all", "a", CmdCommandTypes.FLAG, "Show all lines" },
                 { "invert", "v", CmdCommandTypes.FLAG, "Show all lines but no gremlins" },
@@ -77,11 +77,12 @@ namespace gremlins
                     }, "Output file" },
 
                 { "output-append", "A", CmdCommandTypes.FLAG, "Append to output file" },
+
                 { "trim-end", "", CmdCommandTypes.FLAG, "Trim spaces at end of line for output" },
                 { "trim-start", "", CmdCommandTypes.FLAG, "Trim spaces at start of line for output" },
                 { "trim", "", CmdCommandTypes.FLAG, "Trim spaces at start/end of line for output" },
 
-                { "remove-cr", "", CmdCommandTypes.FLAG, "Remove carrige return in output" }
+                { "remove-cr", "C", CmdCommandTypes.FLAG, "Remove carrige return in output" }
 
             };
    
@@ -199,12 +200,12 @@ namespace gremlins
             for (int l = offset; l < lastLine; l++)
             {
                 string newLine = "";
-               
-                bool lineEndsWithSpace = lines[l].EndsWith("\t\r") || lines[l].EndsWith(" \r") || lines[l].EndsWith(" ") || lines[l].EndsWith("\t");
+                string line = lines[l];
+                bool lineEndsWithSpace = line.EndsWith("\t\r") || line.EndsWith(" \r") || line.EndsWith(" ") || line.EndsWith("\t");
                 bool isGremlin = false;
 
                 if (!cmd.HasFlag("regex-only"))
-                    isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(lines[l]) || Regex.IsMatch(lines[l], @"^\s*$"));
+                    isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(line) || Regex.IsMatch(line, @"^\s*$"));
 
                 bool isCustomGremlin = false;
 
@@ -215,7 +216,7 @@ namespace gremlins
 
                 //string l = line.Replace("\r", "\\r".Pastel("80ff80"));
 
-                string line = lines[l];
+               
                 bool hadCR = line.EndsWith("\r");
 
                 if (cmd.HasFlag("trim-end"))
@@ -265,16 +266,7 @@ namespace gremlins
                 }
                 
                 if (cmd.Exists("regex"))
-                {   /* Doesn't work because of coloring every character before
-                    Regex r = new Regex(cmd["regex"].Strings[0]);
-                    isCustomGremlin = r.IsMatch(lines[l]);
-
-                    
-                    foreach (Match match in r.Matches(lines[l]))
-                    {
-                        newLine = lines[l].Replace(match.Value, match.Value.Pastel(ColorTheme.HighLight2));
-                    }
-                    */
+                {   
                     foreach(string pattern in cmd["regex"].Strings)
                         isCustomGremlin |= Regex.IsMatch(lines[l], pattern);
                     if (!isGremlin)

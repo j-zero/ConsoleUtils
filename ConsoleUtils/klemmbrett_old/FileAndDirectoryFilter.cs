@@ -74,22 +74,6 @@ namespace klemmbrett
             }
             return result;
         }
-        private static void foo(string[] args)
-        {
-            List<string> df = new List<string>();
-
-            string[] f = Directory.GetFiles(Environment.CurrentDirectory, args[0]);
-            string[] d = Directory.GetDirectories(Environment.CurrentDirectory, args[0]);
-
-            df.AddRange(f);
-            df.AddRange(d);
-
-
-            foreach (var s in df)
-            {
-                Console.WriteLine(s);
-            }
-        }
 
     }
 }

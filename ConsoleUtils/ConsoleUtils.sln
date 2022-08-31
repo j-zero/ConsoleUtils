@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "open", "open\open.csproj", "{A384871A-614B-4026-AF27-8133AD04F1BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett", "klemmbrett\klemmbrett.csproj", "{0BC5D1C1-8D35-4093-822E-3CADAE186708}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett_old", "klemmbrett_old\klemmbrett_old.csproj", "{0BC5D1C1-8D35-4093-822E-3CADAE186708}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "file", "file\file.csproj", "{8F3C21D0-66C7-4B27-85EC-25A8546AA72D}"
 EndProject
@@ -24,6 +24,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gremlins", "gremlins\gremlins.csproj", "{F6556EE2-3B76-4B9F-9163-586D4573714F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "privatebin", "privatebin\privatebin.csproj", "{4F32AAF8-F7BB-4DE0-84B5-6416C1D75433}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "touch", "touch\touch.csproj", "{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett", "klemmbrett\klemmbrett.csproj", "{65A64087-F2D5-4824-A181-90701A71A0F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "list", "l\list.csproj", "{81455DB7-D77C-4903-BF79-DFE46EC810C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +81,18 @@ Global
 		{4F32AAF8-F7BB-4DE0-84B5-6416C1D75433}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F32AAF8-F7BB-4DE0-84B5-6416C1D75433}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F32AAF8-F7BB-4DE0-84B5-6416C1D75433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65A64087-F2D5-4824-A181-90701A71A0F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65A64087-F2D5-4824-A181-90701A71A0F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65A64087-F2D5-4824-A181-90701A71A0F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65A64087-F2D5-4824-A181-90701A71A0F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81455DB7-D77C-4903-BF79-DFE46EC810C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81455DB7-D77C-4903-BF79-DFE46EC810C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81455DB7-D77C-4903-BF79-DFE46EC810C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81455DB7-D77C-4903-BF79-DFE46EC810C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

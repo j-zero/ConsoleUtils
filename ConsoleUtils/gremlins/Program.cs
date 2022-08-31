@@ -45,7 +45,7 @@ namespace gremlins
                     $"Number of lines for head/tail. Default: {defaultLineCount}"
                 },
 
-                
+
                 { "only-non-ascii", "", CmdCommandTypes.FLAG, "Everything above 0xff is gremlin" },
                 { "empty-lines", "E", CmdCommandTypes.FLAG, "Parse empty lines as gremlins" },
                 { "no-space-on-line-end", "S", CmdCommandTypes.FLAG, "Parse spaces on line end not as gremlin" },
@@ -96,6 +96,8 @@ namespace gremlins
                 {
                     ShowHelp();
                 }
+
+                
 
                 if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain") || cmd.HasFlag("output") || Console.IsOutputRedirected)
                     Pastel.ConsoleExtensions.Disable();

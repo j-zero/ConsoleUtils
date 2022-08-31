@@ -7,6 +7,7 @@ namespace google
     {
         static void Main(string[] args)
         {
+            var f = Environment.CommandLine.Replace("\"" + Environment.GetCommandLineArgs()[0] + "\"", "").TrimStart();
             if (args.Length > 0)
                 google(string.Join("+", args));
             else

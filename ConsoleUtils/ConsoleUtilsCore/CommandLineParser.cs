@@ -69,6 +69,7 @@ public class CmdOption
     public string Description { get; set; }
     public int Count { get; set; }
     public bool WasUserSet { get; set; }
+    public bool IsDefaultVerb { get; set; }
 
     public CmdOption(string Name)
     {
@@ -89,6 +90,10 @@ public class CmdOption
     public void InitDefaultValues()
     {
         //this.Values.Add(new CmdParameters());
+        if(CmdType == CmdCommandTypes.VERB)
+        {
+            ;
+        }
         this.Values.AddRange(this.Parameters);
     }
     public long Int
@@ -165,13 +170,17 @@ public class CmdOption
     {
         return this.Values.Select(x => x.DecimalValue).ToArray();
     }
-
+    public bool IsVerb
+    {
+        get { return this.CmdType == CmdCommandTypes.VERB; }
+    }
 }
 
 public class CmdParser : KeyedCollection<string, CmdOption>
 {
     private string _longParamPrefix = "--";
     private string _shortParamPrefix = "-";
+    private string _defaultVerb = "";
 
     private Queue<string> fifo = new Queue<string>();
 
@@ -186,6 +195,10 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     public bool HasFlag(string flag)
     {
         return this[flag].Bool;
+    }
+    public bool HasVerb(string verb)
+    {
+        return this.Verbs.Contains(verb);
     }
 
     public bool IsParameterNullOrEmpty(string parameter)
@@ -206,9 +219,34 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     public string[] Verbs
     {
         get
-        {   
-            string[] verbs = this.Where(c => c.CmdType == CmdCommandTypes.VERB && c.WasUserSet).Select(x => x.Name).ToArray();
+        {
+            
+            string[] verbs = this.Where(c => (c.CmdType == CmdCommandTypes.VERB && c.WasUserSet)).Select(x => x.Name).ToArray();
             return verbs.Length > 0 ? verbs : DefaultVerb != null ? new string[] { DefaultVerb } : new string[0];
+        }
+    }
+    public IEnumerable<CmdOption> SelectOptions
+    {
+        get
+        {
+            return this.Where(c => c.CmdType != CmdCommandTypes.VERB);
+        }
+    }
+    public IEnumerable<CmdOption> SelectVerbs
+    {
+        get
+        {
+            return this.Where(c => c.CmdType == CmdCommandTypes.VERB);
+        }
+    }
+
+    public string FirstVerb
+    {
+        get
+        {
+            if (this.Verbs.Length > 0)
+                return this.Verbs[0];
+            return null;
         }
     }
 
@@ -379,6 +417,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
             {
                 if(this.DefaultParameter != null)
                 {
+
                     this[this.DefaultParameter].Values.Add(CmdParameterTypes.STRING, currentArgument);
                 }                    
             }

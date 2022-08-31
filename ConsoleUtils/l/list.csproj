@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{65A64087-F2D5-4824-A181-90701A71A0F1}</ProjectGuid>
+    <ProjectGuid>{81455DB7-D77C-4903-BF79-DFE46EC810C7}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>klemmbrett</RootNamespace>
-    <AssemblyName>kb</AssemblyName>
+    <RootNamespace>list</RootNamespace>
+    <AssemblyName>list</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClipboardHelper.cs" />
+    <Compile Include="EntryInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

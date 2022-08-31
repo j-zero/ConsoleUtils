@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{65A64087-F2D5-4824-A181-90701A71A0F1}</ProjectGuid>
+    <ProjectGuid>{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>klemmbrett</RootNamespace>
-    <AssemblyName>kb</AssemblyName>
+    <RootNamespace>touch</RootNamespace>
+    <AssemblyName>touch</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -35,7 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,18 +43,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClipboardHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ConsoleUtilsCore\ConsoleUtilsCore.csproj">
-      <Project>{f2eee824-5019-44f2-a06a-f7aef10c2549}</Project>
-      <Name>ConsoleUtilsCore</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

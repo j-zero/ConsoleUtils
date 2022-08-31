@@ -158,11 +158,7 @@ namespace Pastel
         }
 
 
-        
-
-
-
-
+       
         /// <summary>
         /// Enables any future console color output produced by Pastel.
         /// </summary>
@@ -234,6 +230,7 @@ namespace Pastel
 
             return closedString;
         }
+
 
 
 

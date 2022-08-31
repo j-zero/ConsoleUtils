@@ -39,7 +39,7 @@ namespace hexe
                 { "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
                 { "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
 
-                { "short", null, CmdCommandTypes.FLAG, $"Show head and tail" },
+                { "short", "s", CmdCommandTypes.FLAG, $"Show head and tail" },
                 { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
 
                 { "cut", "c", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
@@ -195,8 +195,8 @@ namespace hexe
                 {
                     if (cmd.HasFlag("bin"))
                     {
-                        int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
-                        BinDump(data[i].Data, binLineLength);
+                        //int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                        ConsoleHelper.BinDump(data[i].Data);
                     }
                     else
                     {
@@ -319,6 +319,7 @@ namespace hexe
 
             return lineLength;
         }
+        /*
         public static void BinDump(byte[] bytes, int lineLength)
         {
             if (bytes == null) return;
@@ -342,7 +343,7 @@ namespace hexe
                 Console.WriteLine(line);
             }
         }
-
+        */
         
 
         public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0)

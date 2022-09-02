@@ -41,6 +41,15 @@ namespace list
                 return !IsLink ? null : GetFinalPathName(this.FullPath).Replace(@"\\?\",""); 
             } }
         public string ColorString {  get { return _GetColorString(); } }
+        public string BaseDirectory { get {
+
+                if (this.IsDirectory)
+                    return new DirectoryInfo(this.FullPath).Parent.FullName;
+                else if (this.IsFile)
+                    return new FileInfo(this.FullPath).Directory.FullName;
+                else
+                    return null;
+        } }
 
         public string Extension { get
             {

@@ -36,7 +36,7 @@ public class FileAndDirectoryFilter
         return new string[] { base_directory, pattern };
     }
 
-    private static string[] GetMatchingItems(string[] pattern, string base_directory = null)
+    private static string[] GetMatchingItems(string[] pattern, string base_directory)
     {
         string current_pattern = pattern[0];
         List<string> entries = new List<string>();
@@ -50,12 +50,23 @@ public class FileAndDirectoryFilter
             }
         }
         else
-        {
+        { 
             string[] dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
             string[] files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
 
-            foreach (string d in dirs) // todo, do something??
-                entries.Add(d);
+            foreach (string d in dirs)
+            {  // todo, do something??
+                if (current_pattern == "*")
+                {
+                    //entries.AddRange(GetMatchingItems(new string[] { current_pattern }, d));
+                    string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+                    string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+                    entries.AddRange(sub_dirs);
+                    entries.AddRange(sub_files);
+                }
+                else
+                    entries.Add(Path.GetFullPath(d));
+            }
             foreach (string f in files) // todo, do something??
                 entries.Add(f);
 

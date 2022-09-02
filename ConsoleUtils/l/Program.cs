@@ -10,11 +10,11 @@ namespace list
     {
         static CmdParser cmd;
         static string path = null;
-        static List<EntryInfo> entries;
+        static Dictionary<string, List<EntryInfo>> entries;
 
         static void Main(string[] args)
         {
-            entries = new List<EntryInfo>();
+            entries = new Dictionary<string, List<EntryInfo>>();
             cmd = new CmdParser(args)
             {
                 {"list","l", CmdCommandTypes.FLAG, "List" },
@@ -40,44 +40,42 @@ namespace list
 
             foreach (string e in found)
             {
-                entries.Add(new EntryInfo(e));
+                EntryInfo ei = new EntryInfo(e);
+                if (!entries.ContainsKey(ei.BaseDirectory))
+                    entries.Add(ei.BaseDirectory, new List<EntryInfo>());
+                entries[ei.BaseDirectory].Add(ei);
             }
 
-            LongList();
+            foreach (KeyValuePair<string, List<EntryInfo>> ei in entries)
+            {
+                Console.WriteLine(ei.Key);
+                LongList(ei.Value);
+            }
+            //LongList();
             ;
         }
 
-        static List<EntryInfo> GetEntries(string Path)
-        {
-            List<EntryInfo> result = new List<EntryInfo>();
 
-            foreach (string d in Directory.GetDirectories(Path))
-                result.Add(new EntryInfo(d));
-            foreach (string f in Directory.GetFiles(Path))
-                result.Add(new EntryInfo(f));
-
-            return result;
-        }
-
-        static void SimpleList()
+        static void SimpleList(List<EntryInfo> ei)
         {
             int width = Console.WindowWidth;
-            foreach(EntryInfo e in entries.OrderBy(o => o.Name).ToList())
-            {
-                if (!e.HasHiddenAttribute || true)
+            //foreach(KeyValuePair<string, List<EntryInfo>> ei in entries)
+                foreach(EntryInfo e in ei.OrderBy(o => o.Name).ToList())
                 {
-                    if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
+                    if (!e.HasHiddenAttribute || true)
+                    {
+                        if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
 
-                    Console.Write(e.Name.Pastel(e.ColorString));
-                    /*
-                    if (e.LinkTarget != null)
-                        Console.Write(" -> " + PathHelper.GetRelativePath(path,e.LinkTarget));
-                    */
-                    Console.Write("");
+                        Console.Write(e.Name.Pastel(e.ColorString));
+                        /*
+                        if (e.LinkTarget != null)
+                            Console.Write(" -> " + PathHelper.GetRelativePath(path,e.LinkTarget));
+                        */
+                        Console.Write("\n");
+                    }
                 }
-            }
         }
-        static void LongList()
+        static void LongList(List<EntryInfo> ei)
         {
             /*
                 d - Directory
@@ -88,35 +86,36 @@ namespace list
                 l - Reparse point, symlink, etc.
             */
             int width = Console.WindowWidth;
-            foreach (EntryInfo e in entries.OrderBy(o => o.Name).ToList())
-            {
-                if (!e.HasHiddenAttribute || true)
+            //foreach (KeyValuePair<string, List<EntryInfo>> ei in entries)
+                foreach (EntryInfo e in ei.OrderBy(o => o.Name).ToList())
                 {
-                    if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
+                    if (!e.HasHiddenAttribute || true)
+                    {
+                        if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
 
 
-                    //char[] mode = "------".ToCharArray();
+                        //char[] mode = "------".ToCharArray();
 
-                    string mode = "";
-                    string minus = "-".Pastel("#606060");
+                        string mode = "";
+                        string minus = "-".Pastel("#606060");
 
-                    mode += e.IsDirectory ? "d".Pastel(ColorTheme.Directory) : ".".Pastel(e.ColorString);
-                    mode += e.HasArchiveAttribute ? "a".Pastel("#ffd700") : minus;
-                    mode += !e.CanWrite ? "R".Pastel("#ff4500") : (e.HasReadOnlyAttribute ? "r".Pastel("#ff4500") : minus);
-                    mode += e.HasHiddenAttribute ? "h".Pastel("#606060") : minus;
-                    mode += e.HasSystemAttribute ? "s".Pastel("#ff8c00") : minus;
-                    mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
+                        mode += e.IsDirectory ? "d".Pastel(ColorTheme.Directory) : ".".Pastel(e.ColorString);
+                        mode += e.HasArchiveAttribute ? "a".Pastel("#ffd700") : minus;
+                        mode += !e.CanWrite ? "R".Pastel("#ff4500") : (e.HasReadOnlyAttribute ? "r".Pastel("#ff4500") : minus);
+                        mode += e.HasHiddenAttribute ? "h".Pastel("#606060") : minus;
+                        mode += e.HasSystemAttribute ? "s".Pastel("#ff8c00") : minus;
+                        mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
 
-                    Console.Write(mode + " ");
-                    Console.Write(e.Owner.Pastel("#ffd700") + "\t");
-                    Console.Write(e.Name.Pastel(e.ColorString));
+                        Console.Write(mode + " ");
+                        Console.Write(e.Owner.Pastel("#ffd700") + "\t");
+                        Console.Write(e.Name.Pastel(e.ColorString));
 
-                    if (e.LinkTarget != null)
-                        Console.Write(" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
+                        if (e.LinkTarget != null)
+                            Console.Write(" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
 
-                    Console.Write("\n");
+                        Console.Write("\n");
+                    }
                 }
-            }
         }
     }
 }

@@ -3,90 +3,92 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 public class FileAndDirectoryFilter
 {
-    public enum FileAndDirectoryMode
+    public static string[] GetFilesFromFilter(string filter)
     {
-        Files = 1,
-        Directories = 2,
-        ListDirectoryEntries = 4
+        var base_pat = SplitBaseDirAndPattern(filter);
+        var items = GetMatchingItems(base_pat[1].Split(Path.DirectorySeparatorChar), base_pat[0]);
+        return items;
     }
 
-    public static StringCollection Get(string[] paths, FileAndDirectoryMode mode)
+    private static string[] SplitBaseDirAndPattern(string InputPath)
     {
-        StringCollection result = new StringCollection();
-        string filter = null;
-        foreach (string path in paths)
+        string[] path_arr = InputPath.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+        string base_directory = path_arr[0];
+        int i = 1;
+        while (i < path_arr.Length)
         {
-
-            if (File.Exists(path) && (mode.HasFlag(FileAndDirectoryMode.Files) || mode.HasFlag(FileAndDirectoryMode.ListDirectoryEntries)))
-            {
-                result.Add(Path.GetFullPath(path));
-                return result;
-            }
-            else if (Directory.Exists(path) && mode.HasFlag(FileAndDirectoryMode.Directories) && !mode.HasFlag(FileAndDirectoryMode.ListDirectoryEntries))
-            {
-                result.Add(Path.GetFullPath(path));
-                return result;
-            }
+            string combined_path = base_directory + Path.DirectorySeparatorChar.ToString() + path_arr[i];
+            if (Directory.Exists(combined_path) && !combined_path.Contains('*') && !combined_path.Contains('?'))
+                base_directory = combined_path;
             else
+                break;
+            i++;
+        }
+        string pattern = string.Join(Path.DirectorySeparatorChar.ToString(), path_arr.Skip(i).ToArray());
+
+        if (!base_directory.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            base_directory += Path.DirectorySeparatorChar;
+
+        return new string[] { base_directory, pattern };
+    }
+
+    private static string[] GetMatchingItems(string[] pattern, string base_directory = null)
+    {
+        string current_pattern = pattern[0];
+        List<string> entries = new List<string>();
+
+        if (pattern.Length > 1) // mitten im pfad können keinen dateien stehen (außer archive)
+        {
+            string[] new_pattern = pattern.Skip(1).ToArray();
+            foreach (string d in Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)))
             {
-                string[] pathArr = path.Split('\\');
-                string dir = "";
-                if (!Directory.Exists(path))
-                {
-                    dir = string.Join(@"\", pathArr.Take(pathArr.Count() - 1).ToArray());
-                    filter = pathArr.Last();
-                }
-                else
-                {
-                    dir = path;
-                    filter = null;
-                }
-                if (dir == String.Empty)
-                    dir = Path.GetFullPath(Environment.CurrentDirectory);
-                else if (dir.Length == 2 && dir[1] == ':')      // driverletter
-                    dir += "\\*";
-                else
-                {
-                    try
-                    {
-                        dir = Path.GetFullPath(dir);
-                    }
-                    catch (Exception ex)
-                    {
-                        ;
-                    }
-                }
-
-                if (Directory.Exists(dir))
-                {
-                    //dir += @"\";
-
-                    string[] f;
-                    string[] d;
-                    if (filter != null)
-                    {
-                        f = Directory.GetFiles(dir, filter, SearchOption.TopDirectoryOnly);
-                        d = Directory.GetDirectories(dir, filter, SearchOption.TopDirectoryOnly);
-                    }
-                    else
-                    {
-                        f = Directory.GetFiles(dir);
-                        d = Directory.GetDirectories(dir);
-                    }
-                    result.AddRange(d);
-                    result.AddRange(f);
-                }
-                else
-                {
-                    // do nothing
-                }
-
-
+                entries.AddRange(GetMatchingItems(new_pattern, d));
             }
         }
-        return result;
+        else
+        {
+            string[] dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+            string[] files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+
+            foreach (string d in dirs) // todo, do something??
+                entries.Add(d);
+            foreach (string f in files) // todo, do something??
+                entries.Add(f);
+
+        }
+
+        return entries.ToArray();
     }
+
+    private static bool FileOrDirNameIsMatching(string FullPath, string Pattern)
+    {
+        bool match = false;
+        string Name = null;
+        if (Pattern == string.Empty)
+            return true;
+
+
+        DirectoryInfo directoryInfo = new DirectoryInfo(FullPath);
+        if (directoryInfo.Exists)
+            Name = directoryInfo.Name;
+        FileInfo fileInfo = new FileInfo(FullPath);
+        if (fileInfo.Exists)
+            Name = fileInfo.Name;
+
+        if (Name != null)
+            match = MatchWildCard(Pattern, Name);
+
+        return match;
+    }
+
+    private static bool MatchWildCard(string pattern, string value)
+    {
+        string p = "^" + Regex.Escape(pattern).Replace("\\?", ".").Replace("\\*", ".*") + "$";
+        return Regex.IsMatch(value, p, RegexOptions.IgnoreCase);
+    }
+
 }

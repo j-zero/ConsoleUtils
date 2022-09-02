@@ -36,7 +36,7 @@ namespace list
                 path = Environment.CurrentDirectory;
 
 
-            string[] found = FileAndDirectoryFilter.Get(new string[] { path }, FileAndDirectoryFilter.FileAndDirectoryMode.ListDirectoryEntries).Cast<string>().ToList().ToArray();
+            string[] found = FileAndDirectoryFilter.GetFilesFromFilter(path);
 
             foreach (string e in found)
             {

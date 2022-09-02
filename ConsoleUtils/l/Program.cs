@@ -108,10 +108,12 @@ namespace list
                     mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
 
                     Console.Write(mode + " ");
+                    Console.Write(e.Owner.Pastel("#ffd700") + "\t");
                     Console.Write(e.Name.Pastel(e.ColorString));
 
                     if (e.LinkTarget != null)
                         Console.Write(" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
+
                     Console.Write("\n");
                 }
             }

@@ -277,6 +277,16 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         while (fifo.Count > 0)
         {
             var inputArgument = fifo.Dequeue();
+
+            if(inputArgument.StartsWith(_shortParamPrefix) && (inputArgument.Length - _shortParamPrefix.Length > 1)) // multiple short arguments
+            {
+                string p = inputArgument.Substring(_shortParamPrefix.Length,inputArgument.Length - _shortParamPrefix.Length);
+                foreach (char c in p.ToCharArray())
+                    fifo.Enqueue($"{_shortParamPrefix}{c.ToString()}");
+
+                continue;
+            }
+
             var currentArgument = inputArgument;
 
             string parseKey = null;

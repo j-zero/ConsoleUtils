@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 public class FileAndDirectoryFilter
 {
-    public static string[] GetFilesFromFilter(string filter)
+    public static FilesystemEntryInfo[] GetFilesFromFilter(string filter)
     {
         var base_pat = SplitBaseDirAndPattern(filter);
         var items = GetMatchingItems(base_pat[1].Split(Path.DirectorySeparatorChar), base_pat[0]);
@@ -18,7 +18,12 @@ public class FileAndDirectoryFilter
     {
         string[] path_arr = InputPath.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
         string base_directory = path_arr[0];
+
+        if(!Directory.Exists(base_directory))
+            return new string[] { Environment.CurrentDirectory, InputPath };
+
         int i = 1;
+
         while (i < path_arr.Length)
         {
             string combined_path = base_directory + Path.DirectorySeparatorChar.ToString() + path_arr[i];
@@ -36,39 +41,111 @@ public class FileAndDirectoryFilter
         return new string[] { base_directory, pattern };
     }
 
-    private static string[] GetMatchingItems(string[] pattern, string base_directory)
+    private static FilesystemEntryInfo[] GetMatchingItems(string[] pattern, string base_directory)
     {
         string current_pattern = pattern[0];
-        List<string> entries = new List<string>();
+        List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
 
         if (pattern.Length > 1) // mitten im pfad können keinen dateien stehen (außer archive)
         {
+            SearchOption so = SearchOption.TopDirectoryOnly;
+            if (current_pattern == "**")
+                so = SearchOption.AllDirectories;
+
             string[] new_pattern = pattern.Skip(1).ToArray();
-            foreach (string d in Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)))
+            string[] dirs = new string[] { };
+
+                dirs = Directory.GetDirectories(base_directory, "*", so).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+            foreach (string d in dirs)
             {
                 entries.AddRange(GetMatchingItems(new_pattern, d));
             }
         }
         else
-        { 
-            string[] dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
-            string[] files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+        {
+            string[] dirs = new string[] {};
+            string[] files = new string[] { };
+            try
+            {
+                dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+                files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+            }
+            catch (Exception ex)
+            {
+                FilesystemEntryInfo fei = new FilesystemEntryInfo(base_directory);
+                fei.LastException = ex;
+                fei.Error = true;
+                entries.Add(fei);
+            }
+            
+
 
             foreach (string d in dirs)
             {  // todo, do something??
+                FilesystemEntryInfo fei = new FilesystemEntryInfo(d);
+
                 if (current_pattern == "*")
                 {
                     //entries.AddRange(GetMatchingItems(new string[] { current_pattern }, d));
-                    string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-                    string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-                    entries.AddRange(sub_dirs);
-                    entries.AddRange(sub_files);
+                    try
+                    {
+                        string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+                        string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+
+                        foreach (string ssd in sub_dirs)
+                            entries.Add(new FilesystemEntryInfo(ssd));
+                        foreach (string ssf in sub_files)
+                            entries.Add(new FilesystemEntryInfo(ssf));
+
+                    }
+                    catch (UnauthorizedAccessException uaae)
+                    {
+                        fei.LastException = uaae;
+                        fei.Error = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        fei.LastException = ex;
+                        fei.Error = true;
+                    }
+                }
+                else if (current_pattern == "**")
+                {
+                    //entries.AddRange(GetMatchingItems(new string[] { current_pattern }, d));
+                    try
+                    {
+                        string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+                        string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
+
+                        foreach (string ssd in sub_dirs)
+                            entries.Add(new FilesystemEntryInfo(ssd));
+                        foreach (string ssf in sub_files)
+                            entries.Add(new FilesystemEntryInfo(ssf));
+
+                    }
+                    catch (UnauthorizedAccessException uaae)
+                    {
+                        fei.LastException = uaae;
+                        fei.Error = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        fei.LastException = ex;
+                        fei.Error = true;
+                    }
                 }
                 else
-                    entries.Add(Path.GetFullPath(d));
+                {
+
+                    entries.Add(fei);
+                }
             }
-            foreach (string f in files) // todo, do something??
-                entries.Add(f);
+            foreach (string f in files) // todo, do something??{
+                entries.Add(new FilesystemEntryInfo(f));
+            
+
+        
+
 
         }
 

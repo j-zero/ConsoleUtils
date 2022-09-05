@@ -4,6 +4,7 @@ using System.Linq;
 
 public enum FileTypes
 {
+    Directory,
     Executable,
     Libraries,
     Config,

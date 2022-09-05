@@ -223,6 +223,9 @@ namespace Pastel
 
         private static string CloseNestedPastelStrings(string input, Color color, ColorPlane colorPlane)
         {
+            if (input == null)
+                return null;
+
             var closedString = _closeNestedPastelStringRegex1.Replace(input, _formatStringEnd);
 
                 closedString = _closeNestedPastelStringRegex2.Replace(closedString, $"{_formatStringEnd}$0");

@@ -74,8 +74,10 @@
     <Compile Include="CommandLineParser.cs" />
     <Compile Include="ConsoleExtensions.cs" />
     <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="FilesystemEntryInfo.cs" />
     <Compile Include="FileAndDirectoryFilter.cs" />
     <Compile Include="FileDefinitions.cs" />
+    <Compile Include="ListExtensions.cs" />
     <Compile Include="PathHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

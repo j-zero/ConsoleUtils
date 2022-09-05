@@ -6,7 +6,7 @@ public class ColorTheme
     //private string _colorExecutable = "";
     public static string File = "#DDDDDD";
     public static string Symlink = "#00CED1";
-    public static string UnknownFileType = "#696969";
+    public static string UnknownFileType = "#aaaaaa";
 
     public static string Default1 { get { return "9CDCFE"; } }
     public static string Default2 { get { return "569CD6"; } }

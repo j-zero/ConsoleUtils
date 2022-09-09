@@ -34,6 +34,22 @@ put files in the trash-bin instead of deleting them
 
 exa like file listing
 
+## subnet
+
+simple subnet calculator
+
+## touch
+
+touches files
+
+## free
+
+shows stuff
+
+## bits
+
+convert numbers
+
 ## ...
 
 and more... som may not work or not work for you

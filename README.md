@@ -10,6 +10,14 @@ Show strange characters in text files
 
 simple hex viewer
 
+## klemmbrett
+
+reimplementation of console clipboard utility (does not work)
+
+## klemmbrett_old
+
+console clipboard utility
+
 ## open
 
 open file/folder with default application

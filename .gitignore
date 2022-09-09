@@ -215,3 +215,6 @@ ModelManifest.xml
 *.pfx
 *.cer
 *.crt
+
+# old_stuff
+*_old

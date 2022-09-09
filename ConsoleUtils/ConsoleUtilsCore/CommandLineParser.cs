@@ -278,7 +278,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         {
             var inputArgument = fifo.Dequeue();
 
-            if(inputArgument.StartsWith(_shortParamPrefix) && (inputArgument.Length - _shortParamPrefix.Length > 1)) // multiple short arguments
+            if(inputArgument.StartsWith(_shortParamPrefix) && !inputArgument.StartsWith(_longParamPrefix) && (inputArgument.Length - _shortParamPrefix.Length > 1)) // multiple short arguments
             {
                 string p = inputArgument.Substring(_shortParamPrefix.Length,inputArgument.Length - _shortParamPrefix.Length);
                 foreach (char c in p.ToCharArray())
@@ -322,6 +322,9 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
             if (this.TryGetValue(currentArgument, out CmdOption arg))     // known command
             {
+                if(arg.IsVerb == false && IsVerb == true) // parse as verb, but is argument (e.g. "--help" vs. "help")
+                    throw new ArgumentException($"unknown verb \"{inputArgument}\"");
+
                 string name = arg.Name;
                 int parameterCount = arg.Parameters.Count;
                 string expectedParamsString = string.Join(", ", arg.Parameters.Select(x => x.Type.ToString()).ToArray());

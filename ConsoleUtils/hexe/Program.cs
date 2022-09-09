@@ -36,6 +36,7 @@ namespace hexe
 
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
+                { "help", "", CmdCommandTypes.FLAG, "Show this help." },
                 { "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
                 { "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
 
@@ -83,6 +84,9 @@ namespace hexe
             try
             {
                 cmd.Parse();
+
+                if (cmd.HasFlag("help"))
+                    ShowHelp();
 
                 noAscii = cmd.HasFlag("no-ascii");
                 noOffset = cmd.HasFlag("no-offset");

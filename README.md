@@ -1,6 +1,6 @@
 # ConsoleUtils
 
-Collection of some console utils for windows to do various tasks...
+Collection of some console utils for windows to do various tasks... 
 
 ## gremlins
 
@@ -49,6 +49,10 @@ shows stuff
 ## bits
 
 convert numbers
+
+## core dll
+
+does stuff
 
 ## ...
 

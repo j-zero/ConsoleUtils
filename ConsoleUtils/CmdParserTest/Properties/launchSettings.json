@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "CmdParserTest": {
-      "commandName": "Project",
-      "commandLineArgs": "Program.cs cut 0 256"
-    }
-  }
-}

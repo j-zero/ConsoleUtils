@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "hexe": {
-      "commandName": "Project",
-      "commandLineArgs": "programm.cs cut 64 0xff"
-    }
-  }
-}

@@ -89,6 +89,7 @@ namespace gremlins
             cmd.DefaultParameter = "file";
             try
             {
+                
                 cmd.Parse();
 
                 // HELP
@@ -163,16 +164,16 @@ namespace gremlins
             catch (ArgumentException ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
-                Environment.Exit(255);
+                Exit(255);
             }
             catch (Exception ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
                 Console.WriteLine(ex.StackTrace);
-                Environment.Exit(255);
+                Exit(255);
             }
-            if (System.Diagnostics.Debugger.IsAttached)
-                Console.ReadLine();
+
+            Exit(0);
         }
 
         public static void GremlinDump(string[] lines, int start = 0, int length = 0)
@@ -312,7 +313,22 @@ namespace gremlins
                 Console.WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
-            Environment.Exit(0);
+            Exit(0);
+        }
+
+
+        static void Exit(int exitCode)
+        {
+            string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
+            //Console.WriteLine(parrentProcess);
+
+            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
+            {
+                Console.WriteLine("\nPress any key to exit.");
+                Console.ReadKey();
+            }
+
+            Environment.Exit(exitCode);
         }
     }
 }

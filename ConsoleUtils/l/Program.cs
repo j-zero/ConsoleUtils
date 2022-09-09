@@ -47,10 +47,9 @@ namespace list
             
             if (found.Length > 0)
             {
-                if(found.Length == 1)
+                if(found.Length == 1 && found[0].Error)
                 {
-                    if(found[0].Error)
-                        ConsoleHelper.WriteError($"Access denied: \"{path}\"");
+                    ConsoleHelper.WriteError($"Access denied: \"{path}\"");
                     return;
                 }
 
@@ -69,56 +68,51 @@ namespace list
                 foreach (KeyValuePair<string, List<FilesystemEntryInfo>> ei in entries)
                 {
                     FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
-
+                    var list = ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList();
                     if (cmd.HasFlag("list"))
                     {
-                        LongList(ei.Value, showRelativePath);
+                        LongList(list, showRelativePath);
                         if (entries.Count > 1)
                             Console.WriteLine();
                     }
                     else
                     {
-                        ShortList(ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList());
+                        ShortList(list, showRelativePath);
                     }
                 }
                 //LongList();
             }
             else
             {
-                string filterpath = Path.GetFullPath(path);
                 
-                ConsoleHelper.WriteError($"Nothing found for \"{filterpath}\"");
+                try
+                {
+                    string filepath = null;
+                    filepath = Path.GetFullPath(path);
+                    ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
+                }
+                catch
+                {
+                    ConsoleHelper.WriteError($"\"{path}\" does not exist.");
+                }
+                
+
 
             }
             ;
         }
 
 
-        static void ShortList(List<FilesystemEntryInfo> ei)
+        static void ShortList(List<FilesystemEntryInfo> ei, bool printParentDiretory = false)
         {
-            //var list = (ShowHidden ? ei : ei.Where(e => e.HasHiddenAttribute == false));
-
+            var longest_parent_dir = ei.Max(r => (r.GetRelativeParent(Environment.CurrentDirectory)).Length+3);
             int width = Console.WindowWidth;
             var longest_name = ei.Max(r => r.Name.Length)+2;
             int columns = width / longest_name;
 
             int chunk_size = (int)Math.Ceiling(((double)ei.Count / (double)columns));
 
-            //var itemFromListWithMaxLength = ei.OrderByDescending(r => r.Name.Length).FirstOrDefault();
-
-            /*
-            Console.WriteLine($"width:            {width} ");
-            Console.WriteLine($"count:            {ei.Count} ");
-            Console.WriteLine($"longest_name:     {longest_name} ");
-            Console.WriteLine($"columns:          {columns} ");
-            Console.WriteLine($"number_of_chunks: {chunk_size} ");
-            Console.WriteLine($"longest_name: {itemFromListWithMaxLength.Name} ");
-            Console.WriteLine();
-            */
-
             var chunks = ei.OrderBy(o => o.Name).ToList().ChunkBy(chunk_size);
-
-            
 
             for (int i = 0; i < chunk_size; i++) 
             {
@@ -126,30 +120,14 @@ namespace list
                     if(c < chunks.Count && i < chunks[c].Count)
                     {
                         var e = chunks[c][i];
-                        Console.Write(e.Name.PadRight(longest_name).Pastel(e.ColorString));
+                        var parent_directory = "." + Path.DirectorySeparatorChar + e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar;
+                        var name = (printParentDiretory ? (parent_directory).Pastel(ColorTheme.Directory)  : "") + e.Name.PadRight(longest_name).Pastel(e.ColorString);
+                        Console.Write(name);
                     }
                 Console.WriteLine("");
             }
             
             
-
-            /*
-                foreach (FilesystemEntryInfo e in chunk)
-                {
-                    if (!e.HasHiddenAttribute || true)
-                    {
-                        if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
-
-                        Console.Write(e.Name.Pastel(e.ColorString));
-                        Console.Write("\n");
-                    }
-                }
-            }
-
-            ;
-            /*
-
-             */
         }
         static void LongList(List<FilesystemEntryInfo> ei, bool printParentDiretory = false)
         {

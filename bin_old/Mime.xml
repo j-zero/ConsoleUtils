@@ -1,0 +1,377 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Mime</name>
+    </assembly>
+    <members>
+        <member name="T:HeyRed.Mime.Magic">
+            <summary>
+            Provides access to some libmagic methods
+            </summary>
+        </member>
+        <member name="P:HeyRed.Mime.Magic.Version">
+            <summary>
+            Contains the version number of this library which is compiled
+            into the shared library using the constant
+            </summary>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.#ctor(HeyRed.Mime.MagicOpenFlags,System.String)">
+            <summary>
+            Creates a magic cookie and load database from given path
+            </summary>
+            <param name="flags"></param>
+            <param name="dbPath"></param>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.Read(System.String)">
+            <summary>
+            Reads file from given path
+            </summary>
+            <param name="filePath"></param>
+            <returns>returns a textual description of the contents of file</returns>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.Read(System.Byte[],System.Int32)">
+            <summary>
+            Reads contents from buffer
+            </summary>
+            <param name="buffer"></param>
+            <param name="bufferSize"></param>
+            <returns>returns a textual description of the contents of the buffer</returns>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.Read(System.IO.Stream,System.Int32)">
+            <summary>
+            Reads contents from stream with buffer size limit
+            </summary>
+            <remarks>
+            This method rewinds the stream if it's possible
+            </remarks>
+            <param name="stream"></param>
+            <param name="bufferSize"></param>
+            <returns>returns a textual description of the contents of the stream</returns>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.GetFlags">
+            <summary>
+            Returns a value representing current <see cref="T:HeyRed.Mime.MagicOpenFlags"/> set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.SetFlags(HeyRed.Mime.MagicOpenFlags)">
+            <summary>
+            Sets the flags <see cref="T:HeyRed.Mime.MagicOpenFlags"/>
+            Note that using both MIME flags together can also return extra information on the charset.
+            </summary>
+            <param name="flags"></param>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.GetParam(HeyRed.Mime.MagicParams)">
+            <summary>
+            Gets various limits related to the magic library.
+            <see cref="T:HeyRed.Mime.MagicParams"/>
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.SetParam(HeyRed.Mime.MagicParams,System.Int32)">
+            <summary>
+            Sets various limits related to the magic library.
+            <see cref="T:HeyRed.Mime.MagicParams"/>
+            </summary>
+            <param name="param"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.CheckDatabase(System.String)">
+            <summary>
+            Can be used to check the validity of entries
+            in the colon separated database files
+            </summary>
+            <param name="dbPath"></param>
+        </member>
+        <member name="M:HeyRed.Mime.Magic.CompileDatabase(System.String)">
+            <summary>
+            Can be used to compile the colon separated list of database files
+            </summary>
+            <param name="dbPath"></param>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NONE">
+            <summary>
+            No special handling.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_DEBUG">
+            <summary>
+            Print debugging messages to stderr.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_SYMLINK">
+            <summary>
+            If the file queried is a symlink, follow it.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_COMPRESS">
+            <summary>
+            If the file is compressed, unpack it and look at the contents.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_DEVICES">
+            <summary>
+            If the file is a block or character special device, then
+            open the device and try to look in its contents.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_MIME_TYPE">
+            <summary>
+            Return a MIME type string, instead of a textual description.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_CONTINUE">
+            <summary>
+            Return all matches, not just the first.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_CHECK">
+            <summary>
+            Check the magic database for consistency and print warnings to stderr.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_PRESERVE_ATIME">
+            <summary>
+            On systems that support utime(3) or utimes(2), attempt to
+            preserve the access time of files analysed.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_RAW">
+            <summary>
+            Don't translate unprintable characters to a \ooo octal representation.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_ERROR">
+            <summary>
+            Treat operating system errors while trying to open files
+            and follow symlinks as real errors, instead of printing
+            them in the magic buffer.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_MIME_ENCODING">
+            <summary>
+            Return a MIME encoding, instead of a textual description.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_MIME">
+            <summary>
+            A shorthand for MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_APPLE">
+            <summary>
+            Return the Apple creator and type.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_EXTENSION">
+            <summary>
+            Return a slash-separated list of extensions for this file type.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_COMPRESS_TRANSP">
+            <summary>
+            Don't report on compression, only report about the uncompressed data.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NODESC">
+            <summary>
+            A shorthand for (MAGIC_EXTENSION|MAGIC_MIME|MAGIC_APPLE)
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_COMPRESS">
+            <summary>
+            Don't look inside compressed files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_TAR">
+            <summary>
+            Don't examine tar files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_SOFT">
+            <summary>
+            Don't consult magic files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_APPTYPE">
+            <summary>
+            Don't check for EMX application type (only on EMX).
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_ELF">
+            <summary>
+            Don't print ELF details.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_TEXT">
+            <summary>
+            Don't check for various types of text files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_CDF">
+            <summary>
+            Don't get extra information on MS Composite Document Files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_CSV">
+            <summary>
+            Don't check for CSV files
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_TOKENS">
+            <summary>
+            Don't look for known tokens inside ascii files.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_ENCODING">
+            <summary>
+            Don't check text encodings.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_JSON">
+            <summary>
+             Don't check for JSON files
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicOpenFlags.MAGIC_NO_CHECK_BUILTIN">
+            <summary>
+            No built-in tests; only consult the magic file
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_INDIR_MAX">
+            <summary>
+            The parameter controls how many levels of recursion will be followed for indirect magic entries.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_NAME_MAX">
+            <summary>
+            The parameter controls the maximum number of calls for name/use.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_ELF_PHNUM_MAX">
+            <summary>
+            The parameter controls how many ELF program sections will be processed.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_ELF_SHNUM_MAX">
+            <summary>
+            The parameter controls how many ELF sections will be processed.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_ELF_NOTES_MAX">
+            <summary>
+            The parameter controls how many ELF notes will be processed.
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_REGEX_MAX">
+            <summary>
+            Regex limit
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MagicParams.MAGIC_PARAM_BYTES_MAX">
+            <summary>
+            The parameter controls how many bytes read from file
+            </summary>
+        </member>
+        <member name="T:HeyRed.Mime.MimeGuesser">
+            <summary>
+            Static "facade" for <see cref="T:HeyRed.Mime.Magic"/>
+            </summary>
+        </member>
+        <member name="P:HeyRed.Mime.MimeGuesser.MagicFilePath">
+            <summary>
+            Path to libmagic database file
+            </summary>
+        </member>
+        <member name="F:HeyRed.Mime.MimeGuesser.MagicMimeFlags">
+            <summary>
+            Libmagic open flags for getting file type
+            </summary>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessMimeType(System.String)">
+            <summary>
+            Get mime type from file
+            </summary>
+            <param name="filePath"></param>
+            <returns>Mime type as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessMimeType(System.Byte[])">
+            <summary>
+            Get mime type from bytes buffer
+            </summary>
+            <param name="buffer"></param>
+            <returns>Mime type as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessMimeType(System.IO.Stream)">
+            <summary>
+            Get mime type from stream
+            </summary>
+            <param name="stream"></param>
+            <returns>Mime type as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessMimeType(System.IO.FileInfo)">
+            <summary>
+            <see cref="M:HeyRed.Mime.MimeGuesser.GuessMimeType(System.String)"/>
+            </summary>
+            <param name="fi"></param>
+            <returns>Mime type as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessExtension(System.String)">
+            <summary>
+            Get file extension from path
+            </summary>
+            <param name="filePath"></param>
+            <returns>Extension as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessExtension(System.Byte[])">
+            <summary>
+            Get file extension from bytes buffer
+            </summary>
+            <param name="buffer"></param>
+            <returns>Extension as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessExtension(System.IO.Stream)">
+            <summary>
+            Get file extension from stream
+            </summary>
+            <param name="stream"></param>
+            <returns>Extension as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessExtension(System.IO.FileInfo)">
+            <summary>
+            <see cref="M:HeyRed.Mime.MimeGuesser.GuessExtension(System.String)"/>
+            </summary>
+            <param name="fi"></param>
+            <returns>Extension as string</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessFileType(System.String)">
+            <summary>
+            Get file type from path
+            </summary>
+            <param name="filePath"></param>
+            <returns>FileType</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessFileType(System.Byte[])">
+            <summary>
+            Get file type from bytes buffer
+            </summary>
+            <param name="buffer"></param>
+            <returns>FileType</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessFileType(System.IO.Stream)">
+            <summary>
+            Get file type from stream
+            </summary>
+            <param name="stream"></param>
+            <returns>FileType</returns>
+        </member>
+        <member name="M:HeyRed.Mime.MimeGuesser.GuessFileType(System.IO.FileInfo)">
+            <summary>
+            <see cref="M:HeyRed.Mime.MimeGuesser.GuessFileType(System.String)"/>
+            </summary>
+            <param name="fi"></param>
+            <returns>FileType</returns>
+        </member>
+    </members>
+</doc>

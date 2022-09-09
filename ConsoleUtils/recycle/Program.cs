@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace recycle
+namespace trash
 {
     internal class Program
     {
@@ -17,7 +17,7 @@ namespace recycle
                 {
                     var files = FileAndDirectoryFilter.Get(args, FileAndDirectoryFilter.FileAndDirectoryMode.Directories | FileAndDirectoryFilter.FileAndDirectoryMode.Files);
                     foreach (var file in files)
-                        FileOperationAPIWrapper.Recylce(file);
+                        FileOperationAPIWrapper.Recylce(file,FileOperationAPIWrapper.FileOperationFlags.FOF_SILENT);
                 }
                 catch (Exception ex)
                 {

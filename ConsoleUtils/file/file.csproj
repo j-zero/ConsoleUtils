@@ -59,6 +59,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConsoleUtilsCore\ConsoleUtilsCore.csproj">
+      <Project>{f2eee824-5019-44f2-a06a-f7aef10c2549}</Project>
+      <Name>ConsoleUtilsCore</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Mime.3.3.0\build\Mime.targets" Condition="Exists('..\packages\Mime.3.3.0\build\Mime.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -6,7 +6,6 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
-
         if (args.Length > 0) {
             var f = Environment.CommandLine.Replace("\"" + Environment.GetCommandLineArgs()[0] + "\"", "").TrimStart();
             //string f = args[0];
@@ -19,7 +18,6 @@ static class Program
             {
                 try
                 {
-                    
                     System.Diagnostics.Process.Start(f);
                 }
                 catch (System.ComponentModel.Win32Exception ex)

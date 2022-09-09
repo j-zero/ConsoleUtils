@@ -134,7 +134,8 @@ public class FilesystemEntryInfo
             this.IsDirectory = true;
             this.Name = _directoryInfo.Name;
             _lastWriteTime = _directoryInfo.LastWriteTime;
-            this._parentDirectory = _directoryInfo.Parent.FullName;
+            if(_directoryInfo.Parent != null)
+                this._parentDirectory = _directoryInfo.Parent.FullName;
             //this.Owner = System.IO.Directory.GetAccessControl(path).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
             //this.ReadOnly = _directoryInfo.Attributes.HasFlag(System.IO.FileAttributes.ReadOnly);
             //this.Hidden = _directoryInfo.Attributes.HasFlag(System.IO.FileAttributes.Hidden);
@@ -339,8 +340,6 @@ public class FilesystemEntryInfo
     // based on https://stackoverflow.com/a/14488941
     private void _CalculateHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
     {
-
-
         if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
         //if (value < 0) { return "-" + CalculateHumanReadableSize(-value, decimalPlaces); }
         if (value == 0) {
@@ -363,7 +362,7 @@ public class FilesystemEntryInfo
             mag += 1;
             adjustedSize /= factor;
         }
-
+        if (mag == 0) decimalPlaces = 0; // no decimal points on bytes
         this._humanReadbleSize = string.Format("{0:n" + decimalPlaces + "}", adjustedSize);
         this._humanReadbleSizeSuffix = SizeSuffixes[mag];
         /*

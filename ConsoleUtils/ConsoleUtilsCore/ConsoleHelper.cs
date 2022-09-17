@@ -17,6 +17,11 @@ public class ConsoleHelper
             Console.Error.Write($"{message.Pastel(Color.OrangeRed)}\n");
     }
 
+    public static void WriteError(Exception ex)
+    {
+        Console.Error.Write($"{ex.Message.Pastel(Color.OrangeRed)}\n{ex.StackTrace}");
+    }
+
     public static void WriteErrorDog(string message)
     {
         string doggo = "            \\\n             \\\n            /^-----^\\\n            V  o o  V\n             |  Y  |\n              \\ Q /\n              / - \\\n              |    \\\n              |     \\     )\n              || (___\\====";

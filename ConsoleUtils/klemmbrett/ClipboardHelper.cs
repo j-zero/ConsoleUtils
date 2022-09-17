@@ -160,8 +160,8 @@ namespace klemmbrett
             finally
             {
                 GlobalUnlock(dataPointer);
+                CloseClipboard();
             }
-            CloseClipboard();
         }
 
         static IntPtr GetClipboardDataPointer(uint format)

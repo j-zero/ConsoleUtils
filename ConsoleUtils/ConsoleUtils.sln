@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "free", "free\free.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "download", "download\download.csproj", "{6C88477B-F044-40E0-A6D7-2928CE81DB9F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unpack", "unpack\unpack.csproj", "{29FE3156-4F51-4381-84DD-AAD2C3466C8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,10 @@ Global
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29FE3156-4F51-4381-84DD-AAD2C3466C8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29FE3156-4F51-4381-84DD-AAD2C3466C8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29FE3156-4F51-4381-84DD-AAD2C3466C8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29FE3156-4F51-4381-84DD-AAD2C3466C8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

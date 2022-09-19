@@ -186,7 +186,8 @@ namespace list
                     Console.Write($"{lastWriteTime} ");
 
                     int pos = Console.CursorLeft;
-                    string name = printParentDiretory ? (e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar).Pastel(ColorTheme.Directory) + e.Name.Pastel(e.ColorString) : e.Name.Pastel(e.ColorString);
+                    string parent_dir = (e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar).Pastel(ColorTheme.Directory);
+                    string name = printParentDiretory ? parent_dir + e.Name.Pastel(e.ColorString) : e.Name.Pastel(e.ColorString);
 
                     /* TODO
                     if(name.Length + pos > Console.WindowWidth)

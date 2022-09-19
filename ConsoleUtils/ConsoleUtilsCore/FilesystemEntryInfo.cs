@@ -315,7 +315,11 @@ public class FilesystemEntryInfo
 
     private string _getRelativePath(string path, string referencePath)
     {
-        var fileUri = new Uri(path);
+        string _path = path;
+        if (!_path.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            _path = _path + Path.DirectorySeparatorChar;
+
+        var fileUri = new Uri(_path);
         var referenceUri = new Uri(referencePath);
         return Uri.UnescapeDataString(referenceUri.MakeRelativeUri(fileUri).ToString()).Replace('/', Path.DirectorySeparatorChar);
     }

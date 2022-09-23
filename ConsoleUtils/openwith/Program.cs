@@ -7,27 +7,20 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        bool openWith = false;
-        if (args.Length > 0) {
+        if (args.Length > 0)
+        {
             var f = Environment.CommandLine.Replace("\"" + Environment.GetCommandLineArgs()[0] + "\"", "").TrimStart();
-            if (f.StartsWith("-w ") || f.StartsWith("--with ")) // open With
+            //string f = args[0];
+            if (f == "--help")
             {
-                f = f.Substring(3);
-                openWith = true;
-            }
-            if (f == "--help" || f == "-w")
-            {
-                Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file|url}}\n  If no parameter is given, the current directory will be opened.");
-                Console.WriteLine($"Options:");
-                Console.WriteLine($"  --with,-w: Show \"Open With\" dialog");
-
+                Console.Write($"Usage: openwith [file|url]\nIf no parameter is given, the current directory will be opened.");
                 return;
             }
             else
             {
                 try
                 {
-                    Start(f, openWith);
+                    System.Diagnostics.Process.Start(f);
                 }
                 catch (System.ComponentModel.Win32Exception ex)
                 {
@@ -42,9 +35,18 @@ static class Program
                             try
                             {
                                 System.IO.File.Create(f);
-                                Start(f, openWith);
+                                //System.Diagnostics.Process.Start(f);
+                                ProcessStartInfo startInfo = new ProcessStartInfo()
+                                {
+                                    WindowStyle = ProcessWindowStyle.Normal,
+                                    FileName = f,
+                                    Verb = "openas",
+                                    UseShellExecute = true,
+                                    ErrorDialog = true
+                                };
+
                             }
-                            catch(Exception ex2)
+                            catch (Exception ex2)
                             {
                                 Console.Write($"Error: {ex2.Message}");
                                 Environment.Exit(1);
@@ -55,20 +57,8 @@ static class Program
             }
         }
         else
-            Start(Environment.CurrentDirectory, false);
+            System.Diagnostics.Process.Start(Environment.CurrentDirectory);
 
         Environment.Exit(0);
-    }
-
-    static void Start(string filename, bool openWith)
-    {
-        if (openWith)
-        {
-            Process.Start("rundll32.exe", "shell32.dll, OpenAs_RunDLL " + Path.GetFullPath(filename));
-        }
-        else
-        {
-            Process.Start(filename);
-        }
     }
 }

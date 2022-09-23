@@ -163,7 +163,13 @@ public class CmdOption
 
     public string[] GetStrings()
     {
-        return this.Values.Where(x => x.String != null).Select(x => x.String).ToArray();
+        string[] result = this.Values.Where(x => x.String != null).Select(x => x.String).ToArray();
+
+        if(result.Length == 0)
+            return new string[] { null };
+
+        return result;
+        //return this.Values.Select(x => x.String).ToArray();
     }
 
     public decimal[] GetDecimals()

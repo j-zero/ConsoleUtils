@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pastel;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -13,6 +14,7 @@ namespace download
 {
     internal class Program
     {
+        static CmdParser cmd;
         static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         static bool _result = false;
         static bool _debug = false;
@@ -20,23 +22,81 @@ namespace download
 
         static void Main(string[] args)
         {
-            string url = args[0];
 
-            Uri uri = new Uri(url);
+            cmd = new CmdParser(args)
+            {
+                { "help", "", CmdCommandTypes.FLAG, "Show this help." },
+                { "url", "u", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Download URL" },
+                { "outfile", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Output file" },
+                { "timeout", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.INT, 2000 }
+                    }, "Output file" },
+            };
 
-           filename = GetFilenameFromWebServer(url);
-            if (filename == String.Empty)
-                filename = GetFileNameFromUrl(url);
+            cmd.DefaultParameter = "url";
+            cmd.Parse();
 
-            if (filename == String.Empty)
-                filename = "index.html";
+            string url = cmd["url"].String;
+            if (cmd.HasFlag("help") || url == null)
+                ShowHelp();
 
-            if (filename != string.Empty)
-                StartDownload(uri, filename, 2000);
+            filename = cmd["outfile"].String;
+
+            if (url != null)
+            {
+                Uri uri = new Uri(url);
+                
+                filename = GetFilenameFromWebServer(url); // get filename by HEAD
+                if (filename == String.Empty)
+                    filename = GetFileNameFromUrl(url);     // extract filename from url
+
+                if (filename == String.Empty)
+                    filename = "index.html";        // set filename to "index.html"
+
+                if (filename != string.Empty)
+                    StartDownloadFile(uri, filename, (int)cmd["timeout"].Int);
+                else
+                    ConsoleHelper.WriteError("No filename given!"); // this should never happen!
+            }
             else
-                Console.WriteLine("need filename!");
+            {
+                // this should never happen!
+            }
         }
-        public static bool StartDownload(Uri uri, string path, int timeout)
+        static void ShowHelp()
+        {
+            Console.WriteLine($"download, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
+            Console.WriteLine($"Options:");
+            foreach (CmdOption c in cmd.OrderBy(x => x.Name))
+            {
+                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                Console.WriteLine(l);
+            }
+            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+            Exit(0);
+        }
+
+
+        static void Exit(int exitCode)
+        {
+            string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
+            //Console.WriteLine(parrentProcess);
+
+            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
+            {
+                Console.WriteLine("\nPress any key to exit.");
+                Console.ReadKey();
+            }
+
+            Environment.Exit(exitCode);
+        }
+
+        public static bool StartDownloadFile(Uri uri, string path, int timeout)
         {
            
             string _fullPathWhereToSave = Path.GetFullPath(path);
@@ -53,7 +113,7 @@ namespace download
                     // client.Credentials = new NetworkCredential("username", "password");
                     client.DownloadProgressChanged += WebClientDownloadProgressChanged;
                     client.DownloadFileCompleted += WebClientDownloadCompleted;
-                    Console.WriteLine(@"Downloading file:");
+                   
                     client.DownloadFileAsync(uri, _fullPathWhereToSave);
                     _semaphore.Wait(timeout);
                     return _result && File.Exists(_fullPathWhereToSave);

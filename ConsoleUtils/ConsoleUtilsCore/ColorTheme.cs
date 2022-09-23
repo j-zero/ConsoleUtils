@@ -22,7 +22,7 @@ public class ColorTheme
         {FileTypes.Executable, "#32CD32" },
         {FileTypes.Script, "#32CD32" },
         {FileTypes.Sourcecode, "#00bfff" },
-        {FileTypes.Document, "#00bfff" },
+        {FileTypes.Document, "#8EDCFE" },
         {FileTypes.Music, "#ffc0cb" },
         {FileTypes.Archive, "#dc143c" },
         {FileTypes.Cryptography,"#ff69b4" },

@@ -20,6 +20,10 @@ namespace download
         static bool _debug = false;
         static string filename = "";
 
+        static long lastUpdate;
+        static long lastBytes = 0;
+        static DateTime _startedAt;
+
         static void Main(string[] args)
         {
 
@@ -32,9 +36,15 @@ namespace download
                 { "outfile", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Output file" },
-                { "timeout", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
-                        { CmdParameterTypes.INT, 2000 }
-                    }, "Output file" },
+                { "timeout", "t", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.INT, 0 }
+                    }, "Timeout" },
+                { "no-proxy", "P", CmdCommandTypes.FLAG, new CmdParameters() {
+                        { CmdParameterTypes.BOOL, false }
+                    }, "Disable proxy" },
+                { "proxy", "p", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Overwrite Proxy" },
             };
 
             cmd.DefaultParameter = "url";
@@ -110,12 +120,43 @@ namespace download
                 }
                 using (WebClient client = new WebClient())
                 {
-                    // client.Credentials = new NetworkCredential("username", "password");
+                    
+
+                    WebProxy proxy = new WebProxy();
+
+                    string cmdProxy = cmd["proxy"].Strings[0];
+
+                    if (cmdProxy != null)
+                    {
+                        proxy.Address = new Uri(cmdProxy);
+                        //proxy.Credentials = new NetworkCredential("usernameHere", "pa****rdHere");  //These can be replaced by user input
+                        proxy.UseDefaultCredentials = true;
+                        proxy.BypassProxyOnLocal = false;  //still use the proxy for local addresses
+                        client.Proxy = proxy;
+                    }
+
+                    if (cmd.HasFlag("no-proxy"))
+                        client.Proxy = null;
+
+                    
+
+                    if(client.Proxy != null)
+                        Console.WriteLine($"using proxy \"{client.Proxy.GetProxy(uri)}\"");
+
+
+                    client.Credentials = CredentialCache.DefaultCredentials;
+                    //client.Credentials = new NetworkCredential("username", "password");
                     client.DownloadProgressChanged += WebClientDownloadProgressChanged;
                     client.DownloadFileCompleted += WebClientDownloadCompleted;
                    
+
                     client.DownloadFileAsync(uri, _fullPathWhereToSave);
-                    _semaphore.Wait(timeout);
+                    if (timeout == 0)
+                        _semaphore.Wait();
+                    else
+                    {
+                        _semaphore.Wait(timeout);
+                    }
                     return _result && File.Exists(_fullPathWhereToSave);
                 }
             }
@@ -133,17 +174,33 @@ namespace download
 
         private static void WebClientDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
-            Console.Write($"\r{filename} -> {e.ProgressPercentage}%");
+            long bytesPerSecond = 0;
+            if (_startedAt == default(DateTime))
+            {
+                _startedAt = DateTime.Now;
+            }
+            else
+            {
+                var timeSpan = DateTime.Now - _startedAt;
+                if (timeSpan.TotalSeconds > 0)
+                {
+                    bytesPerSecond = (long)(e.BytesReceived / timeSpan.TotalSeconds);
+                }
+            }
+
+            string readableBps = UnitHelper.CalculateHumanReadableSize(bytesPerSecond);
+            string readableBytes = UnitHelper.CalculateHumanReadableSize(e.BytesReceived);
+
+            Console.Write($"\r{filename} -> {readableBytes} total ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
         }
 
         private static void WebClientDownloadCompleted(object sender, AsyncCompletedEventArgs args)
         {
-            _result = !args.Cancelled;
-            if (!_result)
-            {
-                Console.Write(args.Error.ToString());
-            }
-            Console.WriteLine(Environment.NewLine + "Download finished!");
+            if (args.Cancelled || args.Error != null)
+                Console.Write(args.Error.Message);
+            else
+                Console.WriteLine(Environment.NewLine + "Download finished!");
+
             _semaphore.Release();
         }
 

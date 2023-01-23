@@ -46,12 +46,10 @@ namespace unpack
             {
                 using (ArchiveFile file = new ArchiveFile(fullPath))
                 {
-                    
                     foreach (var entry in file.Entries)
                     {
-                        Console.Write(entry.Size.ToString());
-                        Console.Write("\t");
-                        Console.WriteLine(entry.FileName);
+                        string size = UnitHelper.CalculateHumanReadableSize(entry.Size);
+                        Console.WriteLine($"{size}\t{entry.FileName}");
                     }
                 }
             }

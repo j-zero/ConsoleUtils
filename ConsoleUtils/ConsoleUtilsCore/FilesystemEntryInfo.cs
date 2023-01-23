@@ -5,6 +5,7 @@ using System.Security.AccessControl;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.ComponentModel;
+using System.Globalization;
 
 public class FilesystemEntryInfo
 {
@@ -79,6 +80,10 @@ public class FilesystemEntryInfo
     public string HumanReadbleSizeSuffix { get { return _humanReadbleSizeSuffix; } }
     public string HumanReadableLastWriteTime { get { return _formatDateTimeHumanReadable(_lastWriteTime); } }
 
+    public DateTime CreationTime { get; private set; }
+    public DateTime LastAccessTime { get; private set; }
+    public DateTime LastWriteTime { get; private set; }
+
     public FileTypes FileType 
     { 
         get
@@ -88,6 +93,35 @@ public class FilesystemEntryInfo
             else
                 return FileDefinitions.GetFileTypeByExtension(this.Extension);
         } 
+    }
+
+    public string MIMEType
+    {
+        get
+        {
+            return MIMEHelper.GetMIMEType(this.FullPath);
+        }
+    }
+    public string Encoding
+    {
+        get
+        {
+            return MIMEHelper.GetEncoding(this.FullPath);
+        }
+    }
+    public string FileTypeDescription
+    {
+        get
+        {
+            return MIMEHelper.GetDescription(this.FullPath);
+        }
+    }
+    public string ShouldBeExtension
+    {
+        get
+        {
+            return MIMEHelper.GetExtension(this.FullPath);
+        }
     }
 
     public Exception LastException { get; set; }
@@ -120,6 +154,9 @@ public class FilesystemEntryInfo
             this.IsFile = true;
             this.Name = _fileInfo.Name;
             _lastWriteTime = _fileInfo.LastWriteTime;
+            this.CreationTime = _fileInfo.CreationTime;
+            this.LastAccessTime = _fileInfo.LastAccessTime;
+            this.LastWriteTime = _fileInfo.LastWriteTime;
 
             _CalculateHumanReadableSize(_fileInfo.Length);
             this._parentDirectory = _fileInfo.Directory.FullName;
@@ -134,7 +171,10 @@ public class FilesystemEntryInfo
             this.IsDirectory = true;
             this.Name = _directoryInfo.Name;
             _lastWriteTime = _directoryInfo.LastWriteTime;
-            if(_directoryInfo.Parent != null)
+            this.CreationTime = _directoryInfo.CreationTime;
+            this.LastAccessTime = _directoryInfo.LastAccessTime;
+            this.LastWriteTime = _directoryInfo.LastWriteTime;
+            if (_directoryInfo.Parent != null)
                 this._parentDirectory = _directoryInfo.Parent.FullName;
             //this.Owner = System.IO.Directory.GetAccessControl(path).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
             //this.ReadOnly = _directoryInfo.Attributes.HasFlag(System.IO.FileAttributes.ReadOnly);
@@ -149,17 +189,18 @@ public class FilesystemEntryInfo
         }
     }
 
-    private static readonly string[] _monthNames =
-        { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec" };
+    //private static readonly string[] _monthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec" };
 
     private string _formatDateTimeHumanReadable(DateTime timestamp)
     {
 
+        ;
         string result = "";
         string field1 = "";
         string field2 = "";
 
-        field1 = timestamp.Day.ToString().PadLeft(2) + " " + _monthNames[timestamp.Month-1];
+        //field1 = timestamp.Day.ToString().PadLeft(2) + " " + _monthNames[timestamp.Month-1];
+        field1 = timestamp.Day.ToString().PadLeft(2) + " " + CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(timestamp.Month);
 
         if (timestamp.Year < DateTime.Now.Year)
         {

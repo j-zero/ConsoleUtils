@@ -1,5 +1,4 @@
-﻿using HeyRed.Mime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,7 @@ namespace file
             bool isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
 
 
-            Magic magic = null;
+            //Magic magic = null;
             if (args.Length > 0)
             {
                 string path = args[0];
@@ -30,14 +29,14 @@ namespace file
                     Console.WriteLine("File:      " + Path.GetFullPath(path));
                 }
 
-                magic = new Magic(MagicOpenFlags.MAGIC_NONE);
-                Console.WriteLine("Info:      " + magic.Read(path));
+                string mime = MIMEHelper.GetDescription(path);
 
-                magic = new Magic(MagicOpenFlags.MAGIC_MIME_ENCODING);
-                Console.WriteLine("Encoding:  " + magic.Read(path));
+                Console.WriteLine("Info:      " + MIMEHelper.GetDescription(path));
+                Console.WriteLine("MIME-Type: " + mime);
+                Console.WriteLine("Encoding:  " + MIMEHelper.GetEncoding(path));
+                //string ext = HeyRed.Mime.MimeTypesMap.GetExtension(mime);
+                Console.WriteLine("Extension: ." + MIMEHelper.GetExtension(mime));
 
-                magic = new Magic(MagicOpenFlags.MAGIC_MIME_TYPE);
-                Console.WriteLine("MIME-Type: " + magic.Read(path));
 
                 //Console.WriteLine(magicStr);
                 exitCode = 0;

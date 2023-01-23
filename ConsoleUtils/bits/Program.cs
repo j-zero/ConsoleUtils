@@ -52,7 +52,7 @@ namespace bits
             if(data == null)
                 ShowHelp();
 
-            if (data.ToLower().StartsWith("0x") || data.ToLower().Any(c => new char[] {'a','b','c','d','e','f'}.Contains(c)))
+            if (data.ToLower().StartsWith("0x") || data.ToLower().Any(c => new char[] {'a','b','c','d','e','f'}.Contains(c) ))
             {
                 // hex
                 Console.WriteLine("Format detected: hex");
@@ -90,7 +90,7 @@ namespace bits
                     success = false;
                 }
             }
-            else if (data.All(Char.IsDigit))
+            else if (data.All(Char.IsDigit) || (data.StartsWith("-") && data.Substring(1).All(Char.IsDigit)))
             {
                 // decimal/octal
                 Console.WriteLine("Format detected: decimal");

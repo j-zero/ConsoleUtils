@@ -80,7 +80,7 @@ namespace download
         static void ShowHelp()
         {
             Console.WriteLine($"download, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--url|-u] URL}}");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
@@ -188,16 +188,21 @@ namespace download
                 }
             }
 
-            string readableBps = UnitHelper.CalculateHumanReadableSize(bytesPerSecond);
-            string readableBytes = UnitHelper.CalculateHumanReadableSize(e.BytesReceived);
+            string readableBps = UnitHelper.CalculateHumanReadableSize((ulong)bytesPerSecond);
+            string readableBytes = UnitHelper.CalculateHumanReadableSize((ulong)e.BytesReceived);
+            string readableBytesTotal = UnitHelper.CalculateHumanReadableSize((ulong)e.TotalBytesToReceive);
 
-            Console.Write($"\r{filename} -> {readableBytes} total ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
+            Console.Write($"\r{filename} -> {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
         }
 
         private static void WebClientDownloadCompleted(object sender, AsyncCompletedEventArgs args)
         {
             if (args.Cancelled || args.Error != null)
-                Console.Write(args.Error.Message);
+            {
+                dynamic re = args.Error as dynamic;
+                HttpWebResponse response = re.Response;
+                Console.Write($"HTTP Status Code: {(int)response.StatusCode}");
+            }
             else
                 Console.WriteLine(Environment.NewLine + "Download finished!");
 

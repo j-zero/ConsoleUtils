@@ -627,12 +627,11 @@ namespace hexe
 
                         newHexPart += (HexChars[(b >> 4) & 0xF]);
                         newHexPart += (HexChars[b & 0xF]);
-
                         string color = ColorTheme.GetColor(b, j % 2 == 0);
 
                         if((highlightOffset != -1 && highlightLength != -1))
                         {
-                            if((relativePos < highlightOffset) || (relativePos > (highlightOffset + highlightLength)))
+                            if((relativePos < highlightOffset) || (relativePos >= (highlightOffset + highlightLength)))
                                 color = "#666666";
                         }
 

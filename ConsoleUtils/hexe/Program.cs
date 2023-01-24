@@ -253,7 +253,7 @@ namespace hexe
                         string hexString = cmd["find"].String;
                         byte[] needle = StringToByteArray(hexString);
                         int offset = 0;
-
+                        int counter = 0;
                         while (offset != -1 && data[i].Data.Length > (offset+1)) {
                             offset = Find(needle, data[i].Data, offset+1);
                             if(offset != -1)
@@ -268,7 +268,7 @@ namespace hexe
                                 Blob blob = new Blob(offset1, new byte[size]);
                                 //Buffer.BlockCopy(data[i].Data, (int)offset, blob.Data, 0, needle.Length);
                                 Buffer.BlockCopy(data[i].Data, (int)offset1, blob.Data, 0, size);
-                                HexDump(blob, bytesPerLine, false, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length);
+                                HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length);
                                 Console.WriteLine("...");
                                 //foundData.Add(blob);
                             }
@@ -633,7 +633,7 @@ namespace hexe
                         if((highlightOffset != -1 && highlightLength != -1))
                         {
                             if((relativePos < highlightOffset) || (relativePos > (highlightOffset + highlightLength)))
-                                color = "#444444";
+                                color = "#666666";
                         }
 
                         hexPart += newHexPart.Pastel(color);

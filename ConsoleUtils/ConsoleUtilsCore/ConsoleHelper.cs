@@ -59,6 +59,7 @@ public class ConsoleHelper
         }
     }
 
+
     public static void SimpleHexDump(byte[] bytes, int bytesPerLine = 16)
     {
         if (bytes == null)

@@ -109,6 +109,7 @@
     <Compile Include="ListExtensions.cs" />
     <Compile Include="ManagementObjectSearcher.cs" />
     <Compile Include="MIMEHelper.cs" />
+    <Compile Include="NtfsDataStreams.cs" />
     <Compile Include="ObjectDumper.cs" />
     <Compile Include="ParentProcessHelper.cs" />
     <Compile Include="PathHelper.cs" />

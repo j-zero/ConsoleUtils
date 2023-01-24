@@ -22,11 +22,13 @@ namespace list
         static bool ShowHidden = false;
         static bool ShowEncoding = false;
         static bool ShowHeader = false;
+        static bool ShowStreams = false;
 
+        static bool isStartedFromExplorer = false;
 
         static void Main(string[] args)
         {
-            
+            isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
             entries = new Dictionary<string, List<FilesystemEntryInfo>>();
 
 
@@ -40,7 +42,10 @@ namespace list
                 {"oneline","1", CmdCommandTypes.FLAG, "display one entry per line" },
                 {"reverse","r", CmdCommandTypes.FLAG, "reverses the sort order" },
 
-                {"info","i", CmdCommandTypes.FLAG, "show file infos"},
+                {"info","i", CmdCommandTypes.FLAG, "show magic file description"},
+                {"streams","R", CmdCommandTypes.FLAG, "show NTFS alternate file streams"},
+
+                {"full","F", CmdCommandTypes.FLAG, "show all available informations"},
 
                 {"group-directories-first", "d", CmdCommandTypes.FLAG, "list directories before other files" },
                 {"only-dirs", "D", CmdCommandTypes.FLAG, "list directories before other files" },
@@ -64,11 +69,12 @@ namespace list
             if (cmd["path"].Strings.Length > 0 && cmd["path"].Strings[0] != null)
                 path = cmd["path"].Strings[0];
 
-            ShowInfo = cmd.HasFlag("info");
+            ShowInfo = cmd.HasFlag("info") || cmd.HasFlag("full");
             ShowHidden = cmd.HasFlag("all");
 
             ShowEncoding = cmd.HasFlag("encoding");
             ShowHeader = cmd.HasFlag("header");
+            ShowStreams = cmd.HasFlag("streams") || cmd.HasFlag("full");
 
             if (path == null)
                 path = Environment.CurrentDirectory;
@@ -107,7 +113,7 @@ namespace list
                     if (cmd.HasFlag("only-dirs"))
                         list = list.Where(e => e.IsDirectory).ToList();
 
-                    if (cmd.HasFlag("long") || cmd.HasFlag("info"))
+                    if (cmd.HasFlag("long") || cmd.HasFlag("info") || cmd.HasFlag("full") || ShowStreams || ShowHeader || ShowEncoding)
                     {
                         LongList(list, showRelativePath);
                         if (entries.Count > 1)
@@ -142,6 +148,13 @@ namespace list
 
             }
             ;
+
+            if (isStartedFromExplorer)
+            {
+                Console.WriteLine("\nPress any key to exit.");
+                Console.ReadKey();
+            }
+
         }
 
         static void ShowHelp()
@@ -439,8 +452,7 @@ namespace list
                     Console.Write(mode + " ");
 
 
-                    string size = e.IsDirectory ? "-".PadLeft(longestSize+1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
-                    Console.Write($"{size} ");
+
 
                     string owner = (e.ShortOwner != string.Empty ? e.ShortOwner.PadRight(longestOwner).Pastel("#F9F1A5") : "???".PadRight(longestOwner).Pastel("#ff4500"));
                     Console.Write($"{owner} ");
@@ -454,13 +466,25 @@ namespace list
                         Console.Write(encoding);
                     }
 
+                    string size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
+                    int sizepos = Console.CursorLeft;
+                    Console.Write($"{size} ");
+
                     string parent_dir = (e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar).Pastel(ColorTheme.Directory);
                     string name = printParentDiretory ? parent_dir + e.Name.Pastel(e.ColorString) : e.Name.Pastel(e.ColorString);
 
-                    int filepos = Console.CursorLeft + 2;
+                    int filepos = Console.CursorLeft;
                     int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
 
+                    /*
+                    string spaces = "";
+                    for (int i = 0; i < filepos; i++)
+                        spaces += " ";
+                    */
+
                     Console.Write(name);
+
+
 
                     if (e.LinkTarget != null)
                     {
@@ -472,40 +496,70 @@ namespace list
 
                     if (ShowInfo && !e.IsDirectory)
                     {
-                        string description = e.FileTypeDescription;
-                        string spaces = "";
-                        for (int i = 0; i < filepos; i++)
-                            spaces += " ";
-                        
                         Console.WriteLine();
-
-
-                        if (description.Length > maxDescLength)
-                        {
-                            var strings = SplitByNearestSpace(description, maxDescLength).ToArray();
-                            for(int i = 0; i < strings.Length; i++)
-                            {
-                                Console.Write(spaces + strings[i].Pastel("#666666"));
-                                if (i != strings.Length - 1)
-                                    Console.WriteLine();
-                            }
-                        }
-                        else
-                        {
-
-                            //Console.SetCursorPosition(filepos, Console.CursorTop);
-                            //string desc = description.PadLeft(filepos);
-                            Console.Write(spaces + description.Pastel("#666666"));
-                        }
+                        WriteSplittedText(e.FileTypeDescription, maxDescLength, "  ", filepos, "#666666");
                     }
 
 
                     Console.WriteLine();
 
+                    if (ShowStreams)
+                    {
+                        if (e.AlternateDataStreams != null)
+                        {
+                            var spaceSpaces = "";
+                            for (int i = 0; i < sizepos; i++)
+                                spaceSpaces += " ";
+
+                            foreach (var s in e.AlternateDataStreams)
+                            {
+                                if (s.Name != String.Empty)
+                                {
+                                    string streamName = s.Name.Replace(":$DATA", "");
+                                    (string streamSize, string streamSizeSuffix) = FilesystemEntryInfo.GetHumanReadableSize(s.Length);
+                                    Console.WriteLine($"{spaceSpaces}" +
+                                                        $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
+                                                        $" :{streamName.Pastel("#808080")} ");
+                                    if (ShowInfo)
+                                    {
+                                        WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
+                                        Console.WriteLine();
+                                    }
+
+                                }
+
+                            }
+                        }
+                    }
 
                 }
             }
+
+            void WriteSplittedText(string input, int length, string prefix, int offset, string color)
+            {
+                string spaces = "";
+                for (int i = 0; i < offset; i++)
+                    spaces += " ";
+
+                if (input.Length > length)
+                {
+                    var strings = SplitByNearestSpace(input, length).ToArray();
+                    for (int i = 0; i < strings.Length; i++)
+                    {
+                        Console.Write(spaces + prefix + strings[i].Pastel(color));
+                        if (i != strings.Length - 1)
+                            Console.WriteLine();
+                    }
+                }
+                else
+                {
+                    Console.Write(spaces + prefix + input.Pastel(color));
+                }
+            }
+
         }
+
+
     }
 
     class WithoutDotComparer : IComparer<string>

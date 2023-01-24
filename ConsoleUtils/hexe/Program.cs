@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
+using NtfsDataStreams;
 
 namespace hexe
 {
@@ -37,24 +38,38 @@ namespace hexe
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
-                { "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
-                { "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
+
+
+                //{ "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
+                //{ "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
 
                 { "short", "s", CmdCommandTypes.FLAG, $"Show head and tail" },
                 { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
+                { "string", "S", CmdCommandTypes.FLAG, "String mode" },
 
                 { "cut", "c", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 0},
                     { CmdParameterTypes.INT, defaultLength},
-                }, "Cut from here to there" },
+                }, "Cut offset to offset" },
 
                 { "head", "h", CmdCommandTypes.FLAG, $"Show first X bytes, can be modified with --count."},
                 { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with --count."},
 
-                { "debug", "d", CmdCommandTypes.FLAG, "Debug mode" },
-
+                { "debug", "D", CmdCommandTypes.FLAG, "Debug mode" },
+                { "no-header", "H", CmdCommandTypes.FLAG, "disable header" },
+                { "zero", "z", CmdCommandTypes.FLAG, "Set offset to zero on cut" },
                 { "no-offset", "", CmdCommandTypes.FLAG, "Show no offset" },
                 { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
+                { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
+                { "convert-space", "", CmdCommandTypes.FLAG, "Mark space" },
+                { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
+                { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
+                { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
+                { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values" },
+
+                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors" },
+
+                { "dump", "d", CmdCommandTypes.FLAG, "dump binary to [output]-file" },
 
                 { "count", "n", CmdCommandTypes.PARAMETER,
                     new CmdParameters() {
@@ -75,12 +90,24 @@ namespace hexe
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
-                }, "File to read" }
+                }, "File to read" },
+
+                { "find", "F", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, null }
+                }, "Find pattern" },
+
+                { "find-string", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, null }
+                }, "Find string" },
+
+                { "output", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Output file" },
 
             };
 
             cmd.DefaultParameter = "file";
-            cmd.DefaultVerb = "show";
+            //cmd.DefaultVerb = "show";
             try
             {
                 cmd.Parse();
@@ -93,25 +120,20 @@ namespace hexe
 
                 bytesPerLine = (int)cmd["bytes-per-line"].Longs[0];
 
+                if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain") || cmd.HasFlag("output") || Console.IsOutputRedirected)
+                    Pastel.ConsoleExtensions.Disable();
 
                 List<Blob> data = new List<Blob>();
+                
                 List<Selection> parts = new List<Selection>();
-
-                //long offset = 0;
-                //long length = 0;
 
                 parts.Add(new Selection(0, 0));
 
                 if (noOffset)
                     firstHexColumn = 0;
 
-                //long count = cmd["count"].Longs[0];
                 parts[0].Offset = (int)cmd["offset"].Long;
                 parts[0].Length = (int)cmd["count"].Long;
-                /*
-                offset = cmd["cut"].Longs[0];
-                length = cmd["cut"].Longs[1];
-                */
 
                 if (cmd["cut"].WasUserSet)
                 {
@@ -122,8 +144,11 @@ namespace hexe
                         if (parts.Count <= k)
                             parts.Add(new Selection(0, 0));
 
-                        parts[k].Offset = cmd["cut"].Ints[i++];
-                        parts[k].Length = cmd["cut"].Ints[i++];
+                        var offset = cmd["cut"].Ints[i++];
+                        var end = cmd["cut"].Ints[i++];
+
+                        parts[k].Offset = offset;
+                        parts[k].End = end + 1;
                         k++;
                     }
                 }
@@ -139,18 +164,18 @@ namespace hexe
                 }
 
 
-
+                /*
                 if (cmd.Verbs.Length > 1)
                     throw new ArgumentException("You can't use more than one verb!");
 
                 string verb = cmd.Verbs[0];
-
+                */
 
                 // TODO: alle offsets vorher speichern, daten je nach input-stream einlesen und dann im loop ausgeben
 
                 if (cmd.HasFlag("short"))
                 {
-                    int cHeight = (Console.WindowHeight / 2 - 1);
+                    int cHeight = (Console.WindowHeight / 2 - 4);
                     defaultLength = cHeight * bytesPerLine;
 
                     //head
@@ -199,15 +224,67 @@ namespace hexe
                 {
                     if (cmd.HasFlag("bin"))
                     {
-                        //int binLineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
-                        ConsoleHelper.BinDump(data[i].Data);
+                        BinDump(data[i].Data);
                     }
+                    else if (cmd.HasFlag("string"))
+                    {
+                        StringDump(data[i].Data, Encoding.UTF8);
+                    }
+                    else if (cmd.HasFlag("dump"))
+                    {
+                        string filename = cmd["output"].String;
+
+                        if (Console.IsOutputRedirected || filename == null || filename == "-")
+                        {
+                            Console.WriteLine(Encoding.UTF8.GetString(data[i].Data));
+                        }
+                        else
+                        {
+                            if (filename == null)
+                                ConsoleHelper.WriteError("No output file given");
+                            File.WriteAllBytes(filename, data[i].Data);
+                        }
+                        
+
+                    }
+                    else if (cmd["find"].WasUserSet)
+                    {
+                        List<Blob> foundData = new List<Blob>();
+                        string hexString = cmd["find"].String;
+                        byte[] needle = StringToByteArray(hexString);
+                        int offset = 0;
+
+                        while (offset != -1 && data[i].Data.Length > (offset+1)) {
+                            offset = Find(needle, data[i].Data, offset+1);
+                            if(offset != -1)
+                            {
+                                int offset1 = offset - (offset % bytesPerLine);
+                                int offset2 = (offset + needle.Length + bytesPerLine);
+                                int offset3 = offset2 - (offset2 % bytesPerLine);
+
+                                int size = offset3 - offset1;
+
+                                //Blob blob = new Blob(offset, new byte[needle.Length]);
+                                Blob blob = new Blob(offset1, new byte[size]);
+                                //Buffer.BlockCopy(data[i].Data, (int)offset, blob.Data, 0, needle.Length);
+                                Buffer.BlockCopy(data[i].Data, (int)offset1, blob.Data, 0, size);
+                                HexDump(blob, bytesPerLine, false, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length);
+                                Console.WriteLine("...");
+                                //foundData.Add(blob);
+                            }
+                                    
+
+                        }
+
+                        
+                    }
+
                     else
                     {
-                        HexDump(data[i], bytesPerLine, false, (ulong)(data.Last().Offset + data.Last().Length));
+                        HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1));
                     }
                     if(i != data.Count - 1)
-                        Console.WriteLine("...");
+                        WriteLine("...");
                 }
                 
                         
@@ -228,8 +305,16 @@ namespace hexe
                 Console.ReadLine();
         }
 
+        // https://stackoverflow.com/a/321404
+        public static byte[] StringToByteArray(string input) // slow as fuck, but works
+        {
+            string hex = input.Replace(" ", "").Replace("0x","");
 
-
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
+        }
 
         public static byte[] ReadByteStream(Stream stream)
         {
@@ -249,6 +334,7 @@ namespace hexe
         static Blob ReadFile(string path, long offset = 0, long length = 0)
         {
             byte[] result = new byte[0];
+
             if (File.Exists(path))
             {
                 if (offset == 0 && length == 0)
@@ -273,9 +359,8 @@ namespace hexe
                     if (offset + length > size)
                         length = (int)size - offset;
 
-                    ;
-
                     result = new byte[length];
+
                     using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
                     {
                         reader.BaseStream.Seek(offset, SeekOrigin.Begin);
@@ -283,12 +368,61 @@ namespace hexe
                     }
                 }
             }
-            else
-                throw new Exception($"File \"{path}\" not found!");
+            else {
+
+                int idx = path.LastIndexOf(':');
+                if (idx != -1 && idx != 2)
+                {
+                    string filename = path.Substring(0, idx);
+                    string datastream = path.Substring(idx + 1);
+                    if (File.Exists(filename))
+                    {
+
+                        var fdss = new FileInfo(filename).GetDataStreams().Where(c => c.Name == datastream || c.Name == datastream + ":$DATA");
+
+                        if(fdss == null)
+                            throw new Exception($"Alternate data stream \"{path}\" not found!");
+
+                        var fds = fdss.First();
+
+                        long size = fds.Length;
+
+                        if (offset < 0)
+                            offset = size + offset;
+
+                        if (length == 0)
+                        {
+                            length = (int)size - offset;
+                        }
+
+
+                        if (offset > size)
+                            throw new Exception("Offset out of range.");
+                        if (offset + length > size)
+                            length = (int)size - offset;
+
+                        result = new byte[length];
+
+                        using (BinaryReader reader = new BinaryReader(fds.OpenRead()))
+                        {
+                            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+                            reader.Read(result, 0, (int)length);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception($"File \"{path}\" not found!");
+                    }
+                    
+
+                }
+                    
+            }
 
             return new Blob((int)offset, result);
         }
 
+        /*
         static string[] ReadLines(string path, int offset = 0, int length = 0)
         {
             string[] result = new string[0];
@@ -309,6 +443,7 @@ namespace hexe
 
             return result.ToArray();
         }
+        */
 
         static int SetBytesPerLine(int bPerLine)
         {
@@ -323,9 +458,11 @@ namespace hexe
 
             return lineLength;
         }
-        /*
-        public static void BinDump(byte[] bytes, int lineLength)
+
+        public static void BinDump(byte[] bytes, int lineLength = 0)
         {
+            if (lineLength == 0)
+                lineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
             if (bytes == null) return;
             for (int i = 0; i < bytes.Length; i += lineLength)
             {
@@ -344,13 +481,66 @@ namespace hexe
                         line += spaceChar;
                     }
                 }
-                Console.WriteLine(line);
+                WriteLine(line);
             }
         }
-        */
-        
 
-        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0)
+        public static void StringDump(byte[] bytes, Encoding encoding)
+        {
+            // TODO Linenumbers + Gremlins
+            if (bytes == null) return;
+            string output = encoding.GetString(bytes);
+            //Console.WriteLine(output);
+            bool isGremlin = false;
+            bool utf8Gremlin = false;
+            string newLine = string.Empty;
+            int lineCounter = 0;
+
+            foreach (char c in output)
+            {
+                int i = (int)c;
+                string color = ColorTheme.GetColor(i, true);
+
+
+                if (!isGremlin)
+                {
+                    if (utf8Gremlin)
+                        //                                                LF           CR           TAB
+                        isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
+                    else
+                        isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
+                }
+
+                /*
+                
+                else if (i == 0x09)    // Tab
+                    Console.Write((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
+
+                */
+                if (i == 0x0A)
+                {     // LF
+                    lineCounter++;
+                    WriteLine($"{newLine}");
+                    newLine = string.Empty;
+                }
+
+                else if (i == 0x20)    // Space
+                    newLine += (((!cmd.HasFlag("convert-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor)));
+
+                else if (i == 0x0d)    // CR
+                    newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor)));
+                else if (((i < 32) || (i > 255)) && i != 0xA)    // Unprintable (control chars, UTF-8, etc.)
+                    newLine += (((cmd.HasFlag("plain") || !cmd.HasFlag("convert-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2)));
+                else
+                    newLine += ($"{c}".Pastel(color));
+
+            }
+            if(lineCounter == 0)
+                WriteLine($"{newLine}");
+        }
+
+
+        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1)
         {
             if (bytes == null) return;
 
@@ -392,20 +582,20 @@ namespace hexe
             if (header)
             {
                 for (int i = 0; i < offsetLength + offsetPrefix.Length; i++)
-                    Console.Write(spaceChar);
-                Console.Write(spacer); // spacer
+                    Write(spaceChar);
+                Write(spacer); // spacer
                 for (int j = 0; j < bytesPerLine; j++)
                 {
                     if (j > 0 && (j & (dynamicSteps - 1)) == 0)
-                        Console.Write(spaceChar);
-                    Console.Write(j.ToString("X").ToLower().PadLeft(2, '0') + spaceChar);
+                        Write(spaceChar);
+                    Write(j.ToString("X").ToLower().PadLeft(2, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
                 }
-                Console.Write(spacer); // spacer
+                Write(spacer); // spacer
                 for (int j = 0; j < bytesPerLine; j++)
                 {
-                    Console.Write((j % 16).ToString("X").ToLower());
+                    Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
                 }
-                Console.Write(Environment.NewLine + Environment.NewLine);
+                Write(Environment.NewLine);
             }
 
             for (int i = 0; i < bytesLength; i += bytesPerLine)
@@ -414,22 +604,24 @@ namespace hexe
                 string hexPart = string.Empty;
                 string asciiPart = string.Empty;
 
-                //int offsetShift = 0;
-
-                offsetPart = (i + Math.Abs(bytes.Offset)).ToString("X").ToLower().PadLeft(offsetLength, '0');
+                offsetPart = (i + (zeroOffset ? 0 : Math.Abs(bytes.Offset))).ToString("X").ToLower().PadLeft(offsetLength, '0');
 
                 for (int j = 0; j < bytesPerLine; j++)
                 {
+                    int pos = i + j;
+                    int relativePos = pos + (int)bytes.Offset;
+
                     if (j > 0 && (j & (dynamicSteps - 1)) == 0)
                         hexPart += spaceChar;
 
-                    if (i + j >= bytesLength)
+                    if (pos >= bytesLength)
                     {
                         hexPart += (new string(new char[] { spaceChar , spaceChar , spaceChar }));
                     }
                     else
                     {
-                        byte b = bytes.Data[i + j];
+                       
+                        byte b = bytes.Data[pos];
 
                         string newHexPart = string.Empty;
 
@@ -438,6 +630,11 @@ namespace hexe
 
                         string color = ColorTheme.GetColor(b, j % 2 == 0);
 
+                        if((highlightOffset != -1 && highlightLength != -1))
+                        {
+                            if((relativePos < highlightOffset) || (relativePos > (highlightOffset + highlightLength)))
+                                color = "#444444";
+                        }
 
                         hexPart += newHexPart.Pastel(color);
                         hexPart += spaceChar;
@@ -446,20 +643,22 @@ namespace hexe
 
                     }
                 }
-                //Console.WriteLine((noOffset ? string.Empty : "0x" + new string(offsetPart).Pastel("DCDCDC") + "   ") + hexPart + (noAscii ? string.Empty : "   " + asciiPart)); 
-                Console.WriteLine((noOffset ? string.Empty : offsetPrefix + offsetPart.Pastel("DCDCDC") + spacer) + hexPart + (noAscii ? string.Empty : spacer + asciiPart));
+                WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noAscii ? string.Empty : spacer + asciiPart));
             }
         }
 
 
         // based on https://stackoverflow.com/a/38625726
-        public static long Find(byte[] needle, byte[] haystack, long offset = 0)
+        public static int Find(byte[] needle, byte[] haystack, int offset = 0)
         {
             int c = haystack.Length - needle.Length + 1;
-            for (long i = offset; i < c; i++)
+            for (int i = offset; i < c; i++)
             {
                 if (haystack[i] != needle[0]) // compare only first byte
                     continue;
+
+                if (needle.Length == 1) // return offset if needle is only one byte
+                    return i;
 
                 // found a match on first byte, now try to match rest of the pattern
                 for (int j = needle.Length - 1; j >= 1; j--)
@@ -471,46 +670,25 @@ namespace hexe
             return -1;
         }
 
+        static void Write(char input)
+        {
+            Console.Write(input);
+        }
 
+        static void Write(string input)
+        {
+            Console.Write(input);
+        }
+
+        static void WriteLine(string input)
+        {
+            Console.WriteLine(input);
+        }
 
         public static void Die(string msg, int errorcode)
         {
             ConsoleHelper.WriteError(msg);
             Environment.Exit(errorcode);
-        }
-
-        public static void BinDump2(byte[] bytes, int lineLength)
-        {
-            if (bytes == null) return;
-
-
-
-            // line[charColumn] = (b < 32 ? '·' : (char)b);
-
-            char[] line = (new String(spaceChar, lineLength - Environment.NewLine.Length) + Environment.NewLine).ToCharArray();
-
-
-            for (int i = 0; i < bytes.Length; i += lineLength)
-            {
-                int hexColumn = firstHexColumn;
-                int charColumn = firstCharColumn;
-
-                for (int j = 0; j < lineLength; j++)
-                {
-                    if (!(i + j >= bytes.Length))
-                    {
-                        byte b = bytes[i + j];
-                        line[charColumn] = (b < 32 ? nonPrintableChar : (char)b);
-                    }
-                    else
-                    {
-                        line[charColumn] = spaceChar;
-                    }
-
-                    charColumn++;
-                }
-                Console.WriteLine(line);
-            }
         }
 
         static void ShowHelp()

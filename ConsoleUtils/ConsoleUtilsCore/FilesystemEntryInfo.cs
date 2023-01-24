@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.ComponentModel;
 using System.Globalization;
+using System.Collections.Generic;
+using NtfsDataStreams;
 
 public class FilesystemEntryInfo
 {
@@ -43,7 +45,8 @@ public class FilesystemEntryInfo
             return !IsLink ? null : GetFinalPathName(this.FullPath).Replace(@"\\?\",""); 
         } }
     public string ColorString {  get { return _GetColorString(); } }
-    public string BaseDirectory { get {
+    public string BaseDirectory { 
+        get {
 
             if (this.IsDirectory)
                 return new DirectoryInfo(this.FullPath).Parent.FullName;
@@ -51,7 +54,8 @@ public class FilesystemEntryInfo
                 return new FileInfo(this.FullPath).Directory.FullName;
             else
                 return null;
-    } }
+        } 
+    }
 
     public string Extension { get
         {
@@ -93,6 +97,19 @@ public class FilesystemEntryInfo
             else
                 return FileDefinitions.GetFileTypeByExtension(this.Extension);
         } 
+    }
+
+    public IEnumerable<NtfsDataStreams.FileDataStream> AlternateDataStreams
+    {
+        get
+        {
+            if (this.IsDirectory)
+                return null;
+            else if (this.IsFile)
+                return new FileInfo(this.FullPath).GetDataStreams();
+            else
+                return null;
+        }
     }
 
     public string MIMEType
@@ -158,7 +175,7 @@ public class FilesystemEntryInfo
             this.LastAccessTime = _fileInfo.LastAccessTime;
             this.LastWriteTime = _fileInfo.LastWriteTime;
 
-            _CalculateHumanReadableSize(_fileInfo.Length);
+            CalculateHumanReadableSize(_fileInfo.Length);
             this._parentDirectory = _fileInfo.Directory.FullName;
             //this.Owner = System.IO.File.GetAccessControl(path).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
             //this.ReadOnly = _fileInfo.Attributes.HasFlag(System.IO.FileAttributes.ReadOnly);
@@ -383,15 +400,21 @@ public class FilesystemEntryInfo
 
 
     // based on https://stackoverflow.com/a/14488941
-    private void _CalculateHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
+
+    private void CalculateHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
+    {
+        (string size, string suffix) = GetHumanReadableSize(value, factor, decimalPlaces);
+        this._humanReadbleSize = size;
+        this._humanReadbleSizeSuffix = suffix;
+    }
+
+    // based on https://stackoverflow.com/a/14488941
+    public static (string,string) GetHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
     {
         if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
-        //if (value < 0) { return "-" + CalculateHumanReadableSize(-value, decimalPlaces); }
-        if (value == 0) {
-            this._humanReadbleSize = "0";
-            this._humanReadbleSizeSuffix = "";
-            return;
-        }
+
+        if (value == 0)
+            return ("0","");
 
         // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
         int mag = (int)Math.Log(value, factor);
@@ -408,16 +431,10 @@ public class FilesystemEntryInfo
             adjustedSize /= factor;
         }
         if (mag == 0) decimalPlaces = 0; // no decimal points on bytes
-        this._humanReadbleSize = string.Format("{0:n" + decimalPlaces + "}", adjustedSize);
-        this._humanReadbleSizeSuffix = SizeSuffixes[mag];
-        /*
-        return string.Format("{0:n" + decimalPlaces + "} {1}",
-            adjustedSize,
-            SizeSuffixes[mag]);
-        */
+        return (string.Format("{0:n" + decimalPlaces + "}", adjustedSize), SizeSuffixes[mag]);
     }
 
-    
+
 
     private static readonly string[] SizeSuffixes =
         { "", "k", "M", "G", "T", "P", "E", "Z", "Y" };

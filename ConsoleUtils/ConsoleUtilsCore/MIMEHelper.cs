@@ -1,6 +1,7 @@
 ﻿using HeyRed.Mime;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,6 +45,12 @@ public class MIMEHelper
         return GetMIMEFlag(Path, MagicOpenFlags.MAGIC_NONE);
     }
 
+    public static string GetDescription(FileStream Stream)
+    {
+        return GetMIMEFlag(Stream, MagicOpenFlags.MAGIC_NONE);
+        
+    }
+
     public static string GetMIMEType(string Path)
     {
         return GetMIMEFlag(Path, MagicOpenFlags.MAGIC_MIME_TYPE);
@@ -62,6 +69,19 @@ public class MIMEHelper
     public static string GetMIMEFlag(string Path, MagicOpenFlags Flag)
     {
         return (new HeyRed.Mime.Magic(Flag)).Read(Path);
+    }
+
+    public static string GetMIMEFlag(FileStream Stream, MagicOpenFlags Flag)
+    {
+        return (new HeyRed.Mime.Magic(Flag)).Read(Stream, 1024);
+        try
+        {
+            Stream.Close();
+        }
+        catch
+        {
+
+        }
     }
 
 }

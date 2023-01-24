@@ -12,7 +12,7 @@ public class ColorTheme
     public static string Default2 { get { return "569CD6"; } }
     public static string DarkColor { get { return "268C96"; } }
     public static string HighLight2 { get { return "D69D85"; } }
-    public static string OffsetColor {  get { return "eeeeee";} }
+    public static string OffsetColor {  get { return "808080";} }
     public static string OffsetColorHighlight { get { return "D2CC8D"; } }
 
     private static readonly Dictionary<FileTypes, string> FileTypeColors = new Dictionary<FileTypes, string>()

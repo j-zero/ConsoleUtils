@@ -268,8 +268,12 @@ namespace hexe
                                 Blob blob = new Blob(offset1, new byte[size]);
                                 //Buffer.BlockCopy(data[i].Data, (int)offset, blob.Data, 0, needle.Length);
                                 Buffer.BlockCopy(data[i].Data, (int)offset1, blob.Data, 0, size);
+
+                                if(counter != 0)
+                                    Console.WriteLine("...");
+
                                 HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length);
-                                Console.WriteLine("...");
+                                
                                 //foundData.Add(blob);
                             }
                                     

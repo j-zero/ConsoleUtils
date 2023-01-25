@@ -17,12 +17,22 @@ public class FileAndDirectoryFilter
     private static string[] SplitBaseDirAndPattern(string InputPath)
     {
         string[] path_arr = InputPath.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-        string base_directory = path_arr[0];
+
+        string base_directory = "";
+        int i = 1;
+
+        if (InputPath.StartsWith("\\") && path_arr.Length > 1)
+        {  // UNC
+            base_directory = $"\\\\{path_arr[0]}\\{path_arr[1]}";
+            i = 2;
+        }
+        else
+            base_directory = path_arr[0];
 
         if(!Directory.Exists(base_directory))
             return new string[] { Environment.CurrentDirectory, InputPath };
 
-        int i = 1;
+        
 
         while (i < path_arr.Length)
         {

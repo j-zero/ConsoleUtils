@@ -26,6 +26,8 @@ namespace list
 
         static bool isStartedFromExplorer = false;
 
+        static bool ShowLongOwner = false;
+
         static void Main(string[] args)
         {
             isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
@@ -83,9 +85,9 @@ namespace list
 
             FilesystemEntryInfo[] found = FileAndDirectoryFilter.GetFilesFromFilter(path);
 
-
+            var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
             
-            if (found.Length > 0)
+            if (found.Length > 0 && (ShowHidden ||(notHiddenCount > 0)))
             {
                 if(found.Length == 1 && found[0].Error)
                 {
@@ -107,7 +109,7 @@ namespace list
 
                 foreach (KeyValuePair<string, List<FilesystemEntryInfo>> ei in entries)
                 {
-                    FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
+                    //FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
                     var list = ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList();
 
                     if (cmd.HasFlag("only-dirs"))
@@ -135,9 +137,15 @@ namespace list
                 
                 try
                 {
-                    string filepath = null;
-                    filepath = Path.GetFullPath(path);
-                    ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
+                    string filepath = path;
+                    if(!path.StartsWith("\\\\"))
+                        filepath = Path.GetFullPath(path);
+
+                    if(found.Length == 0)
+                        ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
+                    else
+                        ConsoleHelper.WriteError($"No files found in \"{filepath}\", but there are hidden files! Use -a to show them.");
+
                 }
                 catch
                 {
@@ -408,7 +416,8 @@ namespace list
             //foreach (KeyValuePair<string, List<EntryInfo>> ei in entries)
 
             int longestName = ei.Max(r => r.Name.Length);
-            int longestOwner = ei.Max(r => r.ShortOwner.Length);
+            int longestShortOwner = ei.Max(r => r.ShortOwner.Length);
+            int longestLongOwner = ei.Max(r => r.Owner.Length);
             int longestSize = ei.Max(r => r.HumanReadbleSize.Length);
             int longestEncoding = 0;
             int longestDesciption = 0;
@@ -420,7 +429,7 @@ namespace list
             if (ShowInfo)
                 longestDesciption = ei.Max(r => r.FileTypeDescription.Length);
 
-            int maxPos = 9 + longestSize + 1 + longestName + 1 + longestOwner + 1 + (longestDesciption != 0 ? longestDesciption + 1 : 0) + (longestEncoding != 0 ? longestEncoding + 1 : 0);
+            int maxPos = 9 + longestSize + 1 + longestName + 1 + longestShortOwner + 1 + (longestDesciption != 0 ? longestDesciption + 1 : 0) + (longestEncoding != 0 ? longestEncoding + 1 : 0);
 
             foreach (FilesystemEntryInfo e in SortFileSystemList(ei))
             {
@@ -453,22 +462,33 @@ namespace list
 
 
 
+                    string owner = "";
+                    if(ShowLongOwner || !e.IsShare)
+                        owner = (e.ShortOwner != string.Empty ? e.ShortOwner.PadRight(longestShortOwner).Pastel("#F9F1A5") : "???".PadRight(longestShortOwner).Pastel("#ff4500"));
+                    else
+                        owner = (e.Owner != string.Empty ? e.Owner.PadRight(longestLongOwner).Pastel("#F9F1A5") : "???".PadRight(longestLongOwner).Pastel("#ff4500"));
 
-                    string owner = (e.ShortOwner != string.Empty ? e.ShortOwner.PadRight(longestOwner).Pastel("#F9F1A5") : "???".PadRight(longestOwner).Pastel("#ff4500"));
                     Console.Write($"{owner} ");
+                    int sizepos = 0;
+                    string size = "";
+                    string encoding = "";
+                    string lastWriteTime = "";
 
-                    string lastWriteTime = $"{e.HumanReadableLastWriteTime.Pastel("#4169e1")} ";
-                    Console.Write(lastWriteTime);
-
-                    if (ShowEncoding)
+                    if (!e.IsShare)
                     {
-                        string encoding = $"{e.Encoding.PadRight(longestEncoding + 1).Pastel("#666666")}";
-                        Console.Write(encoding);
-                    }
+                        lastWriteTime = $"{e.HumanReadableLastWriteTime.Pastel("#4169e1")} ";
+                        Console.Write(lastWriteTime);
 
-                    string size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
-                    int sizepos = Console.CursorLeft;
-                    Console.Write($"{size} ");
+                        if (ShowEncoding)
+                        {
+                            encoding = $"{e.Encoding.PadRight(longestEncoding + 1).Pastel("#666666")}";
+                            Console.Write(encoding);
+                        }
+
+                        size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
+                        sizepos = Console.CursorLeft;
+                        Console.Write($"{size} ");
+                    }
 
                     string parent_dir = (e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar).Pastel(ColorTheme.Directory);
                     string name = printParentDiretory ? parent_dir + e.Name.Pastel(e.ColorString) : e.Name.Pastel(e.ColorString);
@@ -494,7 +514,7 @@ namespace list
 
 
 
-                    if (ShowInfo && !e.IsDirectory)
+                    if (ShowInfo && !e.IsDirectory && !string.IsNullOrWhiteSpace(e.FileTypeDescription))
                     {
                         Console.WriteLine();
                         WriteSplittedText(e.FileTypeDescription, maxDescLength, "  ", filepos, "#666666");

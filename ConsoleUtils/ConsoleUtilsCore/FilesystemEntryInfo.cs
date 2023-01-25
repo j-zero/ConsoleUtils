@@ -25,6 +25,14 @@ public class FilesystemEntryInfo
 
     public bool IsDirectory { get; private set; }
     public bool IsFile { get; private set; }
+    
+    public bool IsShare { get;  set; }
+
+    public string ShareDescription { get; set; }
+    public string Server { get; set; }
+    public uint ShareType { get; set; }
+    public string ShareName { get; set; }
+
     public string Name { get; private set; }
     public string FullPath { get; private set; }
     public bool CanRead { get { return _CanRead(); } }
@@ -34,7 +42,11 @@ public class FilesystemEntryInfo
     public bool CanReadSecurity { get {  return this.Owner != null ; } }
     public string ShortOwner { get { return this._GetOwner(true); } }
     public bool HasReadOnlyAttribute { get { return this.HasFlag(System.IO.FileAttributes.ReadOnly); } }
-    public bool HasHiddenAttribute { get { return this.HasFlag(System.IO.FileAttributes.Hidden); } }
+    public bool HasHiddenAttribute { get {
+            if (this.IsShare && this.ShareName.EndsWith("$"))
+                return true;
+            return this.HasFlag(System.IO.FileAttributes.Hidden);
+        } }
     public bool HasSystemAttribute { get { return this.HasFlag(System.IO.FileAttributes.System); } }
     public bool HasArchiveAttribute { get { return this.HasFlag(System.IO.FileAttributes.Archive); } }
     public bool IsEncrypted { get { return this.HasFlag(System.IO.FileAttributes.Encrypted); } }
@@ -47,8 +59,9 @@ public class FilesystemEntryInfo
     public string ColorString {  get { return _GetColorString(); } }
     public string BaseDirectory { 
         get {
-
-            if (this.IsDirectory)
+            if (this.IsShare)
+                return "\\\\" + this.Server + "\\";
+            else if (this.IsDirectory)
                 return new DirectoryInfo(this.FullPath).Parent.FullName;
             else if (this.IsFile)
                 return new FileInfo(this.FullPath).Directory.FullName;
@@ -130,6 +143,8 @@ public class FilesystemEntryInfo
     {
         get
         {
+            if (this.IsShare)
+                return this.ShareDescription;
             return MIMEHelper.GetDescription(this.FullPath);
         }
     }
@@ -198,6 +213,11 @@ public class FilesystemEntryInfo
             //this.Hidden = _directoryInfo.Attributes.HasFlag(System.IO.FileAttributes.Hidden);
             //this.System = _directoryInfo.Attributes.HasFlag(System.IO.FileAttributes.System);
         }
+        else if (this.IsShare)
+        {
+            this.Name = this.ShareName;
+            this.Exists = true;
+        }
 
 
         if (Exists)
@@ -206,11 +226,32 @@ public class FilesystemEntryInfo
         }
     }
 
+    public FilesystemEntryInfo(string server, string share, string shareDescription, uint shareType)
+    {
+        System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+        customCulture.NumberFormat.NumberDecimalSeparator = ".";
+        System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+
+        this.ShareName = share;
+        this.IsShare = true;
+        this.Name = this.ShareName;
+        this.Server = server;
+        this.ShareDescription = shareDescription;
+        this.ShareType = shareType;
+        this.Exists = true;
+        this.FullPath = Path.GetFullPath("\\\\" + server + "\\" + share);
+        this._parentDirectory = "\\\\" + server + "\\";
+        
+
+    }
+
+
     //private static readonly string[] _monthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec" };
 
     private string _formatDateTimeHumanReadable(DateTime timestamp)
     {
-
+        if (timestamp.Ticks == 0)
+            return "-";
         ;
         string result = "";
         string field1 = "";
@@ -236,7 +277,7 @@ public class FilesystemEntryInfo
     {
         if(this.IsFile)
             return _fileInfo.Attributes.HasFlag(flag);
-        else if(this.IsDirectory)
+        else if(this.IsDirectory && !this.IsShare)
             return _directoryInfo.Attributes.HasFlag(flag);
         return false;
     }
@@ -255,7 +296,7 @@ public class FilesystemEntryInfo
             {
                 if (this.IsFile)
                     longOwner = System.IO.File.GetAccessControl(this.FullPath).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
-                else if (this.IsDirectory)
+                else if (this.IsDirectory || this.IsShare)
                     longOwner = System.IO.Directory.GetAccessControl(this.FullPath).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
             }
             catch (Exception ex)

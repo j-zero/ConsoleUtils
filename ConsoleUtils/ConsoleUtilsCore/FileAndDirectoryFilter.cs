@@ -7,15 +7,27 @@ using System.Text.RegularExpressions;
 
 public class FileAndDirectoryFilter
 {
+    public static bool isUNCServer = false;
+
     public static FilesystemEntryInfo[] GetFilesFromFilter(string filter)
     {
         var base_pat = SplitBaseDirAndPattern(filter);
-        var items = GetMatchingItems(base_pat[1].Split(Path.DirectorySeparatorChar), base_pat[0]);
-        return items;
+
+        //
+
+        if (!isUNCServer)
+            return GetMatchingItems(base_pat[1].Split(Path.DirectorySeparatorChar), base_pat[0]);
+        else
+            return GetShares(base_pat[0]);
+
+
+
+
     }
 
     private static string[] SplitBaseDirAndPattern(string InputPath)
     {
+        isUNCServer = false;
         string[] path_arr = InputPath.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
 
         string base_directory = "";
@@ -25,6 +37,11 @@ public class FileAndDirectoryFilter
         {  // UNC
             base_directory = $"\\\\{path_arr[0]}\\{path_arr[1]}";
             i = 2;
+        }
+        else if (InputPath.StartsWith("\\") && path_arr.Length == 1)
+        {
+            isUNCServer = true;
+            return new string[] { path_arr[0], "" };
         }
         else
             base_directory = path_arr[0];
@@ -49,6 +66,21 @@ public class FileAndDirectoryFilter
             base_directory += Path.DirectorySeparatorChar;
 
         return new string[] { base_directory, pattern };
+    }
+
+    //private static FilesystemEntryInfo[] GetShares(string[] pattern, string base_directory)
+    private static FilesystemEntryInfo[] GetShares(string server)
+    {
+        // todo pattern
+        List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
+
+        foreach(var share in NetworkShareHelper.EnumNetShares(server))
+        {
+            var fei = new FilesystemEntryInfo(server, share.Name, share.Description, share.Type);
+            entries.Add(fei);
+        }
+
+        return entries.ToArray();
     }
 
     private static FilesystemEntryInfo[] GetMatchingItems(string[] pattern, string base_directory)
@@ -77,8 +109,8 @@ public class FileAndDirectoryFilter
             string[] files = new string[] { };
             try
             {
-                dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
-                files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+                    dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+                    files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
             }
             catch (Exception ex)
             {

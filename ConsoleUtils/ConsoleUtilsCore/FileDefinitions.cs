@@ -50,6 +50,8 @@ public class FileDefinitions
 
     public static FileTypes GetFileTypeByExtension(string Extension)
     {
+        if (Extension == null)
+            return FileTypes.Unknown;
         FileTypes result = FileTypes.Unknown;
         foreach (KeyValuePair<FileTypes, string[]> kv in FileTypeExtensions)
             if (kv.Value.Contains(Extension.ToLower())) return kv.Key;

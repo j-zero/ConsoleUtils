@@ -74,7 +74,9 @@ public class FileAndDirectoryFilter
         // todo pattern
         List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
 
-        foreach(var share in NetworkShareHelper.EnumNetShares(server))
+        var shares = NetworkShareHelper.EnumNetShares(server);
+        // Todo exception
+        foreach (var share in shares)
         {
             var fei = new FilesystemEntryInfo(server, share.Name, share.Description, share.Type);
             entries.Add(fei);

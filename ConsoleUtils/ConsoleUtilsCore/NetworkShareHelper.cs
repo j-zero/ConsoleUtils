@@ -81,7 +81,8 @@ public class NetworkShareHelper
         }
         else
         {
-            ShareInfos.Add(new ShareInfo("ERROR=" + ret.ToString(), 10, string.Empty));
+            //ShareInfos.Add(new ShareInfo("ERROR=" + ret.ToString(), 10, string.Empty));
+            throw new Exception(ret.ToString());
             return ShareInfos.ToArray();
         }
     }

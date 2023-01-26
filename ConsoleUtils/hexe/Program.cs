@@ -24,7 +24,7 @@ namespace hexe
 
         static char[] HexChars = "0123456789abcdef".ToCharArray();
         static bool noOffset = false;
-        static bool noAscii = false;
+        static bool noText = false;
         //static long startOffset = 0;
         static int defaultLength = 256;
 
@@ -34,6 +34,8 @@ namespace hexe
 
         static int windowWidth = 120;
         static int windowHeight = 80;
+
+        static Encoding encoding = Encoding.UTF8;
 
         static void Main(string[] args)
         {
@@ -70,6 +72,8 @@ namespace hexe
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
                 { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values" },
 
+
+
                 { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors" },
 
                 { "dump", "d", CmdCommandTypes.FLAG, "dump binary to [output]-file" },
@@ -103,6 +107,18 @@ namespace hexe
                     { CmdParameterTypes.STRING, null }
                 }, "Find string" },
 
+                { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
+                { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
+                { "utf16", "", CmdCommandTypes.FLAG, "Set encoding to UTF16" },
+                { "utf7", "", CmdCommandTypes.FLAG, "Set encoding to UTF7" },
+                { "utf32", "", CmdCommandTypes.FLAG, "Set encoding to UTF32" },
+                { "utf16be", "", CmdCommandTypes.FLAG, "Set encoding to UTF16BE" },
+
+                { "codepage", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.INT, 0 }
+                }, "Set encoding to codepage <int>" },
+
+
                 { "output", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Output file" },
@@ -118,7 +134,7 @@ namespace hexe
                 if (cmd.HasFlag("help"))
                     ShowHelp();
 
-                noAscii = cmd.HasFlag("no-ascii");
+                noText = cmd.HasFlag("no-ascii");
                 noOffset = cmd.HasFlag("no-offset");
 
                 bytesPerLine = (int)cmd["bytes-per-line"].Longs[0];
@@ -173,6 +189,33 @@ namespace hexe
                     windowHeight = Console.WindowHeight;
                     windowWidth = Console.WindowWidth;
                 }
+
+                /* 
+                { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
+                { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
+                { "utf16", "", CmdCommandTypes.FLAG, "Set encoding to UTF16" },
+                { "utf7", "", CmdCommandTypes.FLAG, "Set encoding to UTF7" },
+                { "utf32", "", CmdCommandTypes.FLAG, "Set encoding to UTF32" },
+                { "utf16be", "", CmdCommandTypes.FLAG, "Set encoding to UTF16BE" },
+                */
+
+                if (cmd["codepage"].WasUserSet)
+                {
+                    encoding = Encoding.GetEncoding((int)cmd["codepage"].Int);
+                }
+                else if (cmd.HasFlag("ascii"))
+                    encoding = Encoding.ASCII;
+                else if (cmd.HasFlag("utf8"))
+                    encoding = Encoding.UTF8;
+                else if (cmd.HasFlag("utf16"))
+                    encoding = Encoding.Unicode;
+                else if (cmd.HasFlag("utf7"))
+                    encoding = Encoding.UTF7;
+                else if (cmd.HasFlag("utf32"))
+                    encoding = Encoding.UTF32;
+                else if (cmd.HasFlag("utf16be"))
+                    encoding = Encoding.BigEndianUnicode;
+
 
                 /*
                 if (cmd.Verbs.Length > 1)
@@ -239,7 +282,7 @@ namespace hexe
                     }
                     else if (cmd.HasFlag("string"))
                     {
-                        StringDump(data[i].Data, Encoding.UTF8);
+                        StringDump(data[i].Data, encoding);
                     }
                     else if (cmd.HasFlag("dump"))
                     {
@@ -247,7 +290,7 @@ namespace hexe
 
                         if (Console.IsOutputRedirected || output_file == null || output_file == "-")
                         {
-                            Console.WriteLine(Encoding.UTF8.GetString(data[i].Data));
+                            Console.WriteLine(encoding.GetString(data[i].Data));
 
                         }
                         else
@@ -259,11 +302,18 @@ namespace hexe
                         
 
                     }
-                    else if (cmd["find"].WasUserSet)
+                    else if (cmd["find"].WasUserSet || cmd["find-string"].WasUserSet)
                     {
                         List<Blob> foundData = new List<Blob>();
-                        string hexString = cmd["find"].String;
-                        byte[] needle = StringToByteArray(hexString);
+                        //string hexString = cmd["find"].String;
+                        byte[] needle = null;
+
+                        if (cmd["find"].WasUserSet)
+                            needle = StringToByteArray(cmd["find"].String);
+                        else if (cmd["find-string"].WasUserSet)
+                            needle = encoding.GetBytes(cmd["find-string"].String);
+
+                        
                         int offset = 0;
                         int counter = 0;
                         while (offset != -1 && data[i].Data.Length > (offset+1)) {
@@ -658,7 +708,7 @@ namespace hexe
 
                     }
                 }
-                WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noAscii ? string.Empty : spacer + asciiPart));
+                WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
             }
         }
 

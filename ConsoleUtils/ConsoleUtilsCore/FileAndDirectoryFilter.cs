@@ -73,7 +73,7 @@ public class FileAndDirectoryFilter
     {
         // todo pattern
         List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
-
+        
         var shares = NetworkShareHelper.EnumNetShares(server);
         // Todo exception
         foreach (var share in shares)

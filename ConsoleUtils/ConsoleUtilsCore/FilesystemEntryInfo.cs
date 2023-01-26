@@ -430,6 +430,10 @@ public class FilesystemEntryInfo
             return ColorTheme.Symlink;
         if (this.IsDirectory)
             return ColorTheme.Directory;
+        if (this.IsShare && this.HasHiddenAttribute)
+            return "#" + ColorTheme.DarkColor;
+        if (this.IsShare)
+            return ColorTheme.Directory;
         if (this.IsFile) {
             string color = ColorTheme.GetColorByExtension(this.Extension);
             return color != null ? color : result;

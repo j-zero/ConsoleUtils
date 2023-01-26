@@ -47,7 +47,7 @@ namespace list
                 {"info","i", CmdCommandTypes.FLAG, "show magic file description"},
                 {"streams","R", CmdCommandTypes.FLAG, "show NTFS alternate file streams"},
 
-                {"full","F", CmdCommandTypes.FLAG, "show all available informations"},
+                {"full","F", CmdCommandTypes.FLAG, "show all available files and informations"},
 
                 {"group-directories-first", "d", CmdCommandTypes.FLAG, "list directories before other files" },
                 {"only-dirs", "D", CmdCommandTypes.FLAG, "list directories before other files" },
@@ -72,7 +72,7 @@ namespace list
                 path = cmd["path"].Strings[0];
 
             ShowInfo = cmd.HasFlag("info") || cmd.HasFlag("full");
-            ShowHidden = cmd.HasFlag("all");
+            ShowHidden = cmd.HasFlag("all") || cmd.HasFlag("full");
 
             ShowEncoding = cmd.HasFlag("encoding");
             ShowHeader = cmd.HasFlag("header");
@@ -81,9 +81,16 @@ namespace list
             if (path == null)
                 path = Environment.CurrentDirectory;
 
-            
+            FilesystemEntryInfo[] found = null;
 
-            FilesystemEntryInfo[] found = FileAndDirectoryFilter.GetFilesFromFilter(path);
+            try
+            {
+                found = FileAndDirectoryFilter.GetFilesFromFilter(path);
+            }
+            catch(Exception ex)
+            {
+                Die("Guru Meditation: " + ex.Message, 1);
+            }
 
             var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
             
@@ -164,7 +171,11 @@ namespace list
             }
 
         }
-
+        public static void Die(string msg, int errorcode)
+        {
+            ConsoleHelper.WriteError(msg);
+            Environment.Exit(errorcode);
+        }
         static void ShowHelp()
         {
             Console.WriteLine($"list, {ConsoleHelper.GetVersionString()}");
@@ -453,7 +464,7 @@ namespace list
                     mode += e.HasArchiveAttribute ? "a".Pastel("#ffd700") : minus;
                     mode += e.Owner == string.Empty ? "!".PastelBg("#ff4500").Pastel("#ffffff") : minus;
                     mode += !e.CanWrite ? "W".Pastel("#ff4500") : (e.HasReadOnlyAttribute ? "r".Pastel("#ff4500") : minus);
-                    mode += e.HasHiddenAttribute ? "h".Pastel("#606060") : minus;
+                    mode += e.HasHiddenAttribute ? "h".Pastel(ColorTheme.DarkColor) : minus;
                     mode += e.HasSystemAttribute ? "s".Pastel("#ff8c00") : minus;
                     mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
                     mode += e.FileType == FileTypes.Executable ? "x".Pastel(e.ColorString) : minus;
@@ -464,9 +475,9 @@ namespace list
 
                     string owner = "";
                     if(ShowLongOwner || !e.IsShare)
-                        owner = (e.ShortOwner != string.Empty ? e.ShortOwner.PadRight(longestShortOwner).Pastel("#F9F1A5") : "???".PadRight(longestShortOwner).Pastel("#ff4500"));
+                        owner = (e.ShortOwner != string.Empty ? e.ShortOwner.PadRight(longestShortOwner).Pastel("#F9F1A5") : "?".PadRight(longestShortOwner).Pastel("#ff4500"));
                     else
-                        owner = (e.Owner != string.Empty ? e.Owner.PadRight(longestLongOwner).Pastel("#F9F1A5") : "???".PadRight(longestLongOwner).Pastel("#ff4500"));
+                        owner = (e.Owner != string.Empty ? e.Owner.PadRight(longestLongOwner).Pastel("#F9F1A5") : "?".PadRight(longestLongOwner).Pastel("#ff4500"));
 
                     Console.Write($"{owner} ");
                     int sizepos = 0;
@@ -491,7 +502,19 @@ namespace list
                     }
 
                     string parent_dir = (e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar).Pastel(ColorTheme.Directory);
-                    string name = printParentDiretory ? parent_dir + e.Name.Pastel(e.ColorString) : e.Name.Pastel(e.ColorString);
+
+                    string name = e.Name.Pastel(e.ColorString);
+                    if(e.IsShare)
+                    {
+                        if (e.ShareName.EndsWith("$"))
+                            name = e.ShareName.Substring(0, e.ShareName.Length - 1).Pastel(ColorTheme.DarkColor) + "$".Pastel(ColorTheme.HighLight1);
+                        else 
+                            name = e.ShareName.Pastel(ColorTheme.Directory);
+                    }
+
+                    string output_name = printParentDiretory ? parent_dir + name : name;
+
+
 
                     int filepos = Console.CursorLeft;
                     int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
@@ -502,7 +525,7 @@ namespace list
                         spaces += " ";
                     */
 
-                    Console.Write(name);
+                    Console.Write(output_name);
 
 
 

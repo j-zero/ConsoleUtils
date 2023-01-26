@@ -30,7 +30,10 @@ namespace hexe
 
         static CmdParser cmd;
 
+        static string output_file = null;
 
+        static int windowWidth = 120;
+        static int windowHeight = 80;
 
         static void Main(string[] args)
         {
@@ -163,6 +166,13 @@ namespace hexe
                     parts[0].Length = cmd["count"].WasUserSet ? parts[0].Length : defaultLength;
                 }
 
+                output_file = cmd["output"].String;
+
+                if (!Console.IsOutputRedirected)
+                {
+                    windowHeight = Console.WindowHeight;
+                    windowWidth = Console.WindowWidth;
+                }
 
                 /*
                 if (cmd.Verbs.Length > 1)
@@ -175,7 +185,8 @@ namespace hexe
 
                 if (cmd.HasFlag("short"))
                 {
-                    int cHeight = (Console.WindowHeight / 2 - 4);
+                    int cHeight = (windowHeight / 2 - 4);
+                    
                     defaultLength = cHeight * bytesPerLine;
 
                     //head
@@ -232,17 +243,18 @@ namespace hexe
                     }
                     else if (cmd.HasFlag("dump"))
                     {
-                        string filename = cmd["output"].String;
+                        
 
-                        if (Console.IsOutputRedirected || filename == null || filename == "-")
+                        if (Console.IsOutputRedirected || output_file == null || output_file == "-")
                         {
                             Console.WriteLine(Encoding.UTF8.GetString(data[i].Data));
+
                         }
                         else
                         {
-                            if (filename == null)
+                            if (output_file == null)
                                 ConsoleHelper.WriteError("No output file given");
-                            File.WriteAllBytes(filename, data[i].Data);
+                            File.WriteAllBytes(output_file, data[i].Data);
                         }
                         
 
@@ -466,7 +478,7 @@ namespace hexe
         public static void BinDump(byte[] bytes, int lineLength = 0)
         {
             if (lineLength == 0)
-                lineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+                lineLength = windowWidth - (windowWidth % 2) - 1;
             if (bytes == null) return;
             for (int i = 0; i < bytes.Length; i += lineLength)
             {
@@ -558,7 +570,7 @@ namespace hexe
 
             if (BytesPerLine == 0)  // dynamic
             {
-                int dynWidth = Console.WindowWidth;
+                int dynWidth = windowWidth;
                 int minWidth = 32;
                 while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
                 {
@@ -675,7 +687,7 @@ namespace hexe
 
         static void Write(char input)
         {
-            Console.Write(input);
+           Console.Write(input);
         }
 
         static void Write(string input)
@@ -685,7 +697,7 @@ namespace hexe
 
         static void WriteLine(string input)
         {
-            Console.WriteLine(input);
+            Write(input + Environment.NewLine);
         }
 
         public static void Die(string msg, int errorcode)

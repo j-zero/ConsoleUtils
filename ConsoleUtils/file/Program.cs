@@ -29,7 +29,7 @@ namespace file
                     Console.WriteLine("File:      " + Path.GetFullPath(path));
                 }
 
-                string mime = MIMEHelper.GetDescription(path);
+                string mime = MIMEHelper.GetMIMEType(path);
 
                 Console.WriteLine("Info:      " + MIMEHelper.GetDescription(path));
                 Console.WriteLine("MIME-Type: " + mime);

@@ -60,7 +60,7 @@ namespace klemmbrett
                     Console.WriteLine(Encoding.ASCII.GetString(b));
                 else if (cmd.HasFlag("unicode"))
                     Console.WriteLine(Encoding.Unicode.GetString(b));
-                else if (cmd.HasFlag("uft8"))
+                else if (cmd.HasFlag("utf8"))
                     Console.WriteLine(Encoding.UTF8.GetString(b));
             }
             ;

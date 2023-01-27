@@ -297,7 +297,12 @@ namespace hexe
                         {
                             if (output_file == null)
                                 ConsoleHelper.WriteError("No output file given");
-                            File.WriteAllBytes(output_file, data[i].Data);
+                            FileMode mode = FileMode.Create;
+
+                            if (i > 0)
+                                mode = FileMode.Append;
+
+                            WriteAllBytes(output_file, data[i].Data, mode);
                         }
                         
 
@@ -370,6 +375,16 @@ namespace hexe
             if (System.Diagnostics.Debugger.IsAttached)
                 Console.ReadLine();
         }
+
+        public static void WriteAllBytes(string path, byte[] bytes, FileMode mode = FileMode.Create)
+        {
+
+            using (var stream = new FileStream(path, mode))
+            {
+                stream.Write(bytes, 0, bytes.Length);
+            }
+        }
+
 
         // https://stackoverflow.com/a/321404
         public static byte[] StringToByteArray(string input) // slow as fuck, but works

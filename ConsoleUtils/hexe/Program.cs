@@ -59,8 +59,10 @@ namespace hexe
                 //{ "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
 
                 { "short", "s", CmdCommandTypes.FLAG, $"Show head and tail" },
+
                 { "bin", "b", CmdCommandTypes.FLAG, "Binary mode" },
                 { "string", "S", CmdCommandTypes.FLAG, "String mode" },
+                { "array", "", CmdCommandTypes.FLAG, "Output C/C++ array" },
 
                 { "cut", "c", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 0},
@@ -117,10 +119,11 @@ namespace hexe
                     { CmdParameterTypes.STRING, null }
                 }, "Find string" },
 
-                { "base16", "", CmdCommandTypes.FLAG, "Show bytes as hexadecimal (default)" },
-                { "base8", "", CmdCommandTypes.FLAG, "Show bytes octodecimal" },
-                { "base10", "", CmdCommandTypes.FLAG, "Show bytes octodecimal" },
-                { "base2", "", CmdCommandTypes.FLAG, "Show bytes in base2" },
+                { "base16", "", CmdCommandTypes.FLAG, "Output bytes as hexadecimal values (default)" },
+                { "base8", "", CmdCommandTypes.FLAG, "Output bytes as octodecimal values" },
+                { "base10", "", CmdCommandTypes.FLAG, "Output bytes as octodecimal values" },
+                { "base2", "", CmdCommandTypes.FLAG, "Output bytes as binary values" },
+
 
                 { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
                 { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
@@ -311,6 +314,10 @@ namespace hexe
                     else if (cmd.HasFlag("string"))
                     {
                         StringDump(data[i].Data, encoding);
+                    }
+                    else if (cmd.HasFlag("array"))
+                    {
+                        ArrayDump(data[i].Data);
                     }
                     else if (cmd.HasFlag("dump"))
                     {
@@ -592,6 +599,41 @@ namespace hexe
                 }
                 WriteLine(line);
             }
+        }
+
+        public static void ArrayDump(byte[] bytes, int lineLength = 32)
+        {
+
+            if (lineLength == 0)
+                lineLength = windowWidth - (windowWidth % 2) - 1;
+            if (bytes == null) return;
+
+            Write("{ ");
+
+            for (int i = 0; i < bytes.Length; i += lineLength)
+            {
+                string line = "";
+                for (int j = 0; j < lineLength; j++)
+                {
+                    var c = i + j;
+                    if (!(c >= bytes.Length))
+                    {
+                        byte b = bytes[i + j];
+                        string color = ColorTheme.GetColor(b, j % 2 == 0);
+
+                        line += ("0x" + b.ToString("X").ToLower().PadLeft(2, '0')).Pastel(color);
+                        if (c < bytes.Length-1)
+                            line += ",";
+                        line += spaceChar;
+                    }
+                    else
+                    {
+                        //line += spaceChar;
+                    }
+                }
+                Write(line);
+            }
+            WriteLine("};");
         }
 
         public static void StringDump(byte[] bytes, Encoding encoding)

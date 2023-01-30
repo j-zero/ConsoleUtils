@@ -13,6 +13,14 @@ namespace hexe
     // TODO cut to binary, patch
     internal class Program
     {
+        public enum OutputMode
+        {
+            Hex,
+            Dec,
+            Oct,
+            Bin
+        }
+
         static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
         static int firstCharColumn = 0;
         static int lineLength = 0;
@@ -36,6 +44,8 @@ namespace hexe
         static int windowHeight = 80;
 
         static Encoding encoding = Encoding.UTF8;
+
+        static OutputMode outputMode = OutputMode.Hex;
 
         static void Main(string[] args)
         {
@@ -106,6 +116,11 @@ namespace hexe
                 { "find-string", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
                 }, "Find string" },
+
+                { "base16", "", CmdCommandTypes.FLAG, "Show bytes as hexadecimal (default)" },
+                { "base8", "", CmdCommandTypes.FLAG, "Show bytes octodecimal" },
+                { "base10", "", CmdCommandTypes.FLAG, "Show bytes octodecimal" },
+                { "base2", "", CmdCommandTypes.FLAG, "Show bytes in base2" },
 
                 { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
                 { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
@@ -216,6 +231,19 @@ namespace hexe
                 else if (cmd.HasFlag("utf16be"))
                     encoding = Encoding.BigEndianUnicode;
 
+
+                if (cmd.HasFlag("base16"))
+                    outputMode = OutputMode.Hex;
+                else if (cmd.HasFlag("base8"))
+                    outputMode = OutputMode.Oct;
+                else if (cmd.HasFlag("base10"))
+                    outputMode = OutputMode.Dec;
+                else if (cmd.HasFlag("base2"))
+                {
+                    if (!cmd["cut"].WasUserSet)
+                        bytesPerLine = 8;
+                    outputMode = OutputMode.Bin;
+                }
 
                 /*
                 if (cmd.Verbs.Length > 1)
@@ -339,7 +367,7 @@ namespace hexe
                                 if(counter != 0)
                                     Console.WriteLine("...");
 
-                                HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length);
+                                HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode);
                                 
                                 //foundData.Add(blob);
                             }
@@ -352,7 +380,7 @@ namespace hexe
 
                     else
                     {
-                        HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1));
+                        HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode);
                     }
                     if(i != data.Count - 1)
                         WriteLine("...");
@@ -621,7 +649,7 @@ namespace hexe
         }
 
 
-        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1)
+        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1, OutputMode outputMode = OutputMode.Hex)
         {
             if (bytes == null) return;
 
@@ -655,7 +683,14 @@ namespace hexe
                 SetBytesPerLine(BytesPerLine);
             }
 
-            
+            int padding = 2;
+            if (outputMode == OutputMode.Hex)
+                padding = 2;
+            else if (outputMode == OutputMode.Dec || outputMode == OutputMode.Oct)
+                padding = 3;
+            else if (outputMode == OutputMode.Bin)
+                padding = 8;
+
 
             //Console.WriteLine(bytes.Length.ToString("X"));
 
@@ -669,7 +704,7 @@ namespace hexe
                 {
                     if (j > 0 && (j & (dynamicSteps - 1)) == 0)
                         Write(spaceChar);
-                    Write(j.ToString("X").ToLower().PadLeft(2, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
+                    Write(j.ToString("X").ToLower().PadLeft(padding, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
                 }
                 Write(spacer); // spacer
                 for (int j = 0; j < bytesPerLine; j++)
@@ -697,17 +732,41 @@ namespace hexe
 
                     if (pos >= bytesLength)
                     {
-                        hexPart += (new string(new char[] { spaceChar , spaceChar , spaceChar }));
+                        for (int s = 0; s <= padding; s++) hexPart += spaceChar; // Spaces before ascii-part 
                     }
                     else
                     {
                        
                         byte b = bytes.Data[pos];
+                        int first = (b >> 4) & 0xF;
+                        int second = b & 0xF;
 
                         string newHexPart = string.Empty;
 
-                        newHexPart += (HexChars[(b >> 4) & 0xF]);
-                        newHexPart += (HexChars[b & 0xF]);
+
+                        if (outputMode == OutputMode.Hex)
+                        {
+
+                            newHexPart += HexChars[first];
+                            newHexPart += HexChars[second];
+
+                            //newHexPart += " (" +b.ToString().PadLeft(3, '0') + ")";
+                        }
+                        else if (outputMode == OutputMode.Dec)
+                        {
+                            newHexPart += b.ToString().PadLeft(3, '0');
+                        }
+                        else if (outputMode == OutputMode.Oct)
+                        {
+                            newHexPart += Convert.ToString(b, 8).PadLeft(3, '0');
+                        }
+
+                        else if (outputMode == OutputMode.Bin)
+                        {
+                            newHexPart += Convert.ToString(first, 2).PadLeft(4, '0');
+                            newHexPart += Convert.ToString(second, 2).PadLeft(4, '0');
+                        }
+
                         string color = ColorTheme.GetColor(b, j % 2 == 0);
 
                         if((highlightOffset != -1 && highlightLength != -1))

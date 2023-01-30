@@ -6,6 +6,7 @@ using System.Text;
 
 public class PathHelper
 {
+    
     public static string GetRelativePath(string fromPath, string toPath)
     {
         int fromAttr = GetPathAttribute(fromPath);

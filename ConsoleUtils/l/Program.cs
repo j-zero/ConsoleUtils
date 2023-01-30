@@ -210,62 +210,7 @@ namespace list
             return $"{str.Substring(0, half - 2).Pastel(color1)}{"...".Pastel(color2)}{str.Substring(str.Length - half, half).Pastel(color3)}";
         }
 
-        // Enumerate by nearest space
-        // Split String value by closest to length spaces
-        // e.g. for length = 3 
-        // "abcd efghihjkl m n p qrstsf" -> "abcd", "efghihjkl", "m n", "p", "qrstsf" 
-        public static IEnumerable<String> SplitByNearestSpace(String value, int length)
-        {
-            if (String.IsNullOrEmpty(value))
-                yield break;
 
-            int bestDelta = int.MaxValue;
-            int bestSplit = -1;
-
-            int from = 0;
-
-            for (int i = 0; i < value.Length; ++i)
-            {
-                var Ch = value[i];
-
-                if (Ch != ' ')
-                    continue;
-
-                int size = (i - from);
-                int delta = (size - length > 0) ? size - length : length - size;
-
-                if ((bestSplit < 0) || (delta < bestDelta))
-                {
-                    bestSplit = i;
-                    bestDelta = delta;
-                }
-                else
-                {
-                    yield return value.Substring(from, bestSplit - from);
-
-                    i = bestSplit;
-
-                    from = i + 1;
-                    bestSplit = -1;
-                    bestDelta = int.MaxValue;
-                }
-            }
-
-            // String's tail
-            if (from < value.Length)
-            {
-                if (bestSplit >= 0)
-                {
-                    if (bestDelta < value.Length - from)
-                        yield return value.Substring(from, bestSplit - from);
-
-                    from = bestSplit + 1;
-                }
-
-                if (from < value.Length)
-                    yield return value.Substring(from);
-            }
-        }
 
         static void Exit(int exitCode)
         {
@@ -540,7 +485,7 @@ namespace list
                     if (ShowInfo && !e.IsDirectory && !string.IsNullOrWhiteSpace(e.FileTypeDescription))
                     {
                         Console.WriteLine();
-                        WriteSplittedText(e.FileTypeDescription, maxDescLength, "  ", filepos, "#666666");
+                        ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength, "  ", filepos, "#666666");
                     }
 
 
@@ -565,7 +510,7 @@ namespace list
                                                         $" :{streamName.Pastel("#808080")} ");
                                     if (ShowInfo)
                                     {
-                                        WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
+                                        ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
                                         Console.WriteLine();
                                     }
 
@@ -578,27 +523,6 @@ namespace list
                 }
             }
 
-            void WriteSplittedText(string input, int length, string prefix, int offset, string color)
-            {
-                string spaces = "";
-                for (int i = 0; i < offset; i++)
-                    spaces += " ";
-
-                if (input.Length > length)
-                {
-                    var strings = SplitByNearestSpace(input, length).ToArray();
-                    for (int i = 0; i < strings.Length; i++)
-                    {
-                        Console.Write(spaces + prefix + strings[i].Pastel(color));
-                        if (i != strings.Length - 1)
-                            Console.WriteLine();
-                    }
-                }
-                else
-                {
-                    Console.Write(spaces + prefix + input.Pastel(color));
-                }
-            }
 
         }
 

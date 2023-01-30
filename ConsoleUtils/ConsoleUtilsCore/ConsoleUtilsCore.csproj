@@ -106,6 +106,7 @@
     <Compile Include="FilesystemEntryInfo.cs" />
     <Compile Include="FileAndDirectoryFilter.cs" />
     <Compile Include="FileDefinitions.cs" />
+    <Compile Include="InetHelper.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="ManagementObjectSearcher.cs" />
     <Compile Include="MIMEHelper.cs" />

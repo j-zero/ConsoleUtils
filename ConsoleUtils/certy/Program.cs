@@ -11,13 +11,39 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using System.Formats.Asn1;
 using System.Collections.Generic;
 
 namespace certy
 {
     internal class Program
     {
+        static System.Drawing.Color GoodColor = System.Drawing.Color.LimeGreen;
+        static System.Drawing.Color WarnColor = System.Drawing.Color.LightGoldenrodYellow;
+        static System.Drawing.Color BadColor = System.Drawing.Color.OrangeRed;
+        static System.Drawing.Color WarnColor2 = System.Drawing.Color.Yellow;
+        static System.Drawing.Color BadColor2 = System.Drawing.Color.Firebrick;
+        static string HeaderColor = ColorTheme.OffsetColorHighlight;
+        public enum SANType
+        {
+            otherName, rfc822Name, dNSName, x400Address, directoryName, ediPartyName, uniformResourceIdentifier, IPAddress, registeredID
+        }
+
+        internal class SAN
+        {
+            public SANType SanType { get; set; }
+            public string Value { get; set; }
+
+            public SAN()
+            {
+
+            }
+            public SAN(SANType SanType, string Value)
+            {
+                this.SanType = SanType;
+                this.Value = Value;
+            }
+        }
+
         static CmdParser cmd;
 
         static void Main(string[] args)
@@ -42,13 +68,17 @@ namespace certy
             cmd.DefaultParameter = "host";
             cmd.Parse();
 
+
             string host = cmd["host"].String;
+            int port = (int)cmd["port"].Int;
+            int timeout = 2000;
 
             if (cmd.HasFlag("help") || host == null)
                 ShowHelp();
 
-
-            TcpClient client = new TcpClient(host, 443);
+            ShowTCPCertificate(host, port, timeout);
+            /*
+            TcpClient client = new TcpClient(host, port);
 
             using (SslStream sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null))
             {
@@ -56,7 +86,9 @@ namespace certy
                 // This is where you read and send data
             }
             client.Close();
-            Console.ReadKey();
+            */
+            if (System.Diagnostics.Debugger.IsAttached)
+                Console.ReadLine();
         }
 
         static void ShowHelp()
@@ -86,7 +118,7 @@ namespace certy
 
             Environment.Exit(exitCode);
         }
-        void ShowTCPCertificate(string host, int port, int timeout = 2000)
+        static void ShowTCPCertificate(string host, int port, int timeout = 2000)
         {
             TcpClient client = new TcpClient();
             try
@@ -114,7 +146,7 @@ namespace certy
                 client.Close();
             }
         }
-        async Task ShowHTTPCertificate(string EndPoint)
+        static async Task ShowHTTPCertificate(string EndPoint)
         {
             string proxy = GetProxyForUrlStatic(EndPoint);
 
@@ -172,12 +204,16 @@ namespace certy
 
             string keyAlgo = "";
             int bits = 0;
-            DateTime notBefore = new DateTime(0);
-            DateTime notAfter = new DateTime(0);
+            DateTime notBefore = X5092.NotBefore;
+            DateTime notAfter = X5092.NotAfter;
+
+            string notBeforeString = "";
+            string notAfterString = "";
+
 
             if (ecdsa != null)
             {
-                keyAlgo = ecdsa.KeyExchangeAlgorithm;
+                keyAlgo = "ECDSA";
                 bits = ecdsa.KeySize;
             }
             else if (rsa != null)
@@ -191,29 +227,100 @@ namespace certy
                 bits = dsa.KeySize;
             }
 
+            int pos = 3;
+
+            int maxDescLength = Console.WindowWidth - 8;
 
 
-            Console.WriteLine($"Subject:                    {X5092.SubjectName.Name}");
+            Console.WriteLine($"Subject:".Pastel(HeaderColor));
+            ConsoleHelper.WriteSplittedText(X5092.SubjectName.Name, maxDescLength, "", 3, ColorTheme.OffsetColor);
+            Console.WriteLine();
+            Console.WriteLine($"Issuer:".Pastel(HeaderColor));
+            ConsoleHelper.WriteSplittedText(X5092.Issuer, maxDescLength, "", 3, ColorTheme.OffsetColor);
+            Console.WriteLine();
+            Console.WriteLine($"Public key:".Pastel(HeaderColor));
+
+            string keyAlgoString = "";
+            string bitsString = "";
+
+            if (keyAlgo == "RSA")
+            {
+                keyAlgoString = keyAlgo.Pastel(WarnColor);
+                if (bits < 2048)
+                    bitsString = bits.ToString().Pastel(BadColor);
+                else if (bits < 3072)
+                    bitsString = bits.ToString().Pastel(WarnColor2);
+                else
+                    bitsString = bits.ToString().Pastel(GoodColor);
+            }
+            else if (keyAlgo == "ECDSA")
+            {
+                bitsString = bits.ToString().Pastel(GoodColor);
+                keyAlgoString = keyAlgo.Pastel(GoodColor);
+            }
+            else
+            {
+                bitsString = bits.ToString().Pastel(BadColor2);
+                keyAlgoString = keyAlgo.Pastel(BadColor);
+            }
+
+            Console.WriteLine($"   {keyAlgoString}, {bitsString} bits");
 
 
-            Console.WriteLine($"Public Key:                 {keyAlgo}, {bits} bits");
+            Console.WriteLine($"Serial number:".Pastel(HeaderColor));
+            Console.WriteLine($"   {X5092.SerialNumber}");
+
+            Console.WriteLine($"Thumbprint:".Pastel(HeaderColor));
+            Console.WriteLine($"   {X5092.Thumbprint}");
+            Console.WriteLine($"Signature Algorhitm:".Pastel(HeaderColor));
+            Console.WriteLine($"   {X5092.SignatureAlgorithm.FriendlyName}");
+
+            Console.WriteLine($"Not Before:".Pastel(HeaderColor));
 
 
-            Console.WriteLine($"Issuer:                     {X5092.Issuer}");
-            Console.WriteLine($"Serial number:              {X5092.SerialNumber}");
-            Console.WriteLine($"Thumbprint  :               {X5092.Thumbprint}");
-            Console.WriteLine($"Signature Algorhitm:        {X5092.SignatureAlgorithm.FriendlyName}");
+            if (notBefore > DateTime.Now)
+                Console.WriteLine($"   {notBefore.ToShortDateString().Pastel(BadColor)} {notBefore.ToShortTimeString().Pastel(BadColor2)}");
+            else
+                Console.WriteLine($"   {notBefore.ToShortDateString().Pastel(ColorTheme.Default1)} {notBefore.ToShortTimeString().Pastel(ColorTheme.Default2)}");
+
+            Console.WriteLine($"Not after:".Pastel(HeaderColor));
+            if (notAfter < DateTime.Now)
+                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(BadColor)} {notAfter.ToShortTimeString().Pastel(BadColor2)}");
+            else if (notAfter < DateTime.Now.AddDays(30))
+                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(WarnColor)} {notAfter.ToShortTimeString().Pastel(WarnColor2)}");
+            else
+                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(ColorTheme.Default1)} {notAfter.ToShortTimeString().Pastel(ColorTheme.Default2)}");
+
+            /*
             Console.WriteLine($"Not Before:                 {X5092.NotBefore.ToLongDateString()} {X5092.NotBefore.ToLongTimeString()}");
             Console.WriteLine($"Not After:                  {X5092.NotAfter.ToLongDateString()} {X5092.NotAfter.ToLongTimeString()}");
-
+            */
             var SAN = X5092.Extensions["2.5.29.17"];        //SAN
 
-            GetExtensionContent(SAN);
+            //File.WriteAllBytes("2.5.29.17.dmp", SAN.RawData);
+
+            Console.WriteLine($"{SAN.Oid.FriendlyName}:".Pastel(HeaderColor));
+
+
+            foreach (var san in ParseSubjectAltName(SAN.RawData))
+            {
+                if (san.SanType == SANType.dNSName )
+                {
+                    if(InetHelper.IsFqdn(san.Value))
+                        Console.WriteLine($"   DNS: {san.Value.Pastel(GoodColor)}");
+                    else
+                        Console.WriteLine($"   DNS: {san.Value.Pastel(WarnColor)}");
+                }
+                else if (san.SanType == SANType.IPAddress)
+                {
+                    Console.WriteLine($"   IP:  {san.Value.Pastel(BadColor)}");
+                }
+            }
 
             // extended information
             //Console.WriteLine($"Version:                    {X5092.Version}");
-
-            foreach (var ext in X5092.Extensions)
+            /*
+                foreach (var ext in X5092.Extensions)
             {
                 // System.Security.Cryptography.X509Certificates.X509KeyUsageExtension
                 // System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension
@@ -239,18 +346,18 @@ namespace certy
                 else if (ext.Oid.Value == "2.5.29.17") // Alternativer Antragstellername
                 {
                     Console.WriteLine($"{GetExtensionContentString(ext)}");
-                    /*
+                    
                     ;
                     SimpleHexDump(ext.RawData);
                     File.WriteAllBytes("2.5.29.17.dmp", ext.RawData);
-                    */
+                    
                 }
                 else
                 {
                     Console.WriteLine($"{GetExtensionContentString(ext)}"); ;
                 }
 
-
+                *
 
                 //DumpProperties(ext, "   ");
                 ;
@@ -292,6 +399,53 @@ namespace certy
                 object value = descriptor.GetValue(obj);
                 Console.WriteLine(prefix + "{0} = \"{1}\"", name, value);
             }
+        }
+
+        // https://oidref.com/2.5.29.17
+        static List<SAN> ParseSubjectAltName(byte[] rawData)
+        {
+            List<SAN> result = new List<SAN>();
+            SANType sanType = SANType.otherName;
+            string sanValue = null;
+            byte[] arr = null;
+            int i = 2;
+            
+            while (i < rawData.Length)
+            {
+                byte b = rawData[i];
+                if (((b >> 4) & 0xF) == 8) // first value
+                {
+                    sanType = (SANType)(b & 0xF);
+                    i++;
+                    int lenth = rawData[i];
+                    arr = new byte[lenth];
+                    for (int j = 0; j < lenth; j++)
+                    {
+                        i++;
+                        arr[j] = rawData[i];
+                    }
+
+                    if (sanType == SANType.dNSName || sanType == SANType.rfc822Name || sanType == SANType.uniformResourceIdentifier)
+                    {
+                        sanValue = Encoding.ASCII.GetString(arr);
+                    }
+                    else if (sanType == SANType.IPAddress)
+                    {
+                        sanValue = arr[0].ToString() + "." + arr[1].ToString() + "." + arr[2].ToString() + "." + arr[3].ToString();
+                    }
+                    else
+                    {
+                        sanValue = Encoding.ASCII.GetString(arr); // ?? 
+                    }
+                    result.Add(new SAN(sanType, sanValue));
+                }
+                else
+                {
+                    i++;    // next byte
+                }
+
+            }
+            return result;
         }
 
         public static void SimpleHexDump(byte[] bytes, int bytesPerLine = 16)

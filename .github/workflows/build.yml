@@ -18,11 +18,12 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Change Dir
         run: cd ConsoleUtils
+        run: ls
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore ./ConsoleUtils/Consoleutils.sln
       - name: Install NuGet dependencies
-        run: nuget restore ConsoleUtils.sln
+        run: nuget restore ./ConsoleUtils/ConsoleUtils.sln
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore ./ConsoleUtils/Consoleutils.sln
       - name: Show Builddir
         run: ls ../bin/

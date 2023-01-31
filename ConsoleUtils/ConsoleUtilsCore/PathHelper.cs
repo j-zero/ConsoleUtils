@@ -6,7 +6,15 @@ using System.Text;
 
 public class PathHelper
 {
-    
+    public static string CleanFileNameFromString(string input)
+    {
+        string result = input;
+        foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+        {
+            result = result.Replace(c, '_');
+        }
+        return result;
+    }
     public static string GetRelativePath(string fromPath, string toPath)
     {
         int fromAttr = GetPathAttribute(fromPath);

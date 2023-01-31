@@ -81,6 +81,7 @@
     <PackageReference Include="SevenZipExtractor">
       <Version>1.0.17</Version>
     </PackageReference>
+    <PackageReference Include="SevenZipExtractor" Version="1.0.17" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

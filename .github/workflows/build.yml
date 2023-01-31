@@ -23,7 +23,9 @@ jobs:
         run: nuget restore ConsoleUtils.sln
         working-directory: ./ConsoleUtils
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: |
+          dotnet add package SevenZipExtractor --version 1.0.17
+          dotnet build --configuration Release --no-restore
         working-directory: ./ConsoleUtils
       - name: Show Builddir
         run: ls ./bin

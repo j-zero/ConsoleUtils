@@ -26,3 +26,9 @@ jobs:
         working-directory: ./ConsoleUtils
       - name: Show Builddir
         run: ls ./bin
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Kompilat
+          path: bin
+          retention-days: 7

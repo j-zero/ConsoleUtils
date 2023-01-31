@@ -16,15 +16,14 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-      - name: Change Dir
-        run: 
-          cd ConsoleUtils
-          ls
       - name: Install dependencies
-        run: dotnet restore ./ConsoleUtils/Consoleutils.sln
+        run: dotnet restore
+        working-directory: ./ConsoleUtils
       - name: Install NuGet dependencies
-        run: nuget restore ./ConsoleUtils/ConsoleUtils.sln
+        run: nuget restore ConsoleUtils.sln
+        working-directory: ./ConsoleUtils
       - name: Build
-        run: dotnet build --configuration Release --no-restore ./ConsoleUtils/Consoleutils.sln
+        run: dotnet build --configuration Release --no-restore
+        working-directory: ./ConsoleUtils
       - name: Show Builddir
-        run: ls ../bin/
+        run: ls ./bin

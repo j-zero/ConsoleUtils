@@ -77,9 +77,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SevenZipExtractor">
-      <Version>1.0.17</Version>
-    </PackageReference>
+    <Reference Include="SevenZipExtractor, Version=1.0.16.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SevenZipExtractor.1.0.17\lib\net45\SevenZipExtractor.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

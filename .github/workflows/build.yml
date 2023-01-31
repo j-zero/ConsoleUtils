@@ -19,9 +19,6 @@ jobs:
       - name: Install NuGet dependencies
         run: nuget restore ConsoleUtils.sln
         working-directory: ./ConsoleUtils
-      - name: 7zip for unpack
-        run: dotnet add package SevenZipExtractor --version 1.0.17
-        working-directory: ./ConsoleUtils/unpack
       - name: Build
         run: dotnet build --configuration Release --no-restore
         working-directory: ./ConsoleUtils

@@ -17,8 +17,9 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Change Dir
-        run: cd ConsoleUtils
-        run: ls
+        run: 
+          cd ConsoleUtils
+          ls
       - name: Install dependencies
         run: dotnet restore ./ConsoleUtils/Consoleutils.sln
       - name: Install NuGet dependencies

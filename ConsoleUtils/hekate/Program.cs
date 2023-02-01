@@ -11,6 +11,8 @@ namespace hekate
     internal class Program
     {
         static CmdParser cmd;
+        static Encoding stringEncoding = Encoding.Unicode;
+
         static void Main(string[] args)
         {
             cmd = new CmdParser(args)
@@ -18,12 +20,28 @@ namespace hekate
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
                 { "name", "n", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
-                    }, "Download URL" },
-                { "list", "", CmdCommandTypes.FLAG, "List all credentials" },
-                { "dump", "", CmdCommandTypes.FLAG, "Dump all credentials" },
+                    }, "Credential name" },
+                { "user", "u", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Credential user" },
+                { "password", "p", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Credential password string" },
+                { "password-hex", "h", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Credential password hex-string" },
+                { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, null }
+                    }, "Filename for dump/input" },
+                { "read", "", CmdCommandTypes.VERB, "Read credentials" },
+                { "write", "", CmdCommandTypes.VERB, "Write credentials" },
+                { "list", "", CmdCommandTypes.VERB, "List all credentials" },
+                { "dump", "", CmdCommandTypes.VERB, "Dump all credentials" },
             };
 
             cmd.DefaultParameter = "name";
+            cmd.DefaultVerb = "read";
+
             cmd.Parse();
 
             if (cmd.HasFlag("help"))
@@ -33,39 +51,72 @@ namespace hekate
 
             //var success = CredentialManager.WriteCredential("hekate", "user", Encoding.UTF8.GetBytes("pässword"), CredentialManager.CredentialPersistence.Enterprise);
             //var credentials = CredentialManager.ReadCredential("hekate");
-            if (name == null || cmd.HasFlag("dump") || cmd.HasFlag("list"))
+            if (name == null || cmd.HasVerb("dump") || cmd.HasVerb("list"))
             {
+                Console.WriteLine($"Credentials:");
                 foreach (var cre in CredentialManager.EnumerateCrendentials())
                 {
                     if (cre != null)
                     {
-                        if (cmd.HasFlag("dump"))
+                        if (cmd.HasVerb("dump"))
                         {
-                            Console.WriteLine($"{"Name".Pastel(ColorTheme.Default1)}:     {cre.ApplicationName}");
+                            Console.WriteLine($"{"Name".Pastel(ColorTheme.Default1)}:      {cre.ApplicationName}");
                             DumpCred(cre);
                             Console.WriteLine("---");
                         }
                         else
                         {
-                            Console.WriteLine($"{cre.ApplicationName}");
+                            Console.WriteLine($"   {cre.ApplicationName.Pastel(ColorTheme.Default1)}");
                         }
                     }
                 }
             }
-            else
+            else if (cmd.HasVerb("write"))
+            {
+                string username = "";
+                if (cmd["user"].WasUserSet)
+                    username = cmd["user"].String;
+                byte[] password = null;
+                if (cmd["password"].WasUserSet)
+                    password = stringEncoding.GetBytes(cmd["password"].String);
+                else if (cmd["password-hex"].WasUserSet)
+                {
+                    password = ConvertHelper.StringToByteArray(cmd["password"].String);
+                }
+                int result = CredentialManager.WriteCredential(name, username, password, CredentialManager.CredentialPersistence.Enterprise);
+                if (result == 0)
+                {
+                    Console.WriteLine($"Succes!");
+                    var cre = CredentialManager.ReadCredential(name);
+                    DumpCred(cre);
+                }
+            }
+            else if (cmd.HasVerb("read"))
             {
                 var cre = CredentialManager.ReadCredential(name);
-                DumpCred(cre);
+                if (!DumpCred(cre))
+                {
+                    ConsoleHelper.WriteError($"Credential \"{name}\" not found.");
+                }
             }
+            else
+            {
+                ConsoleHelper.WriteErrorDog("Wat?");
+            }
+
             Exit(0);
         }
 
-        static void DumpCred(Credential cre, bool hex = true)
+        static bool DumpCred(Credential cre, bool hex = true)
         {
-            
-            Console.WriteLine($"{"Username".Pastel(ColorTheme.Default1)}: {cre.UserName}");
+            if (cre == null)
+            {
+                return false;
+            }
+            Console.WriteLine($"{"Username".Pastel(ColorTheme.Default1)}:  {cre.UserName}");
             Console.WriteLine($"{"Content".Pastel(ColorTheme.Default1)}:");
             ConsoleHelper.SimpleHexDump(cre.RawPassword);
+            return true;
         }
 
         static void ShowHelp()

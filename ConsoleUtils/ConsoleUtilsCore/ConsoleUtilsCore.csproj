@@ -103,6 +103,7 @@
     <Compile Include="CommandLineParser.cs" />
     <Compile Include="ConsoleExtensions.cs" />
     <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="ConvertHelper.cs" />
     <Compile Include="FilesystemEntryInfo.cs" />
     <Compile Include="FileAndDirectoryFilter.cs" />
     <Compile Include="FileDefinitions.cs" />

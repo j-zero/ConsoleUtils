@@ -226,7 +226,6 @@ public class CmdParser : KeyedCollection<string, CmdOption>
     {
         get
         {
-            
             string[] verbs = this.Where(c => (c.CmdType == CmdCommandTypes.VERB && c.WasUserSet)).Select(x => x.Name).ToArray();
             return verbs.Length > 0 ? verbs : DefaultVerb != null ? new string[] { DefaultVerb } : new string[0];
         }
@@ -300,8 +299,11 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
     public void Parse()
     {
+        int counter = 0;
+
         while (fifo.Count > 0)
         {
+            counter++;
             var inputArgument = fifo.Dequeue();
 
             if(inputArgument.StartsWith(_shortParamPrefix) && !inputArgument.StartsWith(_longParamPrefix) && (inputArgument.Length - _shortParamPrefix.Length > 1)) // multiple short arguments
@@ -335,18 +337,22 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 if (parseKey != null)
                     currentArgument = parseKey;
             }
-            else
+            else if(counter == 1)
             {
-                parseKey = this.Where(x => x.Name == currentArgument).Select(x => x.Name).FirstOrDefault();
+                parseKey = this.Where(x => x.Name == currentArgument || x.ShortName == currentArgument).Select(x => x.Name).FirstOrDefault();
                 if (parseKey != null)
+                {
                     currentArgument = parseKey;
-                IsVerb = true;
+                    IsVerb = true;
+                }
+                
             }
 
 
+            
+            bool gotValue = this.TryGetValue(currentArgument, out CmdOption arg);
             ;
-
-            if (this.TryGetValue(currentArgument, out CmdOption arg))     // known command
+            if (gotValue)     // known command
             {
                 if(arg.IsVerb == false && IsVerb == true) // parse as verb, but is argument (e.g. "--help" vs. "help")
                     throw new ArgumentException($"unknown verb \"{inputArgument}\"");

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace unpack
 {
     internal class Program
@@ -30,7 +31,7 @@ namespace unpack
             };
 
             cmd.DefaultParameter = "file";
-            cmd.DefaultVerb = "extract";
+            cmd.DefaultVerb = "list";
             cmd.Parse();
 
             string relativePath = cmd["file"].String;
@@ -41,7 +42,7 @@ namespace unpack
             string fullPath = Path.GetFullPath(relativePath);
             Console.WriteLine(fullPath);
 
-
+            Console.WriteLine($"{"Size"}\t{"PackedSize"}\t{"Filename"}");
             if (cmd.HasVerb("list"))
             {
                 using (ArchiveFile file = new ArchiveFile(fullPath))
@@ -49,7 +50,19 @@ namespace unpack
                     foreach (var entry in file.Entries)
                     {
                         string size = UnitHelper.CalculateHumanReadableSize(entry.Size);
-                        Console.WriteLine($"{size}\t{entry.FileName}");
+                        string packedsize = UnitHelper.CalculateHumanReadableSize(entry.PackedSize);
+                        //string LastWriteTime = entry.LastWriteTime
+                        if (!entry.IsFolder)
+                        {
+                            var extension = GetExtension(entry.FileName);
+                            var color = ColorTheme.GetColorByExtension(extension);
+                            Console.WriteLine($"{size}\t{packedsize}\t\t{entry.FileName.Pastel(color)}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{"    -"}\t{"     -"}\t\t{entry.FileName.Pastel(ColorTheme.Directory)}");
+                        }
+
                     }
                 }
             }
@@ -62,7 +75,16 @@ namespace unpack
             }
 
 
+            Exit(0);
+        }
 
+
+
+        private static string GetExtension(string filename)
+        {
+            if(!filename.Contains("."))
+                    return filename;
+            return filename.Substring(filename.IndexOf("."));
         }
         static void ShowHelp()
         {

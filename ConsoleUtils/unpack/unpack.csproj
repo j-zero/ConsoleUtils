@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A23D4B58-3B2D-4D97-8B8E-C69E2D1FFBDD}</ProjectGuid>
+    <ProjectGuid>{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>unpack</RootNamespace>
     <AssemblyName>unpack</AssemblyName>
@@ -12,10 +12,8 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -24,10 +22,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -58,11 +55,13 @@
       <Project>{f2eee824-5019-44f2-a06a-f7aef10c2549}</Project>
       <Name>ConsoleUtilsCore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SevenZipExtractor\SevenZipExtractor.csproj">
+      <Project>{9582632e-436b-460f-bb76-8dd014b13411}</Project>
+      <Name>SevenZipExtractor</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SevenZipExtractor">
-      <Version>1.0.17</Version>
-    </PackageReference>
+    <PackageReference Include="SevenZipExtractor" Version="1.0.17" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

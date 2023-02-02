@@ -1,11 +1,8 @@
 ﻿using Pastel;
 using SevenZipExtractor;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 
 namespace unpack
@@ -82,8 +79,8 @@ namespace unpack
 
         private static string GetExtension(string filename)
         {
-            if(!filename.Contains("."))
-                    return filename;
+            if (!filename.Contains("."))
+                return filename;
             return filename.Substring(filename.IndexOf("."));
         }
         static void ShowHelp()

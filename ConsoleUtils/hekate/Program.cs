@@ -37,6 +37,7 @@ namespace hekate
                 { "write", "", CmdCommandTypes.VERB, "Write credentials" },
                 { "list", "", CmdCommandTypes.VERB, "List all credentials" },
                 { "dump", "", CmdCommandTypes.VERB, "Dump all credentials" },
+                { "delete", "", CmdCommandTypes.VERB, "Delete credentials" },
             };
 
             cmd.DefaultParameter = "name";
@@ -54,7 +55,11 @@ namespace hekate
             if (name == null || cmd.HasVerb("dump") || cmd.HasVerb("list"))
             {
                 Console.WriteLine($"Credentials:");
-                foreach (var cre in CredentialManager.EnumerateCrendentials())
+                var creds = CredentialManager.EnumerateCrendentials();
+
+
+
+                foreach (var cre in creds)
                 {
                     if (cre != null)
                     {
@@ -99,6 +104,14 @@ namespace hekate
                     ConsoleHelper.WriteError($"Credential \"{name}\" not found.");
                 }
             }
+            else if (cmd.HasVerb("delete"))
+            {
+                if (CredentialManager.DeleteCredential(name))
+                    Console.Write($"Credentials \"{name.Pastel(ColorTheme.Default1)}\" deleted successful!");
+                else
+                    ConsoleHelper.WriteError($"Cannot delete credentials \"{name.Pastel(ColorTheme.Default1)}\"");
+
+            }
             else
             {
                 ConsoleHelper.WriteErrorDog("Wat?");
@@ -114,7 +127,8 @@ namespace hekate
                 return false;
             }
             Console.WriteLine($"{"Username".Pastel(ColorTheme.Default1)}:  {cre.UserName}");
-            Console.WriteLine($"{"Content".Pastel(ColorTheme.Default1)}:");
+            Console.WriteLine($"{"Type".Pastel(ColorTheme.Default1)}:      {cre.CredentialType}");
+            Console.WriteLine($"{"Content".Pastel(ColorTheme.Default1)}:   ");
             ConsoleHelper.SimpleHexDump(cre.RawPassword);
             return true;
         }

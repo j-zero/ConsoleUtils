@@ -25,6 +25,11 @@ public static class CredentialManager
         return null;
     }
 
+    public static bool DeleteCredential(string applicationName)
+    {
+        return CredDelete(applicationName, CredentialType.Generic, 0);
+    }
+
     private static Credential ReadCredentialString(CREDENTIAL credential)
     {
         string applicationName = Marshal.PtrToStringUni(credential.TargetName);
@@ -123,8 +128,10 @@ public static class CredentialManager
     [DllImport("Advapi32.dll", EntryPoint = "CredWriteW", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern bool CredWrite([In] ref CREDENTIAL userCredential, [In] UInt32 flags);
 
-    [DllImport("advapi32", SetLastError = true, CharSet = CharSet.Unicode)]
+    [DllImport("Advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     static extern bool CredEnumerate(string filter, int flag, out int count, out IntPtr pCredentials);
+    [DllImport("advapi32.dll", EntryPoint = "CredDeleteW", CharSet = CharSet.Unicode)]
+    static extern bool CredDelete(string target, CredentialType type, int flags);
 
     [DllImport("Advapi32.dll", EntryPoint = "CredFree", SetLastError = true)]
     static extern bool CredFree([In] IntPtr cred);

@@ -54,6 +54,10 @@ convert numbers
 
 does stuff
 
+## hekate
+
+windows credman tool
+
 ## ...
 
 and more... som may not work or not work for you

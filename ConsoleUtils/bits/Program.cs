@@ -111,19 +111,23 @@ namespace bits
                 Console.WriteLine("???");
             }
 
-
+            double bits = Math.Ceiling(Math.Log(value, 2));
 
             string hexValue = value.ToString("X").ToLower();
             string binaryValue = Convert.ToString(value, 2);
             string octalValue = Convert.ToString(value, 8);
             string decimalValue = value.ToString();
-
+            string bitsValue = bits.ToString();
 
             Console.WriteLine();
+
             Console.WriteLine($"decimal: {value}");
             Console.WriteLine($"hex    : {hexValue}");
             Console.WriteLine($"octal  : {octalValue}");
             Console.WriteLine($"binary : {binaryValue}");
+
+
+            Console.WriteLine($"bits   : {bitsValue}");
 
 
             if (value <= 0xffffff && value > 0)

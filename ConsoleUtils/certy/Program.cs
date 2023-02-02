@@ -146,6 +146,8 @@ namespace certy
                 client.Close();
             }
         }
+
+
         static async Task ShowHTTPCertificate(string EndPoint)
         {
             string proxy = GetProxyForUrlStatic(EndPoint);

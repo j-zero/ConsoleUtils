@@ -56,7 +56,7 @@ does stuff
 
 ## hekate
 
-windows credman tool
+windows credential manager utility
 
 ## ...
 

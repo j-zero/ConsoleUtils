@@ -79,7 +79,6 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Mime.3.4.1\build\Mime.targets" Condition="Exists('..\packages\Mime.3.4.1\build\Mime.targets')" />

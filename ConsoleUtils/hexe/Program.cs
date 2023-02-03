@@ -195,23 +195,7 @@ namespace hexe
                     }
                 }
 
-                if (cmd["skip"].WasUserSet) // todo
-                {
-                    int k = 0;
-                    int i = 0;
-                    while (i < cmd["cut"].Longs.Length)
-                    {
-                        if (parts.Count <= k)
-                            parts.Add(new Selection(0, 0));
 
-                        var offset = cmd["cut"].Ints[i++];
-                        var end = cmd["cut"].Ints[i++];
-
-                        parts[k].Offset = offset;
-                        parts[k].End = end + 1;
-                        k++;
-                    }
-                }
 
                 else if (cmd.HasFlag("tail"))
                 {
@@ -298,6 +282,7 @@ namespace hexe
                 }
 
 
+                // Read Data
                 if (Console.IsInputRedirected)
                 {
                     using (Stream s = Console.OpenStandardInput())
@@ -319,7 +304,7 @@ namespace hexe
                     {
                         string path = cmd["file"].Strings[0];
                         foreach(Selection s in parts)
-                            data.Add(ReadFile(path, s.Offset, s.Length));
+                            data.Add(ReadFile(path, s.Offset, s.Length)); // needs to skip
                     }
                     else
                     {

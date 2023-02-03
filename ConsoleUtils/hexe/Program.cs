@@ -10,7 +10,7 @@ using NtfsDataStreams;
 
 namespace hexe
 {
-    // TODO cut to binary, patch
+    // TODO cut to binary, patch, remove, skip
     internal class Program
     {
         public enum OutputMode
@@ -68,6 +68,11 @@ namespace hexe
                     { CmdParameterTypes.INT, 0},
                     { CmdParameterTypes.INT, defaultLength},
                 }, "Cut offset to offset" },
+
+                { "skip", "", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.INT, 0},
+                    { CmdParameterTypes.INT, 1},
+                }, "Skip from offset <int>, count <int>" },
 
                 { "head", "h", CmdCommandTypes.FLAG, $"Show first X bytes, can be modified with --count."},
                 { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with --count."},
@@ -189,6 +194,25 @@ namespace hexe
                         k++;
                     }
                 }
+
+                if (cmd["skip"].WasUserSet) // todo
+                {
+                    int k = 0;
+                    int i = 0;
+                    while (i < cmd["cut"].Longs.Length)
+                    {
+                        if (parts.Count <= k)
+                            parts.Add(new Selection(0, 0));
+
+                        var offset = cmd["cut"].Ints[i++];
+                        var end = cmd["cut"].Ints[i++];
+
+                        parts[k].Offset = offset;
+                        parts[k].End = end + 1;
+                        k++;
+                    }
+                }
+
                 else if (cmd.HasFlag("tail"))
                 {
                     parts[0].Offset = (cmd["count"].WasUserSet ? parts[0].Length : defaultLength) * -1;

@@ -51,7 +51,7 @@ namespace certy
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
-                { "host", "u", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "host", "h", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Host" },
                 { "port", "p", CmdCommandTypes.PARAMETER, new CmdParameters() {
@@ -60,9 +60,9 @@ namespace certy
                 { "no-proxy", "P", CmdCommandTypes.FLAG, new CmdParameters() {
                         { CmdParameterTypes.BOOL, false }
                     }, "Disable proxy" },
-                { "http-mode", "H", CmdCommandTypes.PARAMETER, new CmdParameters() {
-                        { CmdParameterTypes.STRING, null }
-                    }, "Overwrite Proxy" },
+                { "http", "H", CmdCommandTypes.FLAG, new CmdParameters() {
+                        { CmdParameterTypes.BOOL, false }
+                    }, "Use HTTP-mode (for HTTP proxy, etc.)" },
             };
 
             cmd.DefaultParameter = "host";
@@ -76,7 +76,14 @@ namespace certy
             if (cmd.HasFlag("help") || host == null)
                 ShowHelp();
 
-            ShowTCPCertificate(host, port, timeout);
+            if (cmd.HasFlag("http"))
+            {
+                var task = ShowHTTPCertificate(host);
+                task.Wait();
+
+            }
+            else
+                ShowTCPCertificate(host, port, timeout);
             /*
             TcpClient client = new TcpClient(host, port);
 
@@ -148,8 +155,13 @@ namespace certy
         }
 
 
-        static async Task ShowHTTPCertificate(string EndPoint)
+        static async Task ShowHTTPCertificate(string URL)
         {
+            string EndPoint = URL;
+
+            if (!URL.StartsWith("https://"))
+                EndPoint = "https://" + URL;
+
             string proxy = GetProxyForUrlStatic(EndPoint);
 
             if (proxy != null)

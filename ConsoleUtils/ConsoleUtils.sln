@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "open", "open\open.csproj", "{A384871A-614B-4026-AF27-8133AD04F1BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett_old", "klemmbrett_old\klemmbrett_old.csproj", "{0BC5D1C1-8D35-4093-822E-3CADAE186708}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett", "klemmbrett_old\klemmbrett.csproj", "{0BC5D1C1-8D35-4093-822E-3CADAE186708}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "file", "file\file.csproj", "{8F3C21D0-66C7-4B27-85EC-25A8546AA72D}"
 EndProject
@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gremlins", "gremlins\gremli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "touch", "touch\touch.csproj", "{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett", "klemmbrett\klemmbrett.csproj", "{65A64087-F2D5-4824-A181-90701A71A0F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett2", "klemmbrett\klemmbrett2.csproj", "{65A64087-F2D5-4824-A181-90701A71A0F1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "list", "l\list.csproj", "{81455DB7-D77C-4903-BF79-DFE46EC810C7}"
 EndProject
@@ -40,6 +40,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unpack", "unpack\unpack.csproj", "{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{9582632E-436B-460F-BB76-8DD014B13411}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash", "hash\hash.csproj", "{609CEAB9-54A6-4A12-AAEC-56796A65511E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -199,6 +201,14 @@ Global
 		{9582632E-436B-460F-BB76-8DD014B13411}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9582632E-436B-460F-BB76-8DD014B13411}.Release|x64.ActiveCfg = Release|Any CPU
 		{9582632E-436B-460F-BB76-8DD014B13411}.Release|x64.Build.0 = Release|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|x64.Build.0 = Debug|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|x64.ActiveCfg = Release|Any CPU
+		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

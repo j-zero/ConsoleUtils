@@ -88,6 +88,12 @@
     <Compile Include="ConsoleExtensions.cs" />
     <Compile Include="ConsoleHelper.cs" />
     <Compile Include="ConvertHelper.cs" />
+    <Compile Include="Crc32.cs" />
+    <Compile Include="Crc32Slice16.cs" />
+    <Compile Include="Crc32Slice8.cs" />
+    <Compile Include="Crc64.cs" />
+    <Compile Include="Elf32.cs" />
+    <Compile Include="EncodingHelper.cs" />
     <Compile Include="FilesystemEntryInfo.cs" />
     <Compile Include="FileAndDirectoryFilter.cs" />
     <Compile Include="FileDefinitions.cs" />

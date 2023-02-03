@@ -185,7 +185,7 @@ namespace bits
 
         static void ShowHelp()
         {
-            Console.WriteLine($"bits, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"{System.AppDomain.CurrentDomain.FriendlyName}, {ConsoleHelper.GetVersionString()}");
             Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} data");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
@@ -193,20 +193,16 @@ namespace bits
                 string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
-            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Exit(0);
         }
         static void Exit(int exitCode)
         {
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
             if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
             {
                 Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
             }
-
             Environment.Exit(exitCode);
         }
     }

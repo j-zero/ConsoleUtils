@@ -7,7 +7,7 @@
     <ProjectGuid>{65A64087-F2D5-4824-A181-90701A71A0F1}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>klemmbrett</RootNamespace>
-    <AssemblyName>kb</AssemblyName>
+    <AssemblyName>kb2</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

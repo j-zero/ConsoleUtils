@@ -18,7 +18,8 @@ namespace gremlins
         static char[] trimArray = new char[] { ' ', '\t', '\r' };
 
         static string outputFile = null;
-
+        static Encoding encoding = Encoding.UTF8;
+        static Encoding defaultEncoding = Encoding.UTF8;
 
         static void Main(string[] args)
         {
@@ -76,6 +77,10 @@ namespace gremlins
                         { CmdParameterTypes.STRING, null }
                     }, "Output file" },
 
+                 { "encoding", "e", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                        { CmdParameterTypes.STRING, "utf8" }
+                    }, "Force encoding. <string> could be \"utf8\" (default), \"ascii\", \"utf7\", \"utf16\", \"utf16be\",\"utf32le\", \"utf32be\"" },
+
                 { "output-append", "A", CmdCommandTypes.FLAG, "Append to output file" },
 
                 { "trim-end", "", CmdCommandTypes.FLAG, "Trim spaces at end of line for output" },
@@ -121,15 +126,21 @@ namespace gremlins
                     length = lineCount;
                 }
 
+                if (cmd["encoding"].WasUserSet)
+                {
+                    // "utf8" (default), "ascii", "utf7", "utf16", "utf16be","utf32", "utf32be"
+                    encoding = EncodingHelper.GetEncodingFromName(cmd["encoding"].Strings[0]);
+                }
 
                 if (Console.IsInputRedirected)
                 {
                     Pastel.ConsoleExtensions.Disable();
                     using (Stream s = Console.OpenStandardInput())
                     {
-                        using (StreamReader reader = new StreamReader(s))
+                        using (MemoryStream reader = new MemoryStream())
                         {
-                            lines = reader.ReadToEnd().Split('\n');
+                            s.CopyTo(reader);
+                            lines = encoding.GetString(reader.ToArray()).Split('\n');
                         }
                     }
                 }
@@ -138,7 +149,16 @@ namespace gremlins
                     if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                     {
                         string path = cmd["file"].Strings[0];
-                        lines = File.ReadAllText(path).Split('\n');
+
+                        if (!cmd["encoding"].WasUserSet)
+                        {   
+                            encoding = EncodingHelper.GetEncodingFromFile(path);
+                            if(encoding != Encoding.ASCII && encoding != Encoding.UTF8)
+                                Console.Error.WriteLine($"{"Warning:".Pastel(ColorTheme.OffsetColorHighlight)} files has {encoding.EncodingName} encoding.");
+                        }
+
+                        lines = encoding.GetString(File.ReadAllBytes(path)).Split('\n');
+                        //lines = File.ReadAllText(path, encoding).Split('\n');
                     }
                     else
                     {

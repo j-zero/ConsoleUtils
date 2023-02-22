@@ -38,6 +38,7 @@ namespace hekate
                 { "list", "", CmdCommandTypes.VERB, "List all credentials" },
                 { "dump", "", CmdCommandTypes.VERB, "Dump all credentials" },
                 { "delete", "", CmdCommandTypes.VERB, "Delete credentials" },
+                { "string", "S", CmdCommandTypes.FLAG, "Output as string" },
             };
 
             cmd.DefaultParameter = "name";
@@ -99,7 +100,7 @@ namespace hekate
             else if (cmd.HasVerb("read"))
             {
                 var cre = CredentialManager.ReadCredential(name);
-                if (!DumpCred(cre))
+                if (!DumpCred(cre,!cmd.HasFlag("string")))
                 {
                     ConsoleHelper.WriteError($"Credential \"{name}\" not found.");
                 }
@@ -129,7 +130,10 @@ namespace hekate
             Console.WriteLine($"{"Username".Pastel(ColorTheme.Default1)}:  {cre.UserName}");
             Console.WriteLine($"{"Type".Pastel(ColorTheme.Default1)}:      {cre.CredentialType}");
             Console.WriteLine($"{"Content".Pastel(ColorTheme.Default1)}:   ");
-            ConsoleHelper.SimpleHexDump(cre.RawPassword);
+            if (hex)
+                ConsoleHelper.SimpleHexDump(cre.RawPassword);
+            else
+                Console.WriteLine(Encoding.UTF8.GetString(cre.RawPassword));
             return true;
         }
 

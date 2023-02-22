@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
     public class UnitHelper
     {
-    public static readonly string[] SizeSuffixes = { "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+    public static readonly string[] SizeSuffixes = { "B", "k", "M", "G", "T", "P", "E", "Z", "Y" };
 
     // based on https://stackoverflow.com/a/14488941
     public static void _CalculateHumanReadableSize(Int64 value, out string _humanReadbleSize, out string _humanReadbleSizeSuffix, int factor = 1024, int decimalPlaces = 1)
@@ -45,6 +45,7 @@ using System.Threading.Tasks;
             */
         }
 
+    /*
     public static string CalculateHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
     {
         ulong v = (ulong)Math.Abs(value);
@@ -56,8 +57,57 @@ using System.Threading.Tasks;
 
         return result;
     }
+    */
 
-    public static string CalculateHumanReadableSize(UInt64 value, int factor = 1024, int decimalPlaces = 1)
+    // based on https://stackoverflow.com/a/14488941
+    public static (string, string) GetHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false)
+    {
+        if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+
+        if (value == 0)
+            return ("0", "");
+
+        // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+        int mag = (int)Math.Log(value, factor);
+
+        double val = value;
+
+        for (int i = 0; i < mag; i++)
+            val /= factor;
+
+        if (mag == 0) decimalPlaces = 0; // no decimal points on bytes
+
+        return (string.Format("{0:n" + decimalPlaces + "}", val), ((mag == 0 && !showByteSuffix) ? "" : SizeSuffixes[mag]));
+    }
+
+    public static (string, string) GetHumanReadableSize2(Int64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false)
+    {
+        if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+
+        if (value == 0)
+            return ("0", "");
+
+        // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+        int mag = (int)Math.Log(value, factor);
+
+        // 1L << (mag * 10) == 2 ^ (10 * mag) 
+        // [i.e. the number of bytes in the unit corresponding to mag]
+        decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+
+        // make adjustment when the value is large enough that
+        // it would round up to 1000 or more
+        if (Math.Round(adjustedSize, decimalPlaces) >= factor)
+        {
+            mag += 1;
+            adjustedSize /= factor;
+        }
+
+        if (mag == 0) decimalPlaces = 0; // no decimal points on bytes
+
+        return (string.Format("{0:n" + decimalPlaces + "}", adjustedSize), ((mag == 0 && !showByteSuffix) ? "" : SizeSuffixes[mag]));
+    }
+
+    public static string CalculateHumanReadableSize(UInt64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false)
     {
         string _humanReadbleSize, _humanReadbleSizeSuffix = string.Empty;
 
@@ -86,7 +136,7 @@ using System.Threading.Tasks;
         }
 
         _humanReadbleSize = string.Format("{0:n" + decimalPlaces + "}", adjustedSize);
-        _humanReadbleSizeSuffix = SizeSuffixes[mag];
+        _humanReadbleSizeSuffix = (mag == 0 && !showByteSuffix) ? SizeSuffixes[mag] : "";
 
         return String.Format(CultureInfo.InvariantCulture,"{0:n" + decimalPlaces + "}{1}", adjustedSize, SizeSuffixes[mag]);
 

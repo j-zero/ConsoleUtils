@@ -504,7 +504,7 @@ namespace list
                                 if (s.Name != String.Empty)
                                 {
                                     string streamName = s.Name.Replace(":$DATA", "");
-                                    (string streamSize, string streamSizeSuffix) = FilesystemEntryInfo.GetHumanReadableSize(s.Length);
+                                    (string streamSize, string streamSizeSuffix) = UnitHelper.GetHumanReadableSize(s.Length);
                                     Console.WriteLine($"{spaceSpaces}" +
                                                         $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
                                                         $" :{streamName.Pastel("#808080")} ");

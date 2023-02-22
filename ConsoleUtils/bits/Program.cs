@@ -56,13 +56,15 @@ namespace bits
             if(data == null)
                 ShowHelp();
 
-            if (data.ToLower().StartsWith("0x") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
+            if (data.ToLower().StartsWith("0x") || data.ToLower().StartsWith("#") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
             {
                 // hex
                 Console.WriteLine("Format detected: hex");
 
                 if (data.ToLower().StartsWith("0x"))
                     success = long.TryParse(data.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
+                else if (data.ToLower().StartsWith("#"))
+                    success = long.TryParse(data.Substring(1), System.Globalization.NumberStyles.HexNumber, null, out value);
                 else
                     success = long.TryParse(data, System.Globalization.NumberStyles.HexNumber, null, out value);
             }
@@ -117,35 +119,41 @@ namespace bits
             double bits = Math.Ceiling(Math.Log(value, 2));
             double maxBits = Math.Pow(2,bits);
 
-            string hexValue = StringHelper.AddSeperator(value.ToString("X").ToLower(), " ", 2);
-            string binaryValue = StringHelper.AddSeperator(Convert.ToString(value, 2), " ", 4);
+            // string hexValue = StringHelper.AddSeperator(value.ToString("X").ToLower(), " ", 2);
+            string hexValue = PadLeftToBlocks(value.ToString("X").ToLower(), 2, '0', " ");
+
+            //string binaryValue = StringHelper.AddSeperator(Convert.ToString(value, 2), " ", 4);
+            string binaryValue = PadLeftToBlocks(Convert.ToString(value, 2), 4, '0', " ");
             string octalValue = Convert.ToString(value, 8);
             string decimalValue = StringHelper.AddSeperator(value.ToString(), ".", 3);
             string bitsValue = bits.ToString();
 
             Console.WriteLine();
 
-            Console.WriteLine($"decimal: {decimalValue}");
+            Console.WriteLine($"decimal: {value} ({decimalValue})");
             Console.WriteLine($"hex    : {hexValue}");
             Console.WriteLine($"octal  : {octalValue}");
             Console.WriteLine($"binary : {binaryValue}");
 
 
-            Console.WriteLine($"bits   : {bitsValue} ({maxBits})");
+            Console.WriteLine($"bits   : {bitsValue} (2^{bitsValue} = {maxBits}, +{(maxBits - value)})");
 
+            
 
             if (value <= 0xffffffff && value > 0)
             {
                 Byte
                     a = (byte)((value >> 24) & 0xFF),
-                    b = (byte)((value >> 16) & 0xFF),
+                    r = (byte)((value >> 16) & 0xFF),
                     g = (byte)((value >> 8) & 0xFF),
-                    r = (byte)((value >> 0) & 0xFF);
+                    b = (byte)((value >> 0) & 0xFF);
 
                 if (data.Length == 7) // wenn kein alpha angegeben 255
                     a = 0xff;
 
-                Console.WriteLine($"RGB    : {r},{g},{b}; Alpha {a}  " + "██████".Pastel(Color.FromArgb(r, g, b)));
+                string hexRGB = value.ToString("X").ToLower().PadLeft((value > 0xffffff ? 8 : 6), '0');
+
+                Console.WriteLine($"color  : HEX #{hexRGB}; RGB {r}, {g}, {b} (Alpha {a}); [{"██████".Pastel(Color.FromArgb(r, g, b))}]");
             }
 
             if (value > 0 && (value > DateTime.MinValue.Ticks && value < DateTime.MaxValue.Ticks))
@@ -169,6 +177,14 @@ namespace bits
 
 
             }
+
+
+           (string sizeIValue, string sizeISuffix) = UnitHelper.GetHumanReadableSize(value, 1024, 2, false);
+           (string sizeValue, string sizeSuffix) = UnitHelper.GetHumanReadableSize(value, 1000, 2, false);
+
+            Console.WriteLine($"size   : {sizeValue} {sizeSuffix}B, {sizeIValue} {sizeISuffix}iB");
+
+
 
             Exit(0);
         }
@@ -236,6 +252,13 @@ namespace bits
             if (number >= 4) return "IV" + ToRoman(number - 4);
             if (number >= 1) return "I" + ToRoman(number - 1);
             return "n/a";
+        }
+
+        static string PadLeftToBlocks(string value, int blocksize, char paddingchar, string seperator)
+        {
+            int pads = value.Length % blocksize;
+            string result = (pads > 0 ? string.Empty.PadLeft(blocksize - pads, paddingchar) : string.Empty) + value;
+            return StringHelper.AddSeperator(result, seperator, blocksize);
         }
 
         static void ShowHelp()

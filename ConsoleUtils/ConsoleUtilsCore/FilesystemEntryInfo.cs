@@ -448,36 +448,12 @@ public class FilesystemEntryInfo
 
     private void CalculateHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
     {
-        (string size, string suffix) = GetHumanReadableSize(value, factor, decimalPlaces);
+        (string size, string suffix) = UnitHelper.GetHumanReadableSize(value, factor, decimalPlaces);
         this._humanReadbleSize = size;
         this._humanReadbleSizeSuffix = suffix;
     }
 
-    // based on https://stackoverflow.com/a/14488941
-    public static (string,string) GetHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1)
-    {
-        if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
 
-        if (value == 0)
-            return ("0","");
-
-        // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-        int mag = (int)Math.Log(value, factor);
-
-        // 1L << (mag * 10) == 2 ^ (10 * mag) 
-        // [i.e. the number of bytes in the unit corresponding to mag]
-        decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-        // make adjustment when the value is large enough that
-        // it would round up to 1000 or more
-        if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
-        {
-            mag += 1;
-            adjustedSize /= factor;
-        }
-        if (mag == 0) decimalPlaces = 0; // no decimal points on bytes
-        return (string.Format("{0:n" + decimalPlaces + "}", adjustedSize), SizeSuffixes[mag]);
-    }
 
 
 

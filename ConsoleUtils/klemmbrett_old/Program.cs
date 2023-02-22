@@ -130,7 +130,7 @@ namespace klemmbrett
                 {
                     _Info(parameters);
                 }
-                else if (command == "help")
+                else if (command == "help" || command == "--help" || command == "-h")
                 {
                     WriteLine("[force] string|s path|P, copy|cp, text|t, html, rtf, csv, unicode, image|i, save|S, load|L, paste|p, move|mv, remove|rm|delete|del, show, raw, help");
                 }

@@ -247,22 +247,22 @@ namespace klemmbrett
                     case "html":
                     case "htm":
                         data = Clipboard.GetText(TextDataFormat.Html);
-                        File.WriteAllText(path, ExtractBetweenTwoStrings(data, "<!--StartFragment-->", "<!--EndFragment-->", false, false),Encoding.Unicode);
+                        File.WriteAllText(path, ExtractBetweenTwoStrings(data, "<!--StartFragment-->", "<!--EndFragment-->", false, false),Encoding.Default);
                         WriteLine($"Saved HTML to \"{path}\"");
                         break;
                     case "rtf":
-                        data = Clipboard.GetText(TextDataFormat.UnicodeText);
-                        File.WriteAllText(path, data, Encoding.Unicode);
+                        data = Clipboard.GetText(TextDataFormat.Text);
+                        File.WriteAllText(path, data, Encoding.Default);
                         WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                     case "csv":
                         data = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
-                        File.WriteAllText(path, data, Encoding.Unicode);
+                        File.WriteAllText(path, data, Encoding.Default);
                         WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                     default:
-                        data = Clipboard.GetText(TextDataFormat.UnicodeText);
-                        File.WriteAllText(path, data, Encoding.Unicode);
+                        data = Clipboard.GetText(TextDataFormat.Text);
+                        File.WriteAllText(path, data, Encoding.Default);
                         WriteLine($"Saved {data.Length} bytes to \"{path}\"");
                         break;
                 }
@@ -333,7 +333,7 @@ namespace klemmbrett
                 }
                 else if (format == TextDataFormat.Html && ClipboardHelper.ContainsText(TextDataFormat.Html))
                 {
-                    string content = Clipboard.GetText(TextDataFormat.UnicodeText);
+                    string content = Clipboard.GetText(TextDataFormat.Text);
                     content = ExtractBetweenTwoStrings(content, "<!--StartFragment-->", "<!--EndFragment-->", false, false);
                     
                     Write(content);
@@ -344,7 +344,7 @@ namespace klemmbrett
                     Write(content);
                 }
 
-                if(format == TextDataFormat.Text || format == TextDataFormat.UnicodeText)
+                if(format == TextDataFormat.Text || format == TextDataFormat.Text)
                 {
                     string content = Clipboard.GetText(format);
 
@@ -558,6 +558,15 @@ namespace klemmbrett
 
         static void _Show(string[] p, bool headless)
         {
+
+
+
+
+
+            if (Clipboard.ContainsText(TextDataFormat.Html))
+
+                Clipboard.GetText(TextDataFormat.Html);
+
             if (ClipboardHelper.ContainsText(TextDataFormat.Rtf))
             {
                 if (!headless) WriteHeader("RTF:");
@@ -576,7 +585,7 @@ namespace klemmbrett
             if (ClipboardHelper.ContainsText())
             {
                 if (!headless) WriteHeader("Text:");
-                Write(Clipboard.GetText(TextDataFormat.UnicodeText));
+                Write(Clipboard.GetText(TextDataFormat.Text));
                 //Write(Clipboard.GetText());
             }
             if (ClipboardHelper.ContainsImage())
@@ -610,7 +619,7 @@ namespace klemmbrett
             }
             else
             {
-                WriteHeader("Unknown clipboard content!");
+                //WriteHeader("Unknown clipboard content!");
             }
         }
 

@@ -15,7 +15,7 @@ namespace klemmbrett
             cmd = new CmdParser(args)
             {
                 {"show","s", CmdCommandTypes.VERB, "Show information" },
-                {"list","l", CmdCommandTypes.VERB, "List formats" },
+                {"dump","d", CmdCommandTypes.VERB, "Dumb dump" },
                 { "format", "f", CmdCommandTypes.PARAMETER,
                     new CmdParameters() {
                         { CmdParameterTypes.INT, 1},
@@ -35,7 +35,7 @@ namespace klemmbrett
                 {"utf8","u", CmdCommandTypes.FLAG, "utf8 dump" }
             };
 
-            cmd.DefaultVerb = "list";
+            cmd.DefaultVerb = "dump";
             cmd.Parse();
 
             foreach(string s in cmd.Verbs)
@@ -45,8 +45,17 @@ namespace klemmbrett
 
             //ShowHelp();
             if (cmd.FirstVerb == "list")
-            {
-                ClipboardHelper.ListClipboardFormats();
+            {   
+                //ClipboardHelper.ListClipboardFormatsString();
+                uint[] formats = ClipboardHelper.GetClipboardFormats();
+
+                foreach(uint format in formats)
+                {
+                    Console.WriteLine("0x" + format.ToString("X4") + ": " + ClipboardHelper.GetClipboardFormatName(format));
+                    byte[] bytes = ClipboardHelper.GetClipboardDataBytes(format);
+                    ConsoleHelper.SimpleHexDump(bytes);
+                }
+                
             }
             else if (cmd.FirstVerb == "show")
             {

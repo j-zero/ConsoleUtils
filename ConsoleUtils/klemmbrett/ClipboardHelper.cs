@@ -97,7 +97,7 @@ namespace klemmbrett
             {ClipboardFormats.CF_WAVE, "Represents audio data in one of the standard wave formats, such as 11 kHz or 22 kHz PCM." },
         };
 
-        private static string GetClipboardFormatName(uint ClipboardFormat)
+        public static string GetClipboardFormatName(uint ClipboardFormat)
         {
             string result = GetDefaultClipboardFormatName(ClipboardFormat);
             if (result == null)
@@ -179,8 +179,26 @@ namespace klemmbrett
             return GlobalLock(dataPointer);
         }
 
+        public static uint[] GetClipboardFormats()
+        {
+            List<uint> result = new List<uint>();
+            //OpenClipboard(Handle);
+            OpenClipboard(IntPtr.Zero);
 
-        public static void ListClipboardFormats()
+
+            uint LastRetrievedFormat = 0;
+            while (0 != (LastRetrievedFormat = EnumClipboardFormats(LastRetrievedFormat)))
+            {
+                //string Description = "0x" + LastRetrievedFormat.ToString("X4") + ": " + GetClipboardFormatName(LastRetrievedFormat);
+                result.Add(LastRetrievedFormat);
+
+            }
+
+            CloseClipboard();
+            return result.ToArray();
+        }
+
+        public static void ListClipboardFormatsString()
         {
             //OpenClipboard(Handle);
             OpenClipboard(IntPtr.Zero);

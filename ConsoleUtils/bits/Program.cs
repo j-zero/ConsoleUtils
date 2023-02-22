@@ -10,6 +10,7 @@ namespace bits
 {
     internal class Program
     {
+        static long firstTick = 621355968000000000;
 
         enum DataTypes
         {
@@ -22,6 +23,8 @@ namespace bits
         static CmdParser cmd;
         static void Main(string[] args)
         {
+
+
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
@@ -145,7 +148,59 @@ namespace bits
                 Console.WriteLine($"RGB    : {r},{g},{b}; Alpha {a}  " + "██████".Pastel(Color.FromArgb(r, g, b)));
             }
 
+            if (value > 0 && (value > DateTime.MinValue.Ticks && value < DateTime.MaxValue.Ticks))
+            {
+                Console.Write("ticks  : ");
+
+                DateTime dt = new DateTime(value);
+                TimeSpan ts = new TimeSpan(value);
+
+
+                Console.WriteLine($"{dt.ToShortDateString()} {dt.ToLongTimeString()} ({ToReadableString(ts)})");
+
+
+                DateTime unixTime = UnixTimeStampToDateTime(value);
+                if (unixTime.Ticks != 0)
+                {
+                    Console.Write("unix   : ");
+                    Console.WriteLine($"{unixTime.ToShortDateString()} {unixTime.ToLongTimeString()}");
+                }
+
+
+
+            }
+
             Exit(0);
+        }
+
+        public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            try
+            {
+                DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                dateTime = dateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+                return dateTime;
+            }
+            catch
+            {
+                return new DateTime(0);
+            }
+        }
+
+        public static string ToReadableString(TimeSpan span)
+        {
+            string formatted = string.Format("{0}{1}{2}{3}{4}",
+                span.Duration().Days > 0 ? string.Format("{0:0} day{1} ", span.Days, span.Days == 1 ? string.Empty : "s") : string.Empty,
+                span.Duration().Hours > 0 ? string.Format("{0:0} hour{1} ", span.Hours, span.Hours == 1 ? string.Empty : "s") : string.Empty,
+                span.Duration().Minutes > 0 ? string.Format("{0:0} minute{1} ", span.Minutes, span.Minutes == 1 ? string.Empty : "s") : string.Empty,
+                span.Duration().Seconds > 0 ? string.Format("{0:0} second{1} ", span.Seconds, span.Seconds == 1 ? string.Empty : "s") : string.Empty,
+                span.Duration().Milliseconds > 0 ? string.Format("{0:0} millisecond{1}", span.Milliseconds, span.Milliseconds == 1 ? string.Empty : "s") : string.Empty);
+
+            if (formatted.EndsWith(", ")) formatted = formatted.Substring(0, formatted.Length - 2);
+
+            if (string.IsNullOrEmpty(formatted)) formatted = "0 seconds";
+
+            return formatted;
         }
 
         private static bool IsHex(IEnumerable<char> chars)

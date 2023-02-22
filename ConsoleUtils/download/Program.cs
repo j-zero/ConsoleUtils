@@ -30,6 +30,7 @@ namespace download
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
+                { "headers", "", CmdCommandTypes.FLAG, "Show headers" },
                 { "url", "u", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Download URL" },
@@ -197,11 +198,30 @@ namespace download
 
         private static void WebClientDownloadCompleted(object sender, AsyncCompletedEventArgs args)
         {
+
+
             if (args.Cancelled || args.Error != null)
             {
+
                 dynamic re = args.Error as dynamic;
                 HttpWebResponse response = re.Response;
-                Console.Write($"HTTP Status Code: {(int)response.StatusCode}");
+
+                if (cmd.HasFlag("headers"))
+                {
+                    var headers = response.Headers;
+                    for (int i = 0; i < headers.Count; ++i)
+                    {
+                        string header = headers.GetKey(i);
+                        foreach (string value in headers.GetValues(i))
+                        {
+                            Console.WriteLine("{0}: {1}", header, value);
+                        }
+                    }
+                }
+                Console.WriteLine($"HTTP Status Code: {(int)response.StatusCode}");
+
+
+
             }
             else
                 Console.WriteLine(Environment.NewLine + "Download finished!");

@@ -139,7 +139,7 @@ namespace hekate
 
         static void ShowHelp()
         {
-            Console.WriteLine($"download, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"hekate, {ConsoleHelper.GetVersionString()}");
             Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--url|-u] URL}}");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))

@@ -1,6 +1,7 @@
 ﻿using Pastel;
 using SevenZipExtractor;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -16,6 +17,7 @@ namespace unpack
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
+                { "verbose", "v", CmdCommandTypes.FLAG, "Verbose output" },
                 { "list", "l", CmdCommandTypes.VERB, "List entry in archive." },
                 { "extract", "x", CmdCommandTypes.VERB, "List entry in archive." },
                 //{ "undo", "u", CmdCommandTypes.VERB, "Remove every file that is in the archive (dangerous)" },
@@ -37,40 +39,84 @@ namespace unpack
                 ShowHelp();
 
             string fullPath = Path.GetFullPath(relativePath);
-            Console.WriteLine(fullPath);
+            //Console.WriteLine(fullPath);
 
-            Console.WriteLine($"{"Size"}\t{"PackedSize"}\t{"Filename"}");
-            if (cmd.HasVerb("list"))
+            try
             {
-                using (ArchiveFile file = new ArchiveFile(fullPath))
+                if (cmd.HasVerb("list"))
                 {
-                    foreach (var entry in file.Entries)
+                    using (ArchiveFile file = new ArchiveFile(fullPath))
                     {
-                        string size = UnitHelper.CalculateHumanReadableSize(entry.Size);
-                        string packedsize = UnitHelper.CalculateHumanReadableSize(entry.PackedSize);
-                        //string LastWriteTime = entry.LastWriteTime
-                        if (!entry.IsFolder)
+                        try
                         {
-                            var extension = GetExtension(entry.FileName);
-                            var color = ColorTheme.GetColorByExtension(extension);
-                            Console.WriteLine($"{size}\t{packedsize}\t\t{entry.FileName.Pastel(color)}");
+                            var b = file.Entries; // check if archive can be unpacked
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            Console.WriteLine($"{"    -"}\t{"     -"}\t\t{entry.FileName.Pastel(ColorTheme.Directory)}");
+                            ConsoleHelper.WriteErrorDog(ex.Message);
+                            return;
                         }
 
+                        if (cmd.HasFlag("verbose"))
+                            Console.WriteLine($"{"Size"}\t{"PackedSize"}\t{"Filename"}");
+
+                        foreach (var entry in file.Entries)
+                        {
+                            string size = UnitHelper.CalculateHumanReadableSize(entry.Size);
+                            string packedsize = UnitHelper.CalculateHumanReadableSize(entry.PackedSize);
+                            //string LastWriteTime = entry.LastWriteTime
+                            if (!entry.IsFolder)
+                            {
+                                var extension = GetExtension(entry.FileName);
+                                var color = ColorTheme.GetColorByExtension(extension);
+
+                                string fName = entry.FileName;
+
+                                if (fName == null)
+                                    fName = Path.GetFileNameWithoutExtension(fullPath);
+
+                                string[] p = fName.Split('\\');
+                                List<string> fNameColorParts = new List<string>();
+
+                                for (int i = 0; i < p.Length; i++)
+                                {
+                                    if (i == p.Length - 1)
+                                        fNameColorParts.Add(p[i].Pastel(color));
+                                    else
+                                        fNameColorParts.Add(p[i].Pastel(ColorTheme.Directory));
+                                }
+
+                                if(cmd.HasFlag("verbose"))
+                                    Console.WriteLine($"{size}\t{packedsize}\t\t{string.Join("\\", fNameColorParts)}");
+                                else
+                                    Console.WriteLine($"{string.Join("\\", fNameColorParts)}");
+                            }
+                            else
+                            {
+                                if (cmd.HasFlag("verbose"))
+                                    Console.WriteLine($"{"-     "}\t{"-     "}\t\t{entry.FileName.Pastel(ColorTheme.Directory)}");
+                                else
+                                    Console.WriteLine($"{entry.FileName.Pastel(ColorTheme.Directory)}");
+
+                            }
+
+                        }
+                    }
+
+
+                }
+                else if (cmd.HasVerb("extract"))
+                {
+                    using (ArchiveFile file = new ArchiveFile(fullPath))
+                    {
+                        file.Extract(cmd["outdir"].String);
                     }
                 }
             }
-            else if (cmd.HasVerb("extract"))
+            catch(Exception ex)
             {
-                using (ArchiveFile file = new ArchiveFile(fullPath))
-                {
-                    file.Extract(cmd["outdir"].String);
-                }
+                ConsoleHelper.WriteErrorDog(ex.Message);
             }
-
 
             Exit(0);
         }
@@ -79,7 +125,7 @@ namespace unpack
 
         private static string GetExtension(string filename)
         {
-            if (!filename.Contains("."))
+            if (filename == null || !filename.Contains("."))
                 return filename;
             return filename.Substring(filename.IndexOf("."));
         }

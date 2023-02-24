@@ -15,7 +15,7 @@ namespace list
         }
         
         static CmdParser cmd;
-        static string path = null;
+        //static string path = null;
         static Dictionary<string, List<FilesystemEntryInfo>> entries;
 
         static bool ShowInfo = false;
@@ -68,8 +68,7 @@ namespace list
             if (cmd.HasFlag("help"))
                 ShowHelp();
 
-            if (cmd["path"].Strings.Length > 0 && cmd["path"].Strings[0] != null)
-                path = cmd["path"].Strings[0];
+
 
             ShowInfo = cmd.HasFlag("info") || cmd.HasFlag("full");
             ShowHidden = cmd.HasFlag("all") || cmd.HasFlag("full");
@@ -78,14 +77,32 @@ namespace list
             ShowHeader = cmd.HasFlag("header");
             ShowStreams = cmd.HasFlag("streams") || cmd.HasFlag("full");
 
-            if (path == null)
-                path = Environment.CurrentDirectory;
+            string[] paths = null;
+            //string path = null;
+            //if (cmd["path"].Strings.Length > 0 && cmd["path"].Strings[0] != null)
+            if (cmd["path"].Strings.Length > 0 && cmd["path"].Strings[0] != null)
+                paths = cmd["path"].Strings;
+                //path = cmd["path"].Strings[0];
 
-            FilesystemEntryInfo[] found = null;
+            if (paths == null)
+                paths = new string[] { Environment.CurrentDirectory };
+
+            
+
+            List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
+
+
 
             try
             {
-                found = FileAndDirectoryFilter.GetFilesFromFilter(path);
+                foreach (string path in paths) {
+                    var files = FileAndDirectoryFilter.GetFilesFromFilter(path);
+
+                    if (files.Length == 0)
+                        ConsoleHelper.WriteError($"No files found in \"{path}\"");
+
+                    found.AddRange(files);
+                }
             }
             catch(Exception ex)
             {
@@ -93,12 +110,12 @@ namespace list
             }
 
             var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
-            
-            if (found.Length > 0 && (ShowHidden ||(notHiddenCount > 0)))
+
+            if (found.Count > 0 && (ShowHidden ||(notHiddenCount > 0)))
             {
-                if(found.Length == 1 && found[0].Error)
+                if(found.Count == 1 && found[0].Error)
                 {
-                    ConsoleHelper.WriteError($"Access denied: \"{path}\"");
+                    ConsoleHelper.WriteError($"Access denied: \"{found[0].FullPath}\"");
                     return;
                 }
 
@@ -144,19 +161,19 @@ namespace list
                 
                 try
                 {
-                    string filepath = path;
+                    /*
                     if(!path.StartsWith("\\\\"))
                         filepath = Path.GetFullPath(path);
 
-                    if(found.Length == 0)
+                    if(found.Count == 0)
                         ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
                     else
                         ConsoleHelper.WriteError($"No files found in \"{filepath}\", but there are hidden files! Use -a to show them.");
-
+                    */
                 }
                 catch
                 {
-                    ConsoleHelper.WriteError($"\"{path}\" does not exist.");
+                    ConsoleHelper.WriteError($"\"{"??"}\" does not exist.");
                 }
                 
 
@@ -476,7 +493,8 @@ namespace list
 
                     if (e.LinkTarget != null)
                     {
-                        string target = (" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
+                        //string target = (" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
+                        string target = (" -> " + PathHelper.GetRelativePath(e.FullPath, e.LinkTarget));
                         Console.Write(target);
                     }
 

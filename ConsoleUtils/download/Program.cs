@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace download
 {
+
+    // TODO Output to STDOUT instead File Download: client.DownloadDataAsync
+
     internal class Program
     {
         static CmdParser cmd;
@@ -150,6 +153,7 @@ namespace download
                     client.DownloadProgressChanged += WebClientDownloadProgressChanged;
                     client.DownloadFileCompleted += WebClientDownloadCompleted;
                    
+                   
 
                     client.DownloadFileAsync(uri, _fullPathWhereToSave);
                     if (timeout == 0)
@@ -204,23 +208,44 @@ namespace download
             {
 
                 dynamic re = args.Error as dynamic;
-                HttpWebResponse response = re.Response;
-
-                if (cmd.HasFlag("headers"))
+                try
                 {
-                    var headers = response.Headers;
-                    for (int i = 0; i < headers.Count; ++i)
+                    HttpWebResponse response = re.Response;
+
+                    if (response == null)
                     {
-                        string header = headers.GetKey(i);
-                        foreach (string value in headers.GetValues(i))
+                        if (re.GetType() == typeof(WebException))
                         {
-                            Console.WriteLine("{0}: {1}", header, value);
+                            ConsoleHelper.WriteError(re.Message);
+                            Console.Write(re.InnerException.Message);
+                        }
+                        else
+                        {
+                            ConsoleHelper.WriteErrorDog($"Error: Response has type {re.GetType()}...¯\\_(ツ)_/¯ ");
+                        }
+                        _semaphore.Release();
+                        return;
+                    }
+
+                    if (cmd.HasFlag("headers"))
+                    {
+                        var headers = response.Headers;
+                        for (int i = 0; i < headers.Count; ++i)
+                        {
+                            string header = headers.GetKey(i);
+                            foreach (string value in headers.GetValues(i))
+                            {
+                                Console.WriteLine("{0}: {1}", header, value);
+                            }
                         }
                     }
+                    Console.WriteLine($"HTTP Status Code: {(int)response.StatusCode}");
+
                 }
-                Console.WriteLine($"HTTP Status Code: {(int)response.StatusCode}");
-
-
+                catch(Exception ex)
+                {
+                    ConsoleHelper.WriteError(ex);
+                }
 
             }
             else

@@ -92,6 +92,7 @@
     <Compile Include="Crc32Slice16.cs" />
     <Compile Include="Crc32Slice8.cs" />
     <Compile Include="Crc64.cs" />
+    <Compile Include="DynamicHelper.cs" />
     <Compile Include="Elf32.cs" />
     <Compile Include="EncodingHelper.cs" />
     <Compile Include="FilesystemEntryInfo.cs" />

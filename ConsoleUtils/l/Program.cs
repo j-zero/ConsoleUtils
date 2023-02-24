@@ -56,7 +56,7 @@ namespace list
                     { CmdParameterTypes.STRING, "Name" }
                 }, "sort field" },
 
-                { "path", "p", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "path", "p", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
                 }, "Path" }
             };

@@ -29,6 +29,13 @@ public class ConsoleHelper
         Console.Error.Write($"\n   {msg.Pastel(Color.OrangeRed)}\n{doggo.Pastel(Color.White)}\n\n");
     }
 
+    public static void WriteErrorTRex(string message)
+    {
+        string doggo = "                      \n           ████████   \n          ███▄███████ \n          ███████████ \n          ███████████ \n          ██████      \n          █████████   \n█       ███████       \n██    ████████████    \n███  ██████████  █    \n███████████████       \n███████████████       \n █████████████        \n  ███████████         \n    ████████          \n     ███  ██          \n     ██    █          \n     █     █          \n     ██    ██         \n                     ";
+        string msg = message.Length < 12 ? message.PadLeft(11) : message;
+        Console.Error.Write($"\n   {msg.Pastel(Color.OrangeRed)}\n{doggo.Pastel(Color.White)}\n\n");
+    }
+
     public static string GetVersionString()
     {
         return "ConsoleUtils (https://github.com/j-zero/ConsoleUtils)";

@@ -24,7 +24,7 @@ namespace subnet
                 }
                 else if (args.Length == 1 && args[0] == "--help")
                 {
-                    WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+                    ConsoleHelper.WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
                     Environment.Exit(1);
                 }
                 else if (args.Length == 1)
@@ -39,7 +39,13 @@ namespace subnet
 
                     if (args[1].All(char.IsDigit))
                     {
-                        cidr = getCidrFromHostCount(uint.Parse(args[1]));
+                        uint ips = uint.Parse(args[1]);
+                        cidr = getCidrFromHostCount(ips);
+                        var test = Math.Pow(2, 32 - cidr) - 2;
+
+                        if (test < ips)
+                            cidr -= 1;
+
                     }
                     else
                     {
@@ -48,7 +54,7 @@ namespace subnet
                 }
                 else
                 {
-                    WriteError("wat?");
+                    ConsoleHelper.WriteError("wat?");
                     Environment.Exit(255);
                 }
 
@@ -66,7 +72,7 @@ namespace subnet
             }
             catch(Exception ex)
             {
-                WriteError(ex.Message);
+                ConsoleHelper.WriteErrorTRex(ex.Message);
                 Environment.Exit(1);
             }
 
@@ -177,13 +183,6 @@ namespace subnet
             }
 
             return result.ToArray();
-        }
-
-        public static void WriteError(string message)
-        {
-            string doggo = "            \\\n             \\\n            /^-----^\\\n            V  o o  V\n             |  Y  |\n              \\ Q /\n              / - \\\n              |    \\\n              |     \\     )\n              || (___\\====";
-            string msg = message.Length < 12 ? message.PadLeft(11) : message;
-            Console.Write($"\n   {msg.Pastel(Color.Salmon)}\n{doggo.Pastel(Color.White)}\n\n"); // TODO STDERR
         }
 
     }

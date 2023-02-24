@@ -151,9 +151,10 @@ namespace gremlins
                         string path = cmd["file"].Strings[0];
 
                         if (!cmd["encoding"].WasUserSet)
-                        {   
-                            encoding = EncodingHelper.GetEncodingFromFile(path);
-                            if(encoding != Encoding.ASCII && encoding != Encoding.UTF8)
+                        {
+                            //encoding = EncodingHelper.GetEncodingFromFile(path);
+                            encoding = defaultEncoding;
+                            if (encoding != Encoding.ASCII && encoding != Encoding.UTF8)
                                 Console.Error.WriteLine($"{"Warning:".Pastel(ColorTheme.OffsetColorHighlight)} files has {encoding.EncodingName} encoding.");
                         }
 

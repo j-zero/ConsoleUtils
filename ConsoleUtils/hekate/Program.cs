@@ -140,17 +140,23 @@ namespace hekate
         static void ShowHelp()
         {
             Console.WriteLine($"hekate, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--url|-u] URL}}");
-            Console.WriteLine($"Options:");
-            foreach (CmdOption c in cmd.OrderBy(x => x.Name))
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Verb] [Options]");
+
+            Console.WriteLine($"\nVerbs:");
+            foreach (CmdOption c in cmd.SelectVerbs.OrderBy(x => x.Name))
+            {
+                string l = $"  {c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                Console.WriteLine(l);
+            }
+
+            Console.WriteLine($"\nOptions:");
+            foreach (CmdOption c in cmd.SelectOptions.OrderBy(x => x.Name))
             {
                 string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
-            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
-            Exit(0);
+            Environment.Exit(0);
         }
-
 
         static void Exit(int exitCode)
         {

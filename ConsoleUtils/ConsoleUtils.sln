@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash", "hash\hash.csproj", "{609CEAB9-54A6-4A12-AAEC-56796A65511E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coffee", "coffee\coffee.csproj", "{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -209,6 +211,14 @@ Global
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|x64.ActiveCfg = Release|Any CPU
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Release|x64.Build.0 = Release|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Debug|x64.Build.0 = Debug|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|x64.ActiveCfg = Release|Any CPU
+		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -110,7 +110,7 @@ public class CmdOption
     }
     public bool Bool
     {
-        get { return Bools.Single(); }
+        get { return Bools.First(); }
     }
     public decimal Decimal
     {

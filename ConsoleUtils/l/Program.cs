@@ -16,7 +16,7 @@ namespace list
         
         static CmdParser cmd;
         //static string path = null;
-        static Dictionary<string, List<FilesystemEntryInfo>> entries;
+        
 
         static bool ShowInfo = false;
         static bool ShowHidden = false;
@@ -28,11 +28,16 @@ namespace list
 
         static bool ShowLongOwner = false;
 
+
         static void Main(string[] args)
         {
             isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
-            entries = new Dictionary<string, List<FilesystemEntryInfo>>();
 
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                Console.WriteLine($"Current Directory: {Environment.CurrentDirectory}");
+                Console.WriteLine($"Command Line: {Environment.CommandLine}");
+            }
 
             cmd = new CmdParser()
             {
@@ -87,99 +92,116 @@ namespace list
             if (paths == null)
                 paths = new string[] { Environment.CurrentDirectory };
 
-            
-
-            List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
-
+            // analyse paths  to files & dirs
 
 
             try
             {
-                foreach (string path in paths) {
-                    var files = FileAndDirectoryFilter.GetFilesFromFilter(path);
 
-                    if (files.Length == 0)
+                Dictionary<string, List<FilesystemEntryInfo>> entries = new Dictionary<string, List<FilesystemEntryInfo>>();
+                List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
+
+                foreach (string path in paths)
+                {
+                    bool isDir = Directory.Exists(path);
+                    bool isFile = File.Exists(path);
+
+                    //List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
+
+                    var files = FileAndDirectoryFilter.GetFilesFromFilter(path);
+                    found.AddRange(files);
+
+                    if (found.Count == 0)
                         ConsoleHelper.WriteError($"No files found in \"{path}\"");
 
-                    found.AddRange(files);
+                    //found.AddRange(files);
                 }
+
+                var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
+
+                if (found.Count > 0 && (ShowHidden ||(notHiddenCount > 0)))
+                {
+                    if(found.Count == 1 && found[0].Error)
+                    {
+                        ConsoleHelper.WriteError($"Access denied: \"{found[0].FullPath}\"");
+                        return;
+                    }
+
+                    /*
+                    foreach (FilesystemEntryInfo e in found)
+                    {
+                        if (!entries.ContainsKey(e.BaseDirectory))
+                            entries.Add(e.BaseDirectory, new List<FilesystemEntryInfo>());
+                        entries[e.BaseDirectory].Add(e);
+                    }
+
+                    bool showRelativePath = false;
+
+                    if (entries.Count > 1)
+                        showRelativePath = true;
+                    else
+                    {
+                       
+                    }
+                    */
+
+                    bool showRelativePath = false;
+                    //showRelativePath = entries.Any(e => e.Value.Any(x => x.BaseDirectory != Environment.CurrentDirectory)); // if any file entry is not in current dir, enable full pathes
+                    showRelativePath = found.Any(x => x.BaseDirectory != Environment.CurrentDirectory); // if any file entry is not in current dir, enable full pathes
+
+                    //foreach (KeyValuePair<string, List<FilesystemEntryInfo>> ei in entries)
+                    //{
+                    //FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
+                    //var list = ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList();
+                    var list = ShowHidden ? found : found.Where(e => e.HasHiddenAttribute == false).ToList();
+
+                        if (cmd.HasFlag("only-dirs"))
+                            list = list.Where(e => e.IsDirectory).ToList();
+
+                        if (cmd.HasFlag("long") || cmd.HasFlag("info") || cmd.HasFlag("full") || ShowStreams || ShowHeader || ShowEncoding)
+                        {
+                            LongList(list, showRelativePath);
+                        }
+                        else if (cmd.HasFlag("oneline"))
+                        {
+                            OneLinerList(list, showRelativePath);
+                        }
+                        else
+                        {
+                            GridList(list, showRelativePath);
+                        }
+                    //}
+                    //LongList();
+                }
+                else
+                {
+                
+                    try
+                    {
+                        /*
+                        if(!path.StartsWith("\\\\"))
+                            filepath = Path.GetFullPath(path);
+
+                        if(found.Count == 0)
+                            ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
+                        else
+                            ConsoleHelper.WriteError($"No files found in \"{filepath}\", but there are hidden files! Use -a to show them.");
+                        */
+                    }
+                    catch
+                    {
+                        ConsoleHelper.WriteError($"\"{"??"}\" does not exist.");
+                    }
+                
+
+
+                }
+                
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Die("Guru Meditation: " + ex.Message, 1);
             }
-
-            var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
-
-            if (found.Count > 0 && (ShowHidden ||(notHiddenCount > 0)))
-            {
-                if(found.Count == 1 && found[0].Error)
-                {
-                    ConsoleHelper.WriteError($"Access denied: \"{found[0].FullPath}\"");
-                    return;
-                }
-
-                foreach (FilesystemEntryInfo e in found)
-                {
-                    if (!entries.ContainsKey(e.BaseDirectory))
-                        entries.Add(e.BaseDirectory, new List<FilesystemEntryInfo>());
-                    entries[e.BaseDirectory].Add(e);
-                }
-
-                bool showRelativePath = false;
-
-                if (entries.Count > 1)
-                    showRelativePath = true;
-
-                foreach (KeyValuePair<string, List<FilesystemEntryInfo>> ei in entries)
-                {
-                    //FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
-                    var list = ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList();
-
-                    if (cmd.HasFlag("only-dirs"))
-                        list = list.Where(e => e.IsDirectory).ToList();
-
-                    if (cmd.HasFlag("long") || cmd.HasFlag("info") || cmd.HasFlag("full") || ShowStreams || ShowHeader || ShowEncoding)
-                    {
-                        LongList(list, showRelativePath);
-                        if (entries.Count > 1)
-                            Console.WriteLine();
-                    }
-                    else if (cmd.HasFlag("oneline"))
-                    {
-                        OneLinerList(list, showRelativePath);
-                    }
-                    else
-                    {
-                        GridList(list, showRelativePath);
-                    }
-                }
-                //LongList();
-            }
-            else
-            {
-                
-                try
-                {
-                    /*
-                    if(!path.StartsWith("\\\\"))
-                        filepath = Path.GetFullPath(path);
-
-                    if(found.Count == 0)
-                        ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
-                    else
-                        ConsoleHelper.WriteError($"No files found in \"{filepath}\", but there are hidden files! Use -a to show them.");
-                    */
-                }
-                catch
-                {
-                    ConsoleHelper.WriteError($"\"{"??"}\" does not exist.");
-                }
-                
-
-
-            }
-            ;
 
             if (isStartedFromExplorer)
             {
@@ -350,6 +372,7 @@ namespace list
         static void GridList(List<FilesystemEntryInfo> ei, bool printParentDiretory = false)
         {
             
+
             var longest_parent_dir = ei.Max(r => (r.GetRelativeParent(Environment.CurrentDirectory)).Length+3);
             int width = Console.WindowWidth;
             var longest_name = ei.Max(r => r.Name.Length)+2;
@@ -366,8 +389,12 @@ namespace list
                     if(c < chunks.Count && i < chunks[c].Count)
                     {
                         var e = chunks[c][i];
-                        var parent_directory = "." + Path.DirectorySeparatorChar + e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar;
-                        var name = (printParentDiretory ? (parent_directory).Pastel(ColorTheme.Directory) : "") + e.Name.PadRight(longest_name).Pastel(e.ColorString);
+                        var parent_directory = "";
+
+                        
+                        //parent_directory = "." + Path.DirectorySeparatorChar + e.GetRelativeParent(Environment.CurrentDirectory, true) + Path.DirectorySeparatorChar;
+                        parent_directory = e.GetRelativeParent(Environment.CurrentDirectory);
+                        var name = (printParentDiretory ? (parent_directory + (parent_directory.EndsWith(Path.DirectorySeparatorChar.ToString()) ? "" : Path.DirectorySeparatorChar.ToString())).Pastel(ColorTheme.Directory) : "") + e.Name.PadRight(longest_name).Pastel(e.ColorString);
 
                         Console.Write(name);
                     }
@@ -509,31 +536,37 @@ namespace list
 
                     Console.WriteLine();
 
-                    if (ShowStreams)
+                    if (ShowStreams && e.CanRead)
                     {
                         if (e.AlternateDataStreams != null)
                         {
                             var spaceSpaces = "";
                             for (int i = 0; i < sizepos; i++)
                                 spaceSpaces += " ";
-
-                            foreach (var s in e.AlternateDataStreams)
+                            try
                             {
-                                if (s.Name != String.Empty)
+                                foreach (var s in e.AlternateDataStreams)
                                 {
-                                    string streamName = s.Name.Replace(":$DATA", "");
-                                    (string streamSize, string streamSizeSuffix) = UnitHelper.GetHumanReadableSize(s.Length);
-                                    Console.WriteLine($"{spaceSpaces}" +
-                                                        $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
-                                                        $" :{streamName.Pastel("#808080")} ");
-                                    if (ShowInfo)
+                                    if (s.Name != String.Empty)
                                     {
-                                        ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
-                                        Console.WriteLine();
+                                        string streamName = s.Name.Replace(":$DATA", "");
+                                        (string streamSize, string streamSizeSuffix) = UnitHelper.GetHumanReadableSize(s.Length);
+                                        Console.WriteLine($"{spaceSpaces}" +
+                                                            $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
+                                                            $" :{streamName.Pastel("#808080")} ");
+                                        if (ShowInfo)
+                                        {
+                                            ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
+                                            Console.WriteLine();
+                                        }
+
                                     }
 
                                 }
-
+                            }
+                            catch
+                            {
+                                Console.WriteLine($"{spaceSpaces}{string.Empty.PadLeft(longestSize, ' ')}{"Access denied".Pastel(ColorTheme.Error)}");
                             }
                         }
                     }

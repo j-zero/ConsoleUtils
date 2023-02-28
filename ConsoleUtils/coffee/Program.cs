@@ -46,7 +46,7 @@ namespace coffee
                 { "start", "s", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Start Process and keep display alive" },
-                { "use-shell-execute", "", CmdCommandTypes.FLAG, "use shell execurte on --start" },
+                { "use-shell-execute", "", CmdCommandTypes.FLAG, "use shell execute on --start" },
 
             };
 
@@ -61,12 +61,14 @@ namespace coffee
                 Console.Write($"Prventing Idle-to-sleep ... ");
                 Wait();
             }
-            else if (cmd["start"].Strings.Length > 0)
+            else if (cmd["start"].Strings.Length > 0 && cmd["start"].Strings[0] != null)
             {
 
                 string command = cmd["start"].Strings[0];
                 
                 string[] arguments = cmd["start"].Strings.Skip(1).ToArray();
+
+                Console.Error.WriteLine($"Staying awake ...");
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_AWAYMODE_REQUIRED);
                 
                 
@@ -80,7 +82,7 @@ namespace coffee
             else //if (cmd.HasFlag("prevent-idle"))
             {
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_DISPLAY_REQUIRED );
-                Console.Write($"Prventing idle ... ");
+                Console.Write($"Staying awake ... ");
                 Wait();
             }
 
@@ -94,7 +96,7 @@ namespace coffee
         
         static void Wait()
         {
-            Console.WriteLine($"press enter to close");
+            Console.WriteLine($"press Enter to close.");
             ConsoleKey key = ConsoleKey.NoName;
             while (key != ConsoleKey.Enter)
             {

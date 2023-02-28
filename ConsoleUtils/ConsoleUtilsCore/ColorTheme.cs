@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 
 public class ColorTheme
 {
@@ -8,6 +9,8 @@ public class ColorTheme
     public static string File = "#DDDDDD";
     public static string Symlink = "#00CED1";
     public static string UnknownFileType = "#aaaaaa";
+    public static Color Error = Color.OrangeRed;
+
 
     public static string Default1 { get { return "9CDCFE"; } }
     public static string Default2 { get { return "569CD6"; } }

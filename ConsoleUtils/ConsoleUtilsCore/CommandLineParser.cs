@@ -207,6 +207,15 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         return this.Verbs.Contains(verb);
     }
 
+    public bool Empty
+    {
+        get
+        {
+            return !this.Any(c => c.WasUserSet);
+        }
+    }
+
+
     public bool IsParameterNullOrEmpty(string parameter)
     {
         if (!this.Contains(parameter))

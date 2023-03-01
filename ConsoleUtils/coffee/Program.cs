@@ -38,27 +38,47 @@ namespace coffee
 
         static void Main(string[] args)
         {
+
+            Console.CancelKeyPress += Console_CancelKeyPress;
+
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
-                { "prevent-sleep", "", CmdCommandTypes.FLAG, "Prevent Idle-to-Sleep" },
-                { "prevent-idle", "", CmdCommandTypes.FLAG, "Prevent idle (default)" },
+                { "no-sleep", "", CmdCommandTypes.FLAG, "Prevent Idle-to-Sleep" },
+                { "awake", "", CmdCommandTypes.FLAG, "Prevent idle (default)" },
                 { "start", "s", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Start Process and keep display alive" },
                 { "use-shell-execute", "", CmdCommandTypes.FLAG, "use shell execute on --start" },
+                { "topmost", "", CmdCommandTypes.FLAG, "Set window topmost" },
+                { "no-topmost", "", CmdCommandTypes.FLAG, "Set window notopmost" },
 
             };
 
             cmd.DefaultParameter = "start";
             cmd.Parse();
 
+            bool somethingSet = false;
+
             if (cmd.HasFlag("help"))
                 ShowHelp();
 
-            else if (cmd.HasFlag("prevent-sleep")){
+            if (cmd.HasFlag("topmost"))
+            {
+                somethingSet = true;
+                //Console.Error.WriteLine($"Set window always on top.");
+                WindowHelper.SetCurrentWindowTopMost(true);
+            }
+            else if (cmd.HasFlag("no-topmost"))
+            {
+                somethingSet = true;
+                //Console.Error.WriteLine($"Set window not always on top.");
+                WindowHelper.SetCurrentWindowTopMost(false);
+            }
+
+            if (cmd.HasFlag("no-sleep")){
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_AWAYMODE_REQUIRED);
-                Console.Write($"Prventing Idle-to-sleep ... ");
+                //Console.Error.Write($"Prventing Idle-to-sleep ... ");
                 Wait();
             }
             else if (cmd["start"].Strings.Length > 0 && cmd["start"].Strings[0] != null)
@@ -68,7 +88,7 @@ namespace coffee
                 
                 string[] arguments = cmd["start"].Strings.Skip(1).ToArray();
 
-                Console.Error.WriteLine($"Staying awake ...");
+                Console.Error.WriteLine($"staying awake ...");
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_AWAYMODE_REQUIRED);
                 
                 
@@ -77,14 +97,20 @@ namespace coffee
 
                 var proc = Process.Start(psi);
                 proc.WaitForExit();
+                if (cmd.HasFlag("topmost"))
+                    WindowHelper.SetCurrentWindowTopMost(false);
+
+                //Console.Error.Write($"Staying awake ... ");
 
             }
-            else //if (cmd.HasFlag("prevent-idle"))
+            else if (cmd.Empty || cmd.HasFlag("awake"))
             {
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_DISPLAY_REQUIRED );
-                Console.Write($"Staying awake ... ");
+                Console.Error.Write($"staying awake ... ");
                 Wait();
             }
+
+
 
             
 
@@ -93,10 +119,16 @@ namespace coffee
 
         }
 
-        
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        {
+            //Console.Error.Write($"Have a nive day!");
+            if (cmd.HasFlag("topmost"))
+                WindowHelper.SetCurrentWindowTopMost(false);
+        }
+
         static void Wait()
         {
-            Console.WriteLine($"press Enter to close.");
+            Console.WriteLine($"press Enter to exit.");
             ConsoleKey key = ConsoleKey.NoName;
             while (key != ConsoleKey.Enter)
             {

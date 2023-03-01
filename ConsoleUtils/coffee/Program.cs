@@ -139,7 +139,7 @@ namespace coffee
         static void ShowHelp()
         {
             Console.WriteLine($"coffee, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--url|-u] URL}}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] [[--start] [command] [arguments]]");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {

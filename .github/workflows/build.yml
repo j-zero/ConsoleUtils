@@ -58,6 +58,8 @@ jobs:
         run: nuget restore ConsoleUtils.sln
         working-directory: ./ConsoleUtils
       - name: Build
+          with:
+            dotnet-version: 5.0.x
         run: dotnet build --configuration Release --no-restore --output ../bin -p:Platform=x64
         working-directory: ./ConsoleUtils
       - name: Show Builddir

@@ -6,6 +6,15 @@ using System.Text;
 
 public class PathHelper
 {
+    public static string GetSpecialFolder(Environment.SpecialFolder Folder, string FolderName, string prefix = "")
+    {
+        return GuaranteeBackslash(Path.Combine(Environment.GetFolderPath(Folder), prefix, FolderName));
+    }
+
+    public static string GuaranteeBackslash(string Path)
+    {
+        return Path.EndsWith("\\") ? Path : Path + "\\";
+    }
     public static string CleanFileNameFromString(string input)
     {
         string result = input;

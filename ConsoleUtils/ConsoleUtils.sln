@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash", "hash\hash.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coffee", "coffee\coffee.csproj", "{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lognote", "lognote\lognote.csproj", "{1D66DA1B-C820-44A4-AE63-12B3C6B21076}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -219,6 +221,14 @@ Global
 		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|x64.ActiveCfg = Release|Any CPU
 		{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}.Release|x64.Build.0 = Release|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Debug|x64.Build.0 = Debug|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Release|x64.ActiveCfg = Release|Any CPU
+		{1D66DA1B-C820-44A4-AE63-12B3C6B21076}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

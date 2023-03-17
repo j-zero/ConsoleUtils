@@ -147,6 +147,8 @@ namespace certy
             catch (Exception ex)
             {
                 ConsoleHelper.WriteError(ex);
+                if (ex.InnerException != null)
+                    ConsoleHelper.WriteError(ex.InnerException);
             }
             finally
             {
@@ -178,6 +180,8 @@ namespace certy
             catch (HttpRequestException ex)
             {
                 ConsoleHelper.WriteError(ex);
+                if(ex.InnerException != null)
+                    ConsoleHelper.WriteError(ex.InnerException);
             }
             handler.Dispose();
             client.Dispose();

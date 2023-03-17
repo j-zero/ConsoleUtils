@@ -19,7 +19,7 @@ public class ConsoleHelper
 
     public static void WriteError(Exception ex)
     {
-        Console.Error.Write($"{ex.Message.Pastel(Color.OrangeRed)}\n{ex.StackTrace}");
+        Console.Error.Write($"{ex.Message.Pastel(Color.OrangeRed)}\n{ex.StackTrace}\n");
     }
 
     public static void WriteErrorDog(string message)

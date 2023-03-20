@@ -27,7 +27,7 @@ namespace lognote
             else
                 return ((DateTime)dt).ToString(dateTimeFormat).Pastel(ColorTheme.OffsetColor);
         }
-        public void SaveScreenshot()
+        public void SaveScreenshot(string thema)
         {
             string imgeFileExtension = ".png";
             string dateTime = DateTime.Now.ToString(fileDateTimeFormat);
@@ -111,8 +111,15 @@ namespace lognote
 
         public string[] GetAllThemas()
         {
-            string[] dirs = Directory.GetDirectories(this.folder).Select(Path.GetFileName).ToArray();
-            return dirs;
+            if (Directory.Exists(this.folder))
+            {
+                string[] dirs = Directory.GetDirectories(this.folder).Select(Path.GetFileName).ToArray();
+                return dirs;
+            }
+            else
+            {
+                return new string[0];
+            }
 
         }
 

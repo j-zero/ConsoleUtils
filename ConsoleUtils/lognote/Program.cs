@@ -35,8 +35,6 @@ namespace lognote
                 string line = ReadLine.Read($"{thema.Pastel(ColorTheme.Default1)}{prompt}");
                 ParseCommand(line);
 
-
-
             } while (!exit);
         }
 
@@ -52,7 +50,7 @@ namespace lognote
                 }
                 else if (cmd == ":i")
                 {
-                    Globals.db.SaveScreenshot();
+                    Globals.db.SaveScreenshot(thema);
                 }
                 else
                 {

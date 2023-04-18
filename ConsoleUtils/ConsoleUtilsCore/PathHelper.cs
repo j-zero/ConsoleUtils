@@ -8,7 +8,9 @@ public class PathHelper
 {
     public static string GetSpecialFolder(Environment.SpecialFolder Folder, string FolderName, string prefix = "")
     {
-        return GuaranteeBackslash(Path.Combine(Environment.GetFolderPath(Folder), prefix, FolderName));
+        string folder = GuaranteeBackslash(Path.Combine(Environment.GetFolderPath(Folder), prefix, FolderName));
+        Directory.CreateDirectory(folder);
+        return folder;
     }
 
     public static string GuaranteeBackslash(string Path)

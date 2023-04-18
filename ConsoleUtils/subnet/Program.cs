@@ -63,11 +63,13 @@ namespace subnet
 
                 uint count = getInfosFromIp(ip, cidr, out mask, out net, out bc, out start, out end);
 
+
+                //Console.WriteLine($"{"CIDR:".Pastel(Color.White)}      {intToAddr(net)}{cidr.ToString().Pastel(highlight)}");
+                //Console.WriteLine($"{"Mask:".Pastel(Color.White)}      {"/".Pastel(Color.White)}{cidr.ToString().Pastel(highlight)}, {intToAddr(mask)}");
                 Console.WriteLine($"{"IP:".Pastel(Color.White)}        {intToAddr(ip)}");
-                Console.WriteLine($"{"Mask:".Pastel(Color.White)}      {"/".Pastel(Color.White)}{cidr.ToString().Pastel(highlight)}, {intToAddr(mask)}");
-                Console.WriteLine($"{"Network:".Pastel(Color.White)}   {intToAddr(net)}");
+                Console.WriteLine($"{"Network:".Pastel(Color.White)}   {intToAddr(net).Pastel(ColorTheme.Default1)}{"/".Pastel(ColorTheme.Default2)}{cidr.ToString().Pastel(ColorTheme.Default1)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(mask)}");
                 Console.WriteLine($"{"Broadcast:".Pastel(Color.White)} {intToAddr(bc)}");
-                Console.WriteLine($"{"Host:".Pastel(Color.White)}      {count.ToString().Pastel(highlight)}, {intToAddr(start)} - {intToAddr(end)}");
+                Console.WriteLine($"{"Hosts:".Pastel(Color.White)}     {count.ToString().Pastel(highlight)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)}{"-".Pastel(ColorTheme.Default2)}{intToAddr(end)}");
 
             }
             catch(Exception ex)

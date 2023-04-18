@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1D66DA1B-C820-44A4-AE63-12B3C6B21076}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>lognote</RootNamespace>
-    <AssemblyName>lognote</AssemblyName>
+    <RootNamespace>LogNote</RootNamespace>
+    <AssemblyName>log</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -8,13 +8,13 @@ namespace lognote
 {
     public class DB
     {
-        private bool debug = true;
-        string folder = PathHelper.GetSpecialFolder(Environment.SpecialFolder.MyDocuments, "LogNote");
+        private bool debug = false;
+        public string folder = PathHelper.GetSpecialFolder(Environment.SpecialFolder.MyDocuments, "LogNote");
         
         string fileExtension = ".log";
         //string thema = "default";
         bool exit = false;
-        public string dateTimeFormat { get; set; }
+        public string dateTimeFormat = "yyyy'-'MM'-'dd' 'HH':'mm':'ss";
         string fileDateTimeFormat = "yyyy''MM''dd''HH''mm''ss";
         string linePrefix = " ";
 
@@ -52,10 +52,9 @@ namespace lognote
                     CreateThemeFolder(thema);
                     string msg = $"Image from clipboard saved to: {filename}";
                     screenshot.Save(fullFileName, System.Drawing.Imaging.ImageFormat.Png);
-                    //PrintMessage(msg);
-
-
+                    
                     SaveData(thema, msg);
+                    PrintMessage(msg);
 
                     if (debug)
                         Console.WriteLine($"DEBUG: {fullFileName.Pastel(ColorTheme.OffsetColorHighlight)}");
@@ -66,7 +65,7 @@ namespace lognote
             }
             else
             {
-                //PrintMessage("No iamge in clipboard.", true); ;
+                PrintMessage("No iamge in clipboard.", true);
             }
 
         }
@@ -95,18 +94,57 @@ namespace lognote
 
         }
 
+        public void PrintMessage(string msg, bool error = false)
+        {
+            if (error)
+                Console.WriteLine($"{DateTime.Now.ToString(this.dateTimeFormat).Pastel(ColorTheme.OffsetColor)} {("(!) " + msg).Pastel(ColorTheme.Error)}");
+            else
+                Console.WriteLine($"{DateTime.Now.ToString(this.dateTimeFormat).Pastel(ColorTheme.OffsetColor)} {msg}");
+        }
+
+
         public void PrintData(string thema)
         {
             string filename = Path.Combine(this.folder, thema, PathHelper.CleanFileNameFromString(thema + fileExtension));
-            string[] lines = File.ReadAllLines(filename);
-            foreach (string line in lines)
+            if (File.Exists(filename))
             {
-                if (IsDateTimeLine(line))
+                string[] lines = File.ReadAllLines(filename);
+                foreach (string line in lines)
                 {
-                    Console.WriteLine(line);
+                    if (IsDateTimeLine(line))
+                    {
+                        Console.WriteLine(line.Pastel(ColorTheme.Default1));
+                    }
+                    else
+                    {
+                        if (line.StartsWith(linePrefix))
+                        {
+                            Console.WriteLine(line.Pastel(ColorTheme.Text));
+                        }
+                        else
+                        {
+                            ;
+                        }
+
+                    }
                 }
             }
+            else
+            {
+                PrintMessage("empty", true);
+            }
 
+        }
+
+        public string GetFolder(string thema)
+        {
+            return Path.Combine(this.folder, thema);
+        }
+
+        public string[] GetThema(string thema)
+        {
+            string filename = Path.Combine(this.folder, thema, PathHelper.CleanFileNameFromString(thema + fileExtension));
+            return File.ReadAllLines(filename);
         }
 
         public string[] GetAllThemas()
@@ -123,7 +161,7 @@ namespace lognote
 
         }
 
-        bool IsDateTimeLine(string line)
+        public bool IsDateTimeLine(string line)
         {
             DateTime dt;
             bool isValidDateTime = DateTime.TryParse(line, out dt);

@@ -268,8 +268,8 @@ namespace hexe
                 if (cmd.HasFlag("short"))
                 {
                     int cHeight = (windowHeight / 2 - 4);
-                    
                     defaultLength = cHeight * bytesPerLine;
+                    //Console.WriteLine(cHeight);
 
                     //head
                     parts[0].Offset = 0;
@@ -303,8 +303,12 @@ namespace hexe
                     if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                     {
                         string path = cmd["file"].Strings[0];
-                        foreach(Selection s in parts)
-                            data.Add(ReadFile(path, s.Offset, s.Length)); // needs to skip
+                        foreach (Selection s in parts)
+                        {
+                            Blob b = ReadFile(path, s.Offset, s.Length);
+                            if(b != null)
+                                data.Add(b); // needs to skip
+                        }
                     }
                     else
                     {
@@ -412,8 +416,10 @@ namespace hexe
             catch (Exception ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
-                if(cmd.HasFlag("debug") || System.Diagnostics.Debugger.IsAttached)
+                if (cmd.HasFlag("debug") || System.Diagnostics.Debugger.IsAttached)
+                {
                     Console.WriteLine(ex.StackTrace);
+                }
             }
 
             if (System.Diagnostics.Debugger.IsAttached)
@@ -514,6 +520,9 @@ namespace hexe
 
                         if (offset < 0)
                             offset = size + offset;
+
+                        if (offset < 0)
+                            return null;
 
                         if (length == 0)
                         {

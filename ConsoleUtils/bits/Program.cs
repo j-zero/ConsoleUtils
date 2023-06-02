@@ -39,6 +39,7 @@ namespace bits
                     { CmdParameterTypes.STRING, null }
                 }, "input data" }
             };
+
             cmd.DefaultParameter = "data";
             try
             {
@@ -47,22 +48,39 @@ namespace bits
             catch (ArgumentException ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
-                
             }
 
             if (cmd.HasFlag("help"))
                 ShowHelp();
 
             string data = null;
-            bool success = false;
+            
 
 
             if (cmd["data"].Strings.Length > 0 && cmd["data"].Strings[0] != null)
                 data = cmd["data"].Strings[0];
 
-            if(data == null)
-                ShowHelp();
+            if (data == null)
+            {
+                while (true)
+                {
+                    Console.Write("> ".Pastel(ColorTheme.Default1));
+                    data = Console.ReadLine();
+                    Parse(data);
 
+                }
+            }
+            else
+            {
+                Parse(data);
+            }
+
+            Exit(0);
+        }
+
+        public static bool Parse(string data)
+        {
+            bool success = false;
             if (data.ToLower().StartsWith("0x") || data.ToLower().StartsWith("#") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
             {
                 // hex
@@ -83,7 +101,7 @@ namespace bits
             else if (HasSISuffix(data, out double si_interpret_val, out string suffix))
             {
                 int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == suffix.ToLower());
-                
+
                 string unit_name = UnitHelper.SISuffixNames[suffix.ToLower()];
                 Console.WriteLine($"interpretation: {si_interpret_val} {unit_name}, Number with SI Prefix");
 
@@ -94,14 +112,14 @@ namespace bits
 
             }
 
-            else if(HasByteSuffix(data, out double byte_interpret_value, out string byte_suffix, out isBits))
+            else if (HasByteSuffix(data, out double byte_interpret_value, out string byte_suffix, out isBits))
             {
                 string s = byte_suffix.ToLower().Replace("i", "").Replace("b", "");
                 int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == s);
 
 
                 string unit = l == -1 ? "" : UnitHelper.ByteSuffixes[l];
-                
+
 
                 bool isBin = false;
 
@@ -130,7 +148,7 @@ namespace bits
 
                 value = byte_interpret_value;
 
-                
+
             }
 
 
@@ -147,7 +165,7 @@ namespace bits
                     success = false;
                 }
             }
-            else if((data.ToLower().StartsWith("0b") && data.Substring(2).All(c => c == '0' || c == '1')) || data.Length >= 8 && data.All(c => c == '0' || c == '1') )
+            else if ((data.ToLower().StartsWith("0b") && data.Substring(2).All(c => c == '0' || c == '1')) || data.Length >= 8 && data.All(c => c == '0' || c == '1'))
             {
                 // dual
                 Console.WriteLine("interpretation: binary number");
@@ -183,10 +201,10 @@ namespace bits
             long int_value = (long)value;
 
             double bits = Math.Ceiling(Math.Log((double)value, 2));
-            double maxBits = Math.Pow(2,bits);
+            double maxBits = Math.Pow(2, bits);
 
             // string hexValue = StringHelper.AddSeperator(value.ToString("X").ToLower(), " ", 2);
-            
+
 
             //string binaryValue = StringHelper.AddSeperator(Convert.ToString(value, 2), " ", 4);
 
@@ -210,11 +228,11 @@ namespace bits
 
             Console.WriteLine($"bits   : {bitsValue} (2^{bitsValue} = {maxBits}, +{maxBits - (double)value})");
 
-            
+
 
             if (value % 1 == 0 && value <= 0xffffffff && value > 0)
             {
-                
+
                 Byte
                     a = (byte)((int_value >> 24) & 0xFF),
                     r = (byte)((int_value >> 16) & 0xFF),
@@ -279,7 +297,7 @@ namespace bits
 
             for (int i = 0; i < maxSuffixSI; i++)
             {
-                
+
                 (string sizeIValue, string sizeISuffix) = UnitHelper.GetHumanReadableSize(byte_value, 1024, 2, false, i);
                 (string sizeValue, string sizeSuffix) = UnitHelper.GetHumanReadableSize(byte_value, 1000, 2, false, i);
                 (string bit_sizeIValue, string bit_sizeISuffix) = UnitHelper.GetHumanReadableSize(bit_value, 1024, 2, false, i);
@@ -294,12 +312,11 @@ namespace bits
                 }
                 else
                 {
- 
+
                     Console.WriteLine($"         {sizeValue} {UnitHelper.SISuffixNames[sizeSuffix.ToLower()]}bytes, {sizeIValue} {UnitHelper.BinSuffixNames[sizeISuffix.ToLower()]}bytes, {bit_sizeValue} {UnitHelper.SISuffixNames[bit_sizeSuffix.ToLower()]}bits, {bit_sizeIValue} {UnitHelper.BinSuffixNames[bit_sizeSuffix.ToLower()]}bits");
                 }
             }
-
-            Exit(0);
+            return success;
         }
 
         public static bool HasByteSuffix(string val, out double out_val, out string suffix, out bool bits)

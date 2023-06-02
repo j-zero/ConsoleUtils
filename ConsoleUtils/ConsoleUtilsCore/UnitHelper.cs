@@ -7,7 +7,33 @@ using System.Threading.Tasks;
 
     public class UnitHelper
     {
-    public static readonly string[] SizeSuffixes = { "B", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+    public static readonly string[] SizeSuffixes = { "B", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
+    public static readonly string[] ByteSuffixes = { "", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
+
+    public static readonly Dictionary<string, string> SISuffixNames = new Dictionary<string, string> {
+        { "k", "Kilo" },
+        { "m", "Mega" },
+        { "g", "Giga" },
+        { "t", "Tera" },
+        { "p", "Peta" },
+        { "e", "Exa" },
+        { "z", "Zetta" },
+        { "y", "Yotta" },
+        { "r", "Ronna" },
+        { "q", "Quetta" },
+    };
+    public static readonly Dictionary<string, string> BinSuffixNames = new Dictionary<string, string> {
+        { "k", "Kibi" },
+        { "m", "Mebi" },
+        { "g", "Gibi" },
+        { "t", "Tebi" },
+        { "p", "Pebi" },
+        { "e", "Exbi" },
+        { "z", "Zebi" },
+        { "y", "Yobi" },
+        { "r", "Robi" },
+        { "q", "Quebi" },
+    };
 
     // based on https://stackoverflow.com/a/14488941
     public static void _CalculateHumanReadableSize(Int64 value, out string _humanReadbleSize, out string _humanReadbleSizeSuffix, int factor = 1024, int decimalPlaces = 1)
@@ -60,7 +86,7 @@ using System.Threading.Tasks;
     */
 
     // based on https://stackoverflow.com/a/14488941
-    public static (string, string) GetHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false)
+    public static (string, string) GetHumanReadableSize(Int64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false, int mag = -1)
     {
         if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
 
@@ -68,7 +94,9 @@ using System.Threading.Tasks;
             return ("0", "");
 
         // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-        int mag = (int)Math.Log(value, factor);
+        
+        if(mag == -1)
+            mag = (int)Math.Log(value, factor);
 
         double val = value;
 
@@ -79,6 +107,7 @@ using System.Threading.Tasks;
 
         return (string.Format("{0:n" + decimalPlaces + "}", val), ((mag == 0 && !showByteSuffix) ? "" : SizeSuffixes[mag]));
     }
+
 
     public static (string, string) GetHumanReadableSize2(Int64 value, int factor = 1024, int decimalPlaces = 1, bool showByteSuffix = false)
     {

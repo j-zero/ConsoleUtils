@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Collections.Generic;
 using NtfsDataStreams;
+using System.Security.Cryptography.X509Certificates;
 
 public class FilesystemEntryInfo
 {
@@ -22,6 +23,11 @@ public class FilesystemEntryInfo
     }
     */
 
+    private bool _isCertValid = false;
+
+
+    public X509Certificate2 Certificate { get { return ReadCertificate();  } }
+    public bool IsCertificateValid { get { ReadCertificate();  return _isCertValid; } }
 
     public bool IsDirectory { get; private set; }
     public bool IsFile { get; private set; }
@@ -96,6 +102,76 @@ public class FilesystemEntryInfo
     public string HumanReadbleSize { get { return _humanReadbleSize; } }
     public string HumanReadbleSizeSuffix { get { return _humanReadbleSizeSuffix; } }
     public string HumanReadableLastWriteTime { get { return _formatDateTimeHumanReadable(_lastWriteTime); } }
+
+
+    private X509Certificate2 ReadCertificate()
+    {
+            if (!File.Exists(this.FullPath))
+            {
+                //Console.WriteLine("File not found");
+            }
+
+            X509Certificate2 theCertificate;
+
+            try
+            {
+                X509Certificate theSigner = X509Certificate.CreateFromSignedFile(this.FullPath);
+                theCertificate = new X509Certificate2(theSigner);
+            }
+            catch (Exception ex)
+            {
+            //Console.WriteLine("No digital signature found: " + ex.Message);
+                return null;
+            }
+
+            bool chainIsValid = false;
+
+            /*
+             *
+             * This section will check that the certificate is from a trusted authority IE
+             * not self-signed.
+             *
+             */
+
+            var theCertificateChain = new X509Chain();
+
+            theCertificateChain.ChainPolicy.RevocationFlag = X509RevocationFlag.EndCertificateOnly;
+
+            /*
+             *
+             * Using .Online here means that the validation WILL CALL OUT TO THE INTERNET
+             * to check the revocation status of the certificate. Change to .Offline if you
+             * don't want that to happen.
+             */
+
+            theCertificateChain.ChainPolicy.RevocationMode = X509RevocationMode.Offline;
+
+            theCertificateChain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+
+            theCertificateChain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
+
+            chainIsValid = theCertificateChain.Build(theCertificate);
+
+            this._isCertValid = chainIsValid;
+
+            //Console.WriteLine("Publisher Information : " + theCertificate.SubjectName.Name);
+            //Console.WriteLine("Valid From: " + theCertificate.GetEffectiveDateString());
+            //Console.WriteLine("Valid To: " + theCertificate.GetExpirationDateString());
+            //Console.WriteLine("Issued By: " + theCertificate.Issuer);
+            /*
+            if (chainIsValid)
+            {
+                
+            }
+            else
+            {
+
+                //Console.WriteLine("Chain Not Valid (certificate is self-signed)");
+            }
+            */
+            return theCertificate;
+        
+    }
 
     public DateTime CreationTime { get; private set; }
     public DateTime LastAccessTime { get; private set; }

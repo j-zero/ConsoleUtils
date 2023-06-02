@@ -64,6 +64,7 @@ static class Program
     {
         if (openWith)
         {
+
             Process.Start("rundll32.exe", "shell32.dll, OpenAs_RunDLL " + Path.GetFullPath(filename));
         }
         else

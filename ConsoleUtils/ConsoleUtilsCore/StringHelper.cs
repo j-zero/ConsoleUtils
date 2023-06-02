@@ -33,5 +33,12 @@ public class StringHelper
 
         return Reverse(result);
     }
+
+    public static string PadLeftToBlocks(string value, int blocksize, char paddingchar, string seperator)
+    {
+        int pads = value.Length % blocksize;
+        string result = (pads > 0 ? string.Empty.PadLeft(blocksize - pads, paddingchar) : string.Empty) + value;
+        return AddSeperator(result, seperator, blocksize);
+    }
 }
 

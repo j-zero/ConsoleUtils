@@ -9,9 +9,9 @@ public class ColorTheme
     public static string File = "#DDDDDD";
     public static string Symlink = "#00CED1";
     public static string UnknownFileType = "#aaaaaa";
-    public static Color Error = Color.OrangeRed;
-
-
+    public static Color Error = Color.OrangeRed; // "#ff4500"
+    public static string Error1 = "#ff4500";
+    public static string Comment { get { return "666666"; } }
     public static string Default1 { get { return "9CDCFE"; } }
     public static string Default2 { get { return "569CD6"; } }
     public static string DarkColor { get { return "268C96"; } }

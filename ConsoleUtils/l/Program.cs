@@ -458,6 +458,7 @@ namespace list
                     mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
                     mode += e.FileType == FileTypes.Executable ? "x".Pastel(e.ColorString) : minus;
 
+
                     Console.Write(mode + " ");
 
 
@@ -481,7 +482,7 @@ namespace list
 
                         if (ShowEncoding)
                         {
-                            encoding = $"{e.Encoding.PadRight(longestEncoding + 1).Pastel("#666666")}";
+                            encoding = $"{e.Encoding.PadRight(longestEncoding + 1).Pastel(ColorTheme.Comment)}";
                             Console.Write(encoding);
                         }
 
@@ -530,9 +531,73 @@ namespace list
                     if (ShowInfo && !e.IsDirectory && !string.IsNullOrWhiteSpace(e.FileTypeDescription))
                     {
                         Console.WriteLine();
-                        ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength, "  ", filepos, "#666666");
+                        //ConsoleHelper.WriteSplittedText("File information:\n", maxDescLength, "  ", filepos, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength-2, "  ", filepos+2, ColorTheme.Comment);
                     }
 
+
+                    if (ShowInfo && !e.IsDirectory)
+                    {
+                        var cert = e.Certificate;
+                        if (cert != null)
+                        {
+                            Console.WriteLine();
+                            var dateColor = ColorTheme.Comment;
+
+                            if (cert.NotAfter < DateTime.Now)
+                                dateColor = ColorTheme.Error1;
+
+                            ConsoleHelper.WriteSplittedText("Digital signature:\n", maxDescLength, "  ", filepos, "808080");
+                            /*
+                            if (!e.IsCertificateValid)
+                            {
+                                Console.Write("Not valid\n".Pastel("#ff4500"));
+                            }
+                            else
+                            {
+                                Console.Write("Valid\n".Pastel("#666666"));
+                            }
+                            */
+                            string hasPrivKey = cert.HasPrivateKey ? "Yes" : "No";
+                            //ConsoleHelper.WriteSplittedText($"Serial: {cert.SerialNumber}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            
+                            ConsoleHelper.WriteSplittedText($"Not before: {cert.NotBefore.ToShortDateString()}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"Not after: {cert.NotAfter.ToShortDateString().Pastel(dateColor)}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            
+                            ConsoleHelper.WriteSplittedText("Subject:\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"{cert.Subject}\n", maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
+
+                            //ConsoleHelper.WriteSplittedText("Issuer:\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
+                            //ConsoleHelper.WriteSplittedText($"{cert.Issuer}\n", maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
+
+                            ConsoleHelper.WriteSplittedText($"Signature algorithm: {cert.SignatureAlgorithm.FriendlyName}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            /*
+                            ConsoleHelper.WriteSplittedText($"Public key: {cert.PublicKey.Oid.FriendlyName}", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            try
+                            {
+                                Console.Write($" ({cert.PublicKey.Key.KeyExchangeAlgorithm}, {cert.PublicKey.Key.KeySize} bit)\n".Pastel(ColorTheme.Comment));
+                            }
+                            catch
+                            {
+                                Console.Write($"\n");
+                            }
+                            */
+                            //ConsoleHelper.WriteSplittedText($"Has private key: {hasPrivKey}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            //ConsoleHelper.WriteSplittedText($"Hash: {cert.GetCertHashString()}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+
+                            //Console.Write(cert.GetNameInfo(System.Security.Cryptography.X509Certificates.X509NameType, false));
+                            /*
+                            ConsoleHelper.WriteSplittedText("Extensions:\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
+                            foreach(var ext in cert.Extensions)
+                            {
+                                ConsoleHelper.WriteSplittedText($"{ext.Oid.FriendlyName}\n", maxDescLength, "  ", filepos, ColorTheme.Comment);
+                                //ConsoleHelper.WriteSplittedText($"{ext.}", maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
+                            }
+                            */
+                            
+                        }
+
+                    }
 
                     Console.WriteLine();
 
@@ -553,10 +618,10 @@ namespace list
                                         (string streamSize, string streamSizeSuffix) = UnitHelper.GetHumanReadableSize(s.Length);
                                         Console.WriteLine($"{spaceSpaces}" +
                                                             $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
-                                                            $" :{streamName.Pastel("#808080")} ");
+                                                            $"  :{streamName.Pastel("#808080")} ");
                                         if (ShowInfo)
                                         {
-                                            ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength, "  ", filepos, "#666666");
+                                            ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength-2, "  ", filepos+2, ColorTheme.Comment);
                                             Console.WriteLine();
                                         }
 

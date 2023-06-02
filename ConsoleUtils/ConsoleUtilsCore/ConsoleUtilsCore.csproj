@@ -112,6 +112,7 @@
     <Compile Include="StringHelper.cs" />
     <Compile Include="UnitHelper.cs" />
     <Compile Include="WindowHelper.cs" />
+    <Compile Include="WinTrustHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

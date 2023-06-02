@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ConsoleUtilsCore
 {
+
+   
     // https://stackoverflow.com/a/3346055
     /// <summary>
     /// A utility class to determine a process parent.
@@ -70,5 +73,8 @@ namespace ConsoleUtilsCore
                 return null;
             }
         }
+
     }
+
 }
+

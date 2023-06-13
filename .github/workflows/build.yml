@@ -31,7 +31,7 @@ jobs:
       with:
         name: Kompilat
     - name: Zip artifacts
-      run: zip release.zip ./* -r
+      run: zip ConsoleUtils.zip ./* -r
     - name: Display structure of downloaded files
       run: ls -R
     - name: Release

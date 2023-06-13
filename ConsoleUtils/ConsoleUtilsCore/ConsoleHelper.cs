@@ -98,8 +98,11 @@ public class ConsoleHelper
         }
     }
 
-    public static void WriteSplittedText(string input, int length, string prefix, int offset, string color)
+    public static bool WriteSplittedText(string input, int length, string prefix, int offset, string color)
     {
+        if (input == null)
+            return false;
+
         string spaces = "";
         for (int i = 0; i < offset; i++)
             spaces += " ";
@@ -118,6 +121,7 @@ public class ConsoleHelper
         {
             Console.Write(spaces + prefix + input.Pastel(color));
         }
+        return true;
     }
 
     public static void BinDump(byte[] bytes, int lineLength = 0)

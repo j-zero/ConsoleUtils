@@ -91,7 +91,7 @@ namespace unpack
                                 else
                                     Console.WriteLine($"{string.Join("\\", fNameColorParts)}");
                             }
-                            else
+                            else // foobar
                             {
                                 if (cmd.HasFlag("verbose"))
                                     Console.WriteLine($"{"-     "}\t{"-     "}\t\t{entry.FileName.Pastel(ColorTheme.Directory)}");
@@ -151,7 +151,7 @@ namespace unpack
         }
 
 
-        static void Exit(int exitCode)
+        static void Exit(int exitCode) 
         {
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);

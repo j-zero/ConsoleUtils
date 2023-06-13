@@ -38,6 +38,12 @@ namespace file
                 Console.WriteLine("Extension: ." + MIMEHelper.GetExtension(mime));
 
 
+                if(mime == "application/x-dosexec")
+                {
+                //    var reader = new PeHeaderReader(path);
+                //    var foo = reader.FileHeader;
+                }
+
                 //Console.WriteLine(magicStr);
                 exitCode = 0;
             }

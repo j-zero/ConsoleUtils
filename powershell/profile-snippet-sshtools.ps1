@@ -2,6 +2,10 @@ using namespace System.Management.Automation
 
 Register-ArgumentCompleter -CommandName ssh,scp,sftp -Native -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
+    find-ssh-bookmark($wordToComplete)
+}
+
+function find-ssh-known-host([string]$wordToComplete) {
     $knownHosts = Get-Content ${Env:HOMEPATH}\.ssh\known_hosts `
     | ForEach-Object { ([string]$_).Split(' ')[0] } `
     | ForEach-Object { $_.Split(',') } `
@@ -28,7 +32,8 @@ Register-ArgumentCompleter -CommandName ssh,scp,sftp -Native -ScriptBlock {
 
 function ssh-copy-id([string]$pubkey, [string]$server)
 {
-    type $env:USERPROFILE\.ssh\$pubkey | ssh $server "mkdir ~/.ssh/ && cat >> ~/.ssh/authorized_keys"
+    save-ssh-bookmark($server)
+    Get-Content $env:USERPROFILE\.ssh\$pubkey | ssh $server "mkdir ~/.ssh/ && cat >> ~/.ssh/authorized_keys"
 }
 
 Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'pubkey' -ScriptBlock {
@@ -38,6 +43,47 @@ Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'pubkey' -S
 
 Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'server' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-    "${Env:UserName}@"
+    find-ssh-bookmark($wordToComplete)
+    
+    #"${Env:UserName}@"
 }
+
+function save-ssh-bookmark([string]$server){
+    $path = "$env:LOCALAPPDATA/.ssh_bookmarks"
+    #New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.ssh_bookmarks -ErrorAction "silentcontinue"
+    if(!(Test-Path $path) -or !(Select-String -Path $path -pattern $server -SimpleMatch)){
+        Add-Content $path $server
+    }
+}
+
+function find-ssh-bookmark([string]$needle){
+    
+    $path = "$env:LOCALAPPDATA/.ssh_bookmarks"
+    $hosts = @()
+
+    $needle_user = ""
+    $needle_host = $needle
+
+    if($needle -match "^((?<username>.*?)@)?(?<hostname>.*?)$"){
+        $needle_user = $Matches.username
+        $needle_host = $Matches.hostname
+    }
+
+
+    Get-Content -Path $path | ForEach-Object {
+        if ($_ -match "^((?<username>" + $needle_user + ".*?)@)?(?<hostname>" + $needle_host +".*?)$") 
+        {
+            if($null -ne $Matches.username){
+                $hosts += $Matches.username + "@" + $Matches.hostname
+            }
+            else{
+                $hosts += $Matches.hostname
+            }
+        }
+    }
+    [array]::Reverse($hosts)
+    $hosts
+}
+
+#save-ssh-bookmark("ringej@otp1.mh-hannover.local")
 

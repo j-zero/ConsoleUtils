@@ -2,14 +2,15 @@ using namespace System.Management.Automation
 
 Register-ArgumentCompleter -CommandName ssh,scp,sftp -Native -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    find-ssh-bookmark($wordToComplete)
+    ssh-find-bookmark($wordToComplete)
 }
 
-function find-ssh-known-host([string]$wordToComplete) {
+function ssh-find-known-host([string]$wordToComplete) {
     $knownHosts = Get-Content ${Env:HOMEPATH}\.ssh\known_hosts `
     | ForEach-Object { ([string]$_).Split(' ')[0] } `
     | ForEach-Object { $_.Split(',') } `
-    | Sort-Object -Unique
+    | Sort-Object -Unique `
+    | where { $_ -match "^[a-zA-Z]" } # only DNS
 
     # For now just assume it's a hostname.
     $textToComplete = $wordToComplete
@@ -32,7 +33,8 @@ function find-ssh-known-host([string]$wordToComplete) {
 
 function ssh-copy-id([string]$pubkey, [string]$server)
 {
-    save-ssh-bookmark($server)
+    #ssh-save-bookmark($server)
+    #ssh-find-known-host($server)
     Get-Content $env:USERPROFILE\.ssh\$pubkey | ssh $server "mkdir ~/.ssh/ && cat >> ~/.ssh/authorized_keys"
 }
 
@@ -43,12 +45,13 @@ Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'pubkey' -S
 
 Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'server' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-    find-ssh-bookmark($wordToComplete)
+    ssh-find-bookmark($wordToComplete)
+    #ssh-find-known-host($wordToComplete)
     
     #"${Env:UserName}@"
 }
 
-function save-ssh-bookmark([string]$server){
+function ssh-save-bookmark([string]$server){
     $path = "$env:LOCALAPPDATA/.ssh_bookmarks"
     #New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.ssh_bookmarks -ErrorAction "silentcontinue"
     if(!(Test-Path $path) -or !(Select-String -Path $path -pattern $server -SimpleMatch)){
@@ -56,7 +59,7 @@ function save-ssh-bookmark([string]$server){
     }
 }
 
-function find-ssh-bookmark([string]$needle){
+function ssh-find-bookmark([string]$needle){
     
     $path = "$env:LOCALAPPDATA/.ssh_bookmarks"
     $hosts = @()
@@ -69,12 +72,29 @@ function find-ssh-bookmark([string]$needle){
         $needle_host = $Matches.hostname
     }
 
+    #$known_hosts = Get-Content -Path $path
 
-    Get-Content -Path $path | ForEach-Object {
-        if ($_ -match "^((?<username>" + $needle_user + ".*?)@)?(?<hostname>" + $needle_host +".*?)$") 
+    $known_hosts = Get-Content ${Env:HOMEPATH}\.ssh\known_hosts `
+    | ForEach-Object { ([string]$_).Split(' ')[0] } `
+    | ForEach-Object { $_.Split(',') } `
+    | Sort-Object -Unique `
+    | where { $_ -match "^[a-zA-Z]" } # only DNS
+
+    $known_hosts | ForEach-Object {
+
+        if ($_ -match "^(?<username>.*?)@(?<hostname>" + $needle_host +".*?)$") 
         {
-            if($null -ne $Matches.username){
-                $hosts += $Matches.username + "@" + $Matches.hostname
+            if($null -ne $needle_user){
+                $hosts += $needle_user + "@" + $Matches.hostname
+            }
+            else{
+                $hosts += $Matches.hostname
+            }
+        }
+        elseif ((!($_ -match "@")) -and ($_ -match "^(?<hostname>" + $needle_host +".*?)$")) 
+        {
+            if($null -ne $needle_user){
+                $hosts += $needle_user + "@" + $Matches.hostname
             }
             else{
                 $hosts += $Matches.hostname
@@ -84,6 +104,4 @@ function find-ssh-bookmark([string]$needle){
     [array]::Reverse($hosts)
     $hosts
 }
-
-#save-ssh-bookmark("ringej@otp1.mh-hannover.local")
 

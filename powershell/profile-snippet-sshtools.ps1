@@ -101,7 +101,7 @@ function ssh-find-bookmark([string]$needle){
             }
         }
     }
-    [array]::Reverse($hosts)
+    #[array]::Reverse($hosts)
     $hosts
 }
 

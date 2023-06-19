@@ -11,5 +11,9 @@ function mk([string]$new_dir){
     Set-Location $new_dir
 }
 
+function rdp([string]$server){
+    mstsc.exe /prompt /v:$server
+}
+
 # powershell ssh tools
 . "$PSScriptRoot\profile-snippet-sshtools.ps1"

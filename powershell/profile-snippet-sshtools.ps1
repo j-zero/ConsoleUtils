@@ -5,6 +5,26 @@ Register-ArgumentCompleter -CommandName ssh,scp,sftp -Native -ScriptBlock {
     ssh-find-bookmark($wordToComplete)
 }
 
+function _Get-SSH-Host($sshConfigPath) {
+    Get-Content -Path $sshConfigPath `
+    | Select-String -Pattern '^Host ' `
+    | ForEach-Object { $_ -replace 'Host ', '' } `
+    | ForEach-Object { $_ -split ' ' } `
+    | Sort-Object -Unique `
+    | Select-String -Pattern '^.*[*!?].*$' -NotMatch
+}
+
+function Get-SSH-Hosts(){
+    $sshPath = "$env:USERPROFILE\.ssh"
+    $hosts = Get-Content -Path "$sshPath\config" `
+    | Select-String -Pattern '^Include ' `
+    | ForEach-Object { $_ -replace 'Include ', '' }  `
+    | ForEach-Object { Get-SSHHost "$sshPath/$_" }
+    $hosts += _Get-SSH-Host("$sshPath\config")
+    $hosts = $hosts | Sort-Object -Unique
+    $hosts
+}
+
 function ssh-find-known-host([string]$wordToComplete) {
     $knownHosts = Get-Content ${Env:HOMEPATH}\.ssh\known_hosts `
     | ForEach-Object { ([string]$_).Split(' ')[0] } `

@@ -6,7 +6,12 @@ using Pastel;
 namespace ed
 {
     internal class Program
-    { 
+    {
+        static int from = 0;
+        static int current_last_line = 0;
+
+        static string[] lines = new string[0];
+
         static void lineChanger(string newText, string fileName, int line_to_edit)
         {
             string[] arrLine = File.ReadAllLines(fileName);
@@ -16,19 +21,26 @@ namespace ed
 
         static void Main(string[] args)
         {
-            var file_name = @"C:\TEMP\foobar.txt";
-            string[] lines = File.ReadAllLines(file_name); // ugly
+            Console.CursorVisible = false;
 
+            var file_name = args[0];
+            lines = File.ReadAllLines(file_name); // ugly
 
-            PrintLines(lines, 0, Console.WindowHeight - 2);
-            ParseKey();
+            
+            PrintLines();
+            while (ParseKey())
+            {
+
+            }
             ;
 
 
         }
 
-        static void ParseKey()
+        static bool ParseKey()
         {
+
+
             ConsoleKeyInfo cki;
             cki = Console.ReadKey(true);
             if (cki.Modifiers.HasFlag(ConsoleModifiers.Control))
@@ -45,28 +57,83 @@ namespace ed
             {
                 Console.Write("SHIFT ");
             }
-
-
+            if (cki.Key == ConsoleKey.DownArrow)
+            {
+                from++;
+                if (from >= lines.Length - Console.WindowHeight - 1)
+                    from = lines.Length - Console.WindowHeight - 1;
+                PrintLines();
+            }
+            if (cki.Key == ConsoleKey.UpArrow)
+            {
+                from--;
+                if (from < 0)
+                    from = 0;
+                PrintLines();
+            }
+            if (cki.Key == ConsoleKey.PageDown)
+            {
+                from = current_last_line - 1;
+                if (from >= lines.Length - Console.WindowHeight - 1)
+                    from = lines.Length - Console.WindowHeight - 1;
+                PrintLines();
+            }
+            if (cki.Key == ConsoleKey.PageUp)
+            {
+                from-=Console.WindowHeight;
+                if (from < 0)
+                    from = 0;
+                PrintLines();
+            }
+            if (cki.Key == ConsoleKey.Spacebar)
+            {
+                PrintLines();
+            }
+            if (cki.Key == ConsoleKey.Q)
+            {
+                return false;
+            }
+            return true;
         }
 
-        static void PrintLines(string[] lines, int from, int to) 
+        static int PrintLines() 
         {
-            Console.Clear();
+            //Console.Clear();
+            Console.SetCursorPosition(0, 0);
+            
+            int to = from + Console.WindowHeight-1;
+
             int line_number_max_length = lines.Length.ToString().Length; // even more ugly
             string prefix = "".PadLeft(line_number_max_length + 1) + "│ ".Pastel(ColorTheme.DarkText);
+            int i = from;
+            int current_line_number = i;
+            int counter_displayed_lines = 0;
 
-            for (int i = from; i < to; i++)
+            while(i <= (to <= lines.Length ? to : lines.Length))
             {
                 var arr = GetSplittedText(lines[i], line_number_max_length + 2, 1);
-
+                
                 for (int j = 0; j < arr.Length; j++)
                 {
-                    string line_number = i.ToString().PadLeft(line_number_max_length + 1, ' ').Pastel(ColorTheme.Default1);
-                    string blank = "".ToString().PadLeft(line_number_max_length + 1, ' ');
-                    Console.WriteLine((j == 0 ? line_number : blank) + "│ ".Pastel(ColorTheme.DarkText) + arr[j].Pastel(ColorTheme.Text));
-                }
 
+                    counter_displayed_lines++;
+                    if (counter_displayed_lines > Console.WindowHeight - 1)
+                        break;
+                    string line_number = (current_line_number + 1).ToString().PadLeft(line_number_max_length + 1, ' ').Pastel(ColorTheme.Default1);
+                    string blank = "".ToString().PadLeft(line_number_max_length + 1, ' ');
+                    Console.Write((j == 0 ? (line_number) : blank) + "│ ".Pastel(ColorTheme.DarkText));
+                    int pos = Console.CursorLeft;
+                    Console.Write(arr[j].PadRight(Console.WindowWidth - pos,' ').Pastel(ColorTheme.Text));
+                }
+                current_line_number++;
+                current_last_line = current_line_number;
+                i += arr.Length;
             }
+
+            Console.SetCursorPosition(0, Console.WindowHeight-1);
+            Console.Write(":".PadRight(Console.WindowWidth, ' ').PastelBg(ColorTheme.Default1));
+            Console.CursorVisible = false;
+            return i;
         }
 
         static string[] GetSplittedText(string input, int padding_left = 4, int padding_right = 1)

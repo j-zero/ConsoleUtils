@@ -195,7 +195,7 @@ namespace download
 
             string readableBps = UnitHelper.CalculateHumanReadableSize((ulong)bytesPerSecond);
             string readableBytes = UnitHelper.CalculateHumanReadableSize((ulong)e.BytesReceived);
-            string readableBytesTotal = UnitHelper.CalculateHumanReadableSize((ulong)e.TotalBytesToReceive);
+            string readableBytesTotal = UnitHelper.CalculateHumanReadableSize((ulong)e.TotalBytesToReceive,1024,1,true);
 
             Console.Write($"\r{filename} -> {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
         }

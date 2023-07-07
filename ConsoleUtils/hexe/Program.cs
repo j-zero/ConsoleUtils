@@ -472,8 +472,12 @@ namespace hexe
         {
 
             string hex = input.Replace(" ", "").Replace("0x", "").Replace("%", "");
+
             if (hex.Length % 2 != 0)
-                throw new Exception("Length not divisible by 2, not a valid hex string.");
+            {
+                //Console.Error.WriteLine("Warning: Length not divisible by 2, not a valid hex string. Adding leading 0 to fix!\n".Pastel(ColorTheme.HighLight2));
+                hex = "0" + hex;
+            }
 
             return Enumerable.Range(0, hex.Length)
                              .Where(x => x % 2 == 0)

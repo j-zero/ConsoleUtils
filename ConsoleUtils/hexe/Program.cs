@@ -78,7 +78,7 @@ namespace hexe
                 { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with --count."},
 
                 { "debug", "D", CmdCommandTypes.FLAG, "Debug mode" },
-                { "no-header", "H", CmdCommandTypes.FLAG, "disable header" },
+                { "no-header", "", CmdCommandTypes.FLAG, "disable header" },
                 { "zero", "z", CmdCommandTypes.FLAG, "Set offset to zero on cut" },
                 { "no-offset", "", CmdCommandTypes.FLAG, "Show no offset" },
                 { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
@@ -108,13 +108,21 @@ namespace hexe
                     $"Offset to start with"
                 },
 
-                { "bytes-per-line", "B", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "bytes-per-line", "L", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
                 }, "bytes per line" },
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
                 }, "File to read" },
+
+                { "input-hex-string", "H", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, null }
+                }, "Input hexadecimal string" },
+
+                { "input-string", "I", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, null }
+                }, "Input string" },
 
                 { "find", "F", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
@@ -298,22 +306,45 @@ namespace hexe
                         }
                     }
                 }
+                else if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
+                {
+                    string path = cmd["file"].Strings[0];
+                    foreach (Selection s in parts)
+                    {
+                        Blob b = ReadFile(path, s.Offset, s.Length);
+                        if (b != null)
+                            data.Add(b); // needs to skip
+                    }
+                }
+                else if (cmd["input-hex-string"].StringIsNotNull)
+                {
+                    byte[] allData = HexStringToByteArray(cmd["input-hex-string"].Strings[0]);
+                    foreach (Selection p in parts)
+                    {
+                        if (p.Length == 0)
+                            p.Length = allData.Length - p.Offset;
+                        Blob blob = new Blob(p.Offset, new byte[p.Length]);
+                        Buffer.BlockCopy(allData, p.Offset, blob.Data, 0, p.Length);
+                        data.Add(blob);
+                    }
+                }
+                else if (cmd["input-string"].StringIsNotNull)
+                {
+                    byte[] allData = Encoding.UTF8.GetBytes(cmd["input-string"].Strings[0]);
+                    foreach (Selection p in parts)
+                    {
+                        if (p.Length == 0)
+                            p.Length = allData.Length - p.Offset;
+                        Blob blob = new Blob(p.Offset, new byte[p.Length]);
+                        Buffer.BlockCopy(allData, p.Offset, blob.Data, 0, p.Length);
+                        data.Add(blob);
+                    }
+                }
                 else
                 {
-                    if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
-                    {
-                        string path = cmd["file"].Strings[0];
-                        foreach (Selection s in parts)
-                        {
-                            Blob b = ReadFile(path, s.Offset, s.Length);
-                            if(b != null)
-                                data.Add(b); // needs to skip
-                        }
-                    }
-                    else
-                    {
+
                         ShowHelp();
-                    }
+                    
                 }
 
 
@@ -362,7 +393,7 @@ namespace hexe
                         byte[] needle = null;
 
                         if (cmd["find"].WasUserSet)
-                            needle = StringToByteArray(cmd["find"].String);
+                            needle = HexStringToByteArray(cmd["find"].String);
                         else if (cmd["find-string"].WasUserSet)
                             needle = encoding.GetBytes(cmd["find-string"].String);
 
@@ -437,14 +468,18 @@ namespace hexe
 
 
         // https://stackoverflow.com/a/321404
-        public static byte[] StringToByteArray(string input) // slow as fuck, but works
+        public static byte[] HexStringToByteArray(string input) // slow as fuck, but works
         {
-            string hex = input.Replace(" ", "").Replace("0x","");
+
+            string hex = input.Replace(" ", "").Replace("0x", "").Replace("%", "");
+            if (hex.Length % 2 != 0)
+                throw new Exception("Length not divisible by 2, not a valid hex string.");
 
             return Enumerable.Range(0, hex.Length)
                              .Where(x => x % 2 == 0)
                              .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                              .ToArray();
+            ;
         }
 
         public static byte[] ReadByteStream(Stream stream)

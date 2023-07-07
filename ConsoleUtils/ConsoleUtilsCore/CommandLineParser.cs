@@ -129,6 +129,11 @@ public class CmdOption
         get { return GetStrings(); }
     }
 
+    public bool StringIsNotNull
+    {
+        get { string[] strs = GetStrings(); return (strs.Length > 0 && strs[0] != null); }
+    }
+
     public bool[] Bools
     {
         get { return GetBools(); }

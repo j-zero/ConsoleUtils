@@ -9,6 +9,7 @@ namespace ed
     {
         static int from = 0;
         static int current_last_line = 0;
+        static int backup_from = 0;
 
         static string[] lines = new string[0];
 
@@ -26,7 +27,6 @@ namespace ed
             var file_name = args[0];
             lines = File.ReadAllLines(file_name); // ugly
 
-            
             PrintLines();
             while (ParseKey())
             {
@@ -39,7 +39,6 @@ namespace ed
 
         static bool ParseKey()
         {
-
 
             ConsoleKeyInfo cki;
             cki = Console.ReadKey(true);
@@ -59,6 +58,7 @@ namespace ed
             }
             if (cki.Key == ConsoleKey.DownArrow)
             {
+                backup_from = from;
                 from++;
                 if (from >= lines.Length - Console.WindowHeight - 1)
                     from = lines.Length - Console.WindowHeight - 1;
@@ -66,6 +66,7 @@ namespace ed
             }
             if (cki.Key == ConsoleKey.UpArrow)
             {
+                backup_from = from;
                 from--;
                 if (from < 0)
                     from = 0;
@@ -73,6 +74,7 @@ namespace ed
             }
             if (cki.Key == ConsoleKey.PageDown)
             {
+                backup_from = from;
                 from = current_last_line - 1;
                 if (from >= lines.Length - Console.WindowHeight - 1)
                     from = lines.Length - Console.WindowHeight - 1;
@@ -80,7 +82,9 @@ namespace ed
             }
             if (cki.Key == ConsoleKey.PageUp)
             {
-                from-=Console.WindowHeight;
+
+                from -= Console.WindowHeight / 2;
+                //backup_from = from;
                 if (from < 0)
                     from = 0;
                 PrintLines();
@@ -109,7 +113,7 @@ namespace ed
             int current_line_number = i;
             int counter_displayed_lines = 0;
 
-            while(i <= (to <= lines.Length ? to : lines.Length))
+            while (i <= (to <= lines.Length ? to : lines.Length))
             {
                 var arr = GetSplittedText(lines[i], line_number_max_length + 2, 1);
                 

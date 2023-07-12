@@ -116,11 +116,9 @@ namespace hexe
                     { CmdParameterTypes.STRING, null } 
                 }, "File to read" },
 
-                { "input-hex-string", "H", CmdCommandTypes.PARAMETER, new CmdParameters() {
-                    { CmdParameterTypes.STRING, null }
-                }, "Input hexadecimal string" },
+                { "input-hex-string", "H", CmdCommandTypes.FLAG, "Sets input mode to hexadecimal string" },
 
-                { "input-string", "I", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                { "input", "i", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
                 }, "Input string" },
 
@@ -275,7 +273,7 @@ namespace hexe
 
                 if (cmd.HasFlag("short"))
                 {
-                    int cHeight = (windowHeight / 2 - 4);
+                    int cHeight = (windowHeight / 2) - 2;
                     defaultLength = cHeight * bytesPerLine;
                     //Console.WriteLine(cHeight);
 
@@ -309,28 +307,27 @@ namespace hexe
                 else if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                 {
                     string path = cmd["file"].Strings[0];
-                    foreach (Selection s in parts)
+                    if (File.Exists(path))
                     {
-                        Blob b = ReadFile(path, s.Offset, s.Length);
-                        if (b != null)
-                            data.Add(b); // needs to skip
+                        foreach (Selection s in parts)
+                        {
+                            Blob b = ReadFile(path, s.Offset, s.Length);
+                            if (b != null)
+                                data.Add(b); // needs to skip
+                        }
                     }
+                    else
+                        throw new Exception($"File \"{path}\" not found!");
+
                 }
-                else if (cmd["input-hex-string"].StringIsNotNull)
+                else if (cmd["input"].StringIsNotNull)
                 {
-                    byte[] allData = HexStringToByteArray(cmd["input-hex-string"].Strings[0]);
-                    foreach (Selection p in parts)
-                    {
-                        if (p.Length == 0)
-                            p.Length = allData.Length - p.Offset;
-                        Blob blob = new Blob(p.Offset, new byte[p.Length]);
-                        Buffer.BlockCopy(allData, p.Offset, blob.Data, 0, p.Length);
-                        data.Add(blob);
-                    }
-                }
-                else if (cmd["input-string"].StringIsNotNull)
-                {
-                    byte[] allData = Encoding.UTF8.GetBytes(cmd["input-string"].Strings[0]);
+                    byte[] allData;
+                    if(cmd.HasFlag("input-hex-string"))
+                        allData = HexStringToByteArray(cmd["input"].Strings[0]);
+                    else
+                        allData = encoding.GetBytes(cmd["input"].Strings[0]);
+
                     foreach (Selection p in parts)
                     {
                         if (p.Length == 0)
@@ -342,9 +339,7 @@ namespace hexe
                 }
                 else
                 {
-
                         ShowHelp();
-                    
                 }
 
 
@@ -416,7 +411,7 @@ namespace hexe
                                 Buffer.BlockCopy(data[i].Data, (int)offset1, blob.Data, 0, size);
 
                                 if(counter != 0)
-                                    Console.WriteLine("...");
+                                    WriteLine("...".Pastel(ColorTheme.HighLight2));
 
                                 HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode);
                                 
@@ -434,7 +429,7 @@ namespace hexe
                         HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode);
                     }
                     if(i != data.Count - 1)
-                        WriteLine("...");
+                        WriteLine("...".Pastel(ColorTheme.HighLight2));
                 }
                 
                         
@@ -518,12 +513,15 @@ namespace hexe
                     if (offset < 0)
                         offset = size + offset;
 
+                    if (offset < 0)
+                        return null;
+
                     if (length == 0)
                     {
                         length = (int)size - offset;
                     }
 
-
+                    
                     if (offset > size)
                         throw new Exception("Offset out of range.");
                     if (offset + length > size)

@@ -187,7 +187,7 @@ public class ConsoleHelper
     }
 
 
-    public static void SimpleHexDump(byte[] bytes, int bytesPerLine = 16)
+    public static void VerySimpleHexDump(byte[] bytes, int bytesPerLine = 16)
     {
         if (bytes == null)
         {
@@ -251,6 +251,16 @@ public class ConsoleHelper
             result.Append(line);
         }
         Console.WriteLine(result.ToString());
+    }
+
+    public static void HexDump(byte[] bytes, int bytesPerLine = 16)
+    {
+        HexDump(new Blob(bytes), bytesPerLine);
+    }
+
+    public static void HexDump(string str, int bytesPerLine = 16)
+    {
+        HexDump(new Blob(Encoding.UTF8.GetBytes(str)), bytesPerLine);
     }
 
     static int SetBytesPerLine(int bPerLine)

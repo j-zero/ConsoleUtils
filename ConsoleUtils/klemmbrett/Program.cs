@@ -53,7 +53,7 @@ namespace klemmbrett
                 {
                     Console.WriteLine("0x" + format.ToString("X4") + ": " + ClipboardHelper.GetClipboardFormatName(format));
                     byte[] bytes = ClipboardHelper.GetClipboardDataBytes(format);
-                    ConsoleHelper.SimpleHexDump(bytes);
+                    ConsoleHelper.HexDump(bytes);
                 }
                 
             }
@@ -64,7 +64,7 @@ namespace klemmbrett
                 if (cmd.HasFlag("bin"))
                     ConsoleHelper.BinDump(b);
                 else if (cmd.HasFlag("hex"))
-                    ConsoleHelper.SimpleHexDump(b);
+                    ConsoleHelper.HexDump(b);
                 else if (cmd.HasFlag("ascii"))
                     Console.WriteLine(Encoding.ASCII.GetString(b));
                 else if (cmd.HasFlag("unicode"))

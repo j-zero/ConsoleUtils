@@ -142,7 +142,7 @@ namespace hexe
                 cmd.Parse();
 
                 if (cmd.HasFlag("help"))
-                    ShowHelp();
+                    ShowLongHelp();
                 if (cmd.HasFlag("version"))
                 {
                     ShowVersion();
@@ -356,7 +356,7 @@ namespace hexe
                 }
                 else
                 {
-                        ShowHelp();
+                    ShowHelp();
                 }
 
 
@@ -802,11 +802,17 @@ namespace hexe
             Environment.Exit(errorcode);
         }
 
-        static void ShowHelp()
+        static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file|-i \"input string\"}}");
-            WriteLine($"Options:");
+            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("e01e37")} [{"Options".Pastel("a71e34")}] {{\"file\"|{"-i".Pastel("a71e34")} \"input string\"}}");
+            if(more)
+                WriteLine($"For more options, use {"--help".Pastel("e01e37")}");
+        }
+        static void ShowLongHelp()
+        {
+            ShowHelp(false);
+            WriteLine($"\n{"Options".Pastel("a71e34")}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
                 string l = $"  --{c.Name}".Pastel("e01e37") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("e01e37")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("a71e34")).ToArray()) + ">" : "") + ": " + c.Description;
@@ -822,7 +828,7 @@ namespace hexe
             WriteLine("██▀▀█ ██▄▄     █ ▀  ██▄▄    ".Pastel("#bd1f36"));
             WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
             WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
-            WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#e01e37"));
+            WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#a71e34"));
             WriteLine(ConsoleHelper.GetVersionString());
         }
 

@@ -100,7 +100,7 @@ namespace gremlins
                 // HELP
                 if (cmd.HasFlag("help"))
                 {
-                    ShowHelp();
+                    ShowLongHelp();
                 }
 
                 
@@ -322,13 +322,18 @@ namespace gremlins
                 Console.Write(output);
             }
         }
-
-        static void ShowHelp()
+        static void ShowHelp(bool more = true)
         {
             ShowVersion();
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("70e000")} [{"Options".Pastel("008000")}] {{\"file\"|{"-i".Pastel("008000")} \"input string\"}}");
+            if(more)
+                Console.WriteLine($"For more options, use {"--help".Pastel("70e000")}");
+        }
+        static void ShowLongHelp()
+        {
+            ShowHelp(false);
             //Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
-            Console.WriteLine($"Options:");
+            Console.WriteLine($"\n{"Options".Pastel("008000")}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
                 string l = $"  --{c.Name}".Pastel("70e000") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("70e000")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("008000")).ToArray()) + ">" : "") + ": " + c.Description;

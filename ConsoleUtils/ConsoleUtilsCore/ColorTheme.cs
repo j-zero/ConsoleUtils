@@ -18,8 +18,10 @@ public class ColorTheme
     public static string Red1 = "#cc6666";
     public static string Red2 = "#a54242";
     public static string Comment { get { return "666666"; } }
-    public static string Default1 { get { return "81a2be"; } }
-    public static string Default2 { get { return "5f819d"; } }
+    //public static string Default1 { get { return "81a2be"; } }
+    //public static string Default2 { get { return "5f819d"; } }
+    public static string Default1 { get { return "64b5f6"; } }
+    public static string Default2 { get { return "1976d2"; } }
     public static string DarkColor { get { return "268C96"; } }
     public static string HighLight2 { get { return "dea740"; } }
     public static string HighLight1 { get { return "f0c674"; } }

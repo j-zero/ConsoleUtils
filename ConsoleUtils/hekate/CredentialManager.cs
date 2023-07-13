@@ -11,8 +11,19 @@ public static class CredentialManager
 {
     public static Credential ReadCredential(string applicationName)
     {
+        foreach (var cred in EnumerateCrendentials())
+        {
+            if (cred.ApplicationName == applicationName)
+                return cred; 
+
+        }
+        return null;
+    }
+
+    public static Credential ReadCredential(string applicationName, CredentialType type = CredentialType.Generic)
+    {
         IntPtr nCredPtr;
-        bool read = CredRead(applicationName, CredentialType.Generic, 0, out nCredPtr);
+        bool read = CredRead(applicationName, type, 0, out nCredPtr);
         if (read)
         {
             using (CriticalCredentialHandle critCred = new CriticalCredentialHandle(nCredPtr))

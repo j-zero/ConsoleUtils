@@ -145,7 +145,7 @@ namespace lognote
                 }
                 else
                 {
-                    Console.WriteLine($"unknown command".Pastel(ColorTheme.Error));
+                    Console.WriteLine($"unknown command".Pastel(ColorTheme.Error1));
                 }
             }
             else if (cmd.StartsWith("#"))

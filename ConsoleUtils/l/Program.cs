@@ -631,7 +631,7 @@ namespace list
                             }
                             catch
                             {
-                                Console.WriteLine($"{spaceSpaces}{string.Empty.PadLeft(longestSize, ' ')}{"Access denied".Pastel(ColorTheme.Error)}");
+                                Console.WriteLine($"{spaceSpaces}{string.Empty.PadLeft(longestSize, ' ')}{"Access denied".Pastel(ColorTheme.Error1)}");
                             }
                         }
                     }

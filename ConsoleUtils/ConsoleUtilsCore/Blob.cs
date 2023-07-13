@@ -1,6 +1,6 @@
-﻿namespace hexe
+﻿namespace ConsoleUtilsCore
 {
-    class Blob
+    public class Blob
     {
 
         public long Offset { get; set; }
@@ -26,7 +26,7 @@
         }
     }
 
-    class Selection
+    public class Selection
     {
         public int Offset { get; set; }
         public int Length { get; set; }

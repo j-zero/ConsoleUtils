@@ -7,25 +7,18 @@ using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
 using NtfsDataStreams;
+using ConsoleUtilsCore;
 
 namespace hexe
 {
     // TODO cut to binary, patch, remove, skip
     internal class Program
-    {
-        public enum OutputMode
-        {
-            Hex,
-            Dec,
-            Oct,
-            Bin
-        }
-
+    { 
         static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
         static int firstCharColumn = 0;
         static int lineLength = 0;
-        static int bytesPerLine = 16;
         static int dynamicSteps = 8;
+        static int bytesPerLine = 16;
 
         static char nonPrintableChar = '·';
         static char spaceChar = ' ';
@@ -45,7 +38,7 @@ namespace hexe
 
         static Encoding encoding = Encoding.UTF8;
 
-        static OutputMode outputMode = OutputMode.Hex;
+        static ConsoleHelper.OutputMode outputMode = ConsoleHelper.OutputMode.Hex;
 
         static void Main(string[] args)
         {
@@ -83,15 +76,13 @@ namespace hexe
                 { "no-offset", "", CmdCommandTypes.FLAG, "Show no offset" },
                 { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
                 { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
-                { "convert-space", "", CmdCommandTypes.FLAG, "Mark space" },
-                { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
+                { "convert-space", "", CmdCommandTypes.FLAG, "Mark space in string mode" },
+                //{ "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
-                { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values" },
+                { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values in string mode" },
 
-
-
-                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors" },
+                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-line-numbers, --no-colors" },
 
                 { "dump", "d", CmdCommandTypes.FLAG, "dump binary to [output]-file" },
 
@@ -114,7 +105,7 @@ namespace hexe
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
-                }, "File to read" },
+                }, "Input file" },
 
                 { "input-hex-string", "H", CmdCommandTypes.FLAG, "Sets input mode to hexadecimal string" },
 
@@ -124,30 +115,20 @@ namespace hexe
 
                 { "find", "F", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
-                }, "Find pattern" },
+                }, "Find hex pattern" },
 
                 { "find-string", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
                 }, "Find string" },
 
-                { "base16", "", CmdCommandTypes.FLAG, "Output bytes as hexadecimal values (default)" },
-                { "base8", "", CmdCommandTypes.FLAG, "Output bytes as octodecimal values" },
-                { "base10", "", CmdCommandTypes.FLAG, "Output bytes as octodecimal values" },
-                { "base2", "", CmdCommandTypes.FLAG, "Output bytes as binary values" },
+                { "byte-mode", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, "hex" }
+                }, "View bytes as: hex (default), dec, oct, bin or char" },
 
-
-                { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
-                { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
-                { "utf16", "", CmdCommandTypes.FLAG, "Set encoding to UTF16" },
-                { "utf7", "", CmdCommandTypes.FLAG, "Set encoding to UTF7" },
-                { "utf32", "", CmdCommandTypes.FLAG, "Set encoding to UTF32" },
-                { "utf16be", "", CmdCommandTypes.FLAG, "Set encoding to UTF16BE" },
-
-                { "codepage", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
-                    { CmdParameterTypes.INT, 0 }
-                }, "Set encoding to codepage <int>" },
-
-
+                { "encoding", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, "utf8" }
+                }, "Sets string encoding to: ascii, utf8 (default), utf16, utf7, utf32, utf16be or <int> as codepage" },
+  
                 { "output", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Output file" },
@@ -155,7 +136,7 @@ namespace hexe
             };
 
             cmd.DefaultParameter = "file";
-            //cmd.DefaultVerb = "show";
+
             try
             {
                 cmd.Parse();
@@ -201,8 +182,6 @@ namespace hexe
                     }
                 }
 
-
-
                 else if (cmd.HasFlag("tail"))
                 {
                     parts[0].Offset = (cmd["count"].WasUserSet ? parts[0].Length : defaultLength) * -1;
@@ -222,52 +201,84 @@ namespace hexe
                     windowWidth = Console.WindowWidth;
                 }
 
-                /* 
-                { "ascii", "", CmdCommandTypes.FLAG, "Set encoding to ASCII" },
-                { "utf8", "", CmdCommandTypes.FLAG, "Set encoding to UTF8 (default)" },
-                { "utf16", "", CmdCommandTypes.FLAG, "Set encoding to UTF16" },
-                { "utf7", "", CmdCommandTypes.FLAG, "Set encoding to UTF7" },
-                { "utf32", "", CmdCommandTypes.FLAG, "Set encoding to UTF32" },
-                { "utf16be", "", CmdCommandTypes.FLAG, "Set encoding to UTF16BE" },
-                */
-
-                if (cmd["codepage"].WasUserSet)
+                if (cmd["encoding"].WasUserSet)
                 {
-                    encoding = Encoding.GetEncoding((int)cmd["codepage"].Int);
+                    string str_encoding = cmd["encoding"].String.Trim().ToLower();
+
+                    switch (str_encoding)
+                    {
+                        case "ascii":
+                            encoding = Encoding.ASCII;
+                            break;
+                        case "utf8":
+                            encoding = Encoding.UTF8;
+                            break;
+                        case "utf16":
+                            encoding = Encoding.Unicode;
+                            break;
+                        case "utf7":
+                            encoding = Encoding.UTF7;
+                            break;
+                        case "utf32":
+                            encoding = Encoding.UTF32;
+                            break;
+                        case "utf16be":
+                            encoding = Encoding.BigEndianUnicode;
+                            break;
+                        default:
+                            int codepage = 0;
+                            if (int.TryParse(str_encoding, out codepage))
+                            {
+                                try
+                                {
+                                    encoding = Encoding.GetEncoding(codepage);
+                                }
+                                catch
+                                {
+                                    Die("Invalid codepage for " + "--encoding".Pastel("#a71e34") + ": \"" + str_encoding + "\"", 2);
+                                }
+                            }
+                            else
+                            {
+                                Die("Unkown option for " + "--encoding".Pastel("#a71e34") + ": \"" + str_encoding + "\"", 2);
+                            }
+                            break;
+
+
+                    }
                 }
-                else if (cmd.HasFlag("ascii"))
-                    encoding = Encoding.ASCII;
-                else if (cmd.HasFlag("utf8"))
-                    encoding = Encoding.UTF8;
-                else if (cmd.HasFlag("utf16"))
-                    encoding = Encoding.Unicode;
-                else if (cmd.HasFlag("utf7"))
-                    encoding = Encoding.UTF7;
-                else if (cmd.HasFlag("utf32"))
-                    encoding = Encoding.UTF32;
-                else if (cmd.HasFlag("utf16be"))
-                    encoding = Encoding.BigEndianUnicode;
 
 
-                if (cmd.HasFlag("base16"))
-                    outputMode = OutputMode.Hex;
-                else if (cmd.HasFlag("base8"))
-                    outputMode = OutputMode.Oct;
-                else if (cmd.HasFlag("base10"))
-                    outputMode = OutputMode.Dec;
-                else if (cmd.HasFlag("base2"))
+                if (cmd["byte-mode"].WasUserSet)
                 {
-                    if (!cmd["cut"].WasUserSet)
-                        bytesPerLine = 8;
-                    outputMode = OutputMode.Bin;
+                    string str_outputmode = cmd["byte-mode"].String.Trim().ToLower();
+
+                    switch (str_outputmode)
+                    {
+                        case "dec":
+                            outputMode = ConsoleHelper.OutputMode.Dec;
+                            break;
+                        case "bin":
+                            outputMode = ConsoleHelper.OutputMode.Bin;
+                            if (!cmd["cut"].WasUserSet)
+                                bytesPerLine = 8;
+                            break;
+                        case "oct":
+                            outputMode = ConsoleHelper.OutputMode.Oct;
+                            break;
+                        case "hex":
+                            outputMode = ConsoleHelper.OutputMode.Hex;
+                            break;
+                        case "char":
+                            outputMode = ConsoleHelper.OutputMode.Char;
+                            break;
+                        default:
+                            Die("Unkown option for " + "--byte-mode".Pastel("#a71e34") + ": \"" + str_outputmode + "\"", 2);
+                            break;
+                    }
+
                 }
 
-                /*
-                if (cmd.Verbs.Length > 1)
-                    throw new ArgumentException("You can't use more than one verb!");
-
-                string verb = cmd.Verbs[0];
-                */
 
                 // TODO: alle offsets vorher speichern, daten je nach input-stream einlesen und dann im loop ausgeben
 
@@ -324,7 +335,7 @@ namespace hexe
                 {
                     byte[] allData;
                     if(cmd.HasFlag("input-hex-string"))
-                        allData = HexStringToByteArray(cmd["input"].Strings[0]);
+                        allData = ConvertHelper.HexStringToByteArray(cmd["input"].Strings[0]);
                     else
                         allData = encoding.GetBytes(cmd["input"].Strings[0]);
 
@@ -343,7 +354,7 @@ namespace hexe
                 }
 
 
-
+                // output data
                 for(int i = 0; i < data.Count; i++)
                 {
                     if (cmd.HasFlag("bin"))
@@ -356,16 +367,13 @@ namespace hexe
                     }
                     else if (cmd.HasFlag("array"))
                     {
-                        ArrayDump(data[i].Data);
+                        ArrayDump(data[i].Data, bytesPerLine, outputMode);
                     }
                     else if (cmd.HasFlag("dump"))
                     {
-                        
-
                         if (Console.IsOutputRedirected || output_file == null || output_file == "-")
                         {
                             Console.WriteLine(encoding.GetString(data[i].Data));
-
                         }
                         else
                         {
@@ -378,8 +386,6 @@ namespace hexe
 
                             WriteAllBytes(output_file, data[i].Data, mode);
                         }
-                        
-
                     }
                     else if (cmd["find"].WasUserSet || cmd["find-string"].WasUserSet)
                     {
@@ -388,7 +394,7 @@ namespace hexe
                         byte[] needle = null;
 
                         if (cmd["find"].WasUserSet)
-                            needle = HexStringToByteArray(cmd["find"].String);
+                            needle = ConvertHelper.HexStringToByteArray(cmd["find"].String);
                         else if (cmd["find-string"].WasUserSet)
                             needle = encoding.GetBytes(cmd["find-string"].String);
 
@@ -405,17 +411,14 @@ namespace hexe
 
                                 int size = offset3 - offset1;
 
-                                //Blob blob = new Blob(offset, new byte[needle.Length]);
                                 Blob blob = new Blob(offset1, new byte[size]);
-                                //Buffer.BlockCopy(data[i].Data, (int)offset, blob.Data, 0, needle.Length);
                                 Buffer.BlockCopy(data[i].Data, (int)offset1, blob.Data, 0, size);
 
                                 if(counter != 0)
                                     WriteLine("...".Pastel(ColorTheme.HighLight2));
 
-                                HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode);
-                                
-                                //foundData.Add(blob);
+                                ConsoleHelper.HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode, noOffset, noText);
+                                //ConsoleHelper.HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode, noOffset, noText);
                             }
                                     
 
@@ -426,7 +429,7 @@ namespace hexe
 
                     else
                     {
-                        HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode);
+                        ConsoleHelper.HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode, noOffset, noText);
                     }
                     if(i != data.Count - 1)
                         WriteLine("...".Pastel(ColorTheme.HighLight2));
@@ -454,32 +457,12 @@ namespace hexe
 
         public static void WriteAllBytes(string path, byte[] bytes, FileMode mode = FileMode.Create)
         {
-
             using (var stream = new FileStream(path, mode))
             {
                 stream.Write(bytes, 0, bytes.Length);
             }
         }
 
-
-        // https://stackoverflow.com/a/321404
-        public static byte[] HexStringToByteArray(string input) // slow as fuck, but works
-        {
-
-            string hex = input.Replace(" ", "").Replace("0x", "").Replace("%", "");
-
-            if (hex.Length % 2 != 0)
-            {
-                //Console.Error.WriteLine("Warning: Length not divisible by 2, not a valid hex string. Adding leading 0 to fix!\n".Pastel(ColorTheme.HighLight2));
-                hex = "0" + hex;
-            }
-
-            return Enumerable.Range(0, hex.Length)
-                             .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                             .ToArray();
-            ;
-        }
 
         public static byte[] ReadByteStream(Stream stream)
         {
@@ -656,7 +639,7 @@ namespace hexe
             }
         }
 
-        public static void ArrayDump(byte[] bytes, int lineLength = 32)
+        public static void ArrayDump(byte[] bytes, int lineLength = 32, ConsoleHelper.OutputMode outputMode = ConsoleHelper.OutputMode.Hex)
         {
 
             if (lineLength == 0)
@@ -676,7 +659,32 @@ namespace hexe
                         byte b = bytes[i + j];
                         string color = ColorTheme.GetColor(b, j % 2 == 0);
 
-                        line += ("0x" + b.ToString("X").ToLower().PadLeft(2, '0')).Pastel(color);
+                        if (outputMode == ConsoleHelper.OutputMode.Hex)
+                        {
+                            line += ("0x" + b.ToString("X").ToLower().PadLeft(2, '0')).Pastel(color);
+                        }
+                        else if (outputMode == ConsoleHelper.OutputMode.Dec)
+                        {
+                            line += Convert.ToString(b, 10).Pastel(color);
+                        }
+                        else if (outputMode == ConsoleHelper.OutputMode.Oct)
+                        {
+                            line += Convert.ToString(b, 8).PadLeft(3, '0').Pastel(color);
+                        }
+
+                        else if (outputMode == ConsoleHelper.OutputMode.Bin)
+                        {
+                            line += Convert.ToString(b, 2).PadLeft(8, '0').Pastel(color);
+                        }
+                        else if (outputMode == ConsoleHelper.OutputMode.Char)
+                        {
+                            if(!((b < 32) || (b > 255)))
+                                line += "'" + (char)b + "'".Pastel(color);
+                            else
+                                line += ("0x" + b.ToString("X").ToLower().PadLeft(2, '0')).Pastel(color);
+                        }
+
+
                         if (c < bytes.Length-1)
                             line += ",";
                         line += spaceChar;
@@ -745,145 +753,6 @@ namespace hexe
                 WriteLine($"{newLine}");
         }
 
-
-        public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1, OutputMode outputMode = OutputMode.Hex)
-        {
-            if (bytes == null) return;
-
-            string spacer = "   ";
-            string offsetPrefix = "0x";
-            int bytesLength = bytes.Length;
-
-            int offsetLength = largestOffset != 0 ? (largestOffset).ToString("X").Length : (bytes.Offset + bytes.Length - 1).ToString("X").Length;
-
-            if (offsetLength % 2 != 0) offsetLength++;
-
-            if (BytesPerLine == 0)  // dynamic
-            {
-                int dynWidth = windowWidth;
-                int minWidth = 32;
-                while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
-                {
-                    SetBytesPerLine(bytesPerLine += dynamicSteps);
-                    if (lineLength > dynWidth)
-                    {
-                        SetBytesPerLine(bytesPerLine -= dynamicSteps);
-                        break;
-                    }
-
-                }
-                if (lineLength < minWidth)
-                    SetBytesPerLine(dynamicSteps);
-            }
-            else
-            {
-                SetBytesPerLine(BytesPerLine);
-            }
-
-            int padding = 2;
-            if (outputMode == OutputMode.Hex)
-                padding = 2;
-            else if (outputMode == OutputMode.Dec || outputMode == OutputMode.Oct)
-                padding = 3;
-            else if (outputMode == OutputMode.Bin)
-                padding = 8;
-
-
-            //Console.WriteLine(bytes.Length.ToString("X"));
-
-            // header
-            if (header)
-            {
-                for (int i = 0; i < offsetLength + offsetPrefix.Length; i++)
-                    Write(spaceChar);
-                Write(spacer); // spacer
-                for (int j = 0; j < bytesPerLine; j++)
-                {
-                    if (j > 0 && (j & (dynamicSteps - 1)) == 0)
-                        Write(spaceChar);
-                    Write(j.ToString("X").ToLower().PadLeft(padding, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
-                }
-                Write(spacer); // spacer
-                for (int j = 0; j < bytesPerLine; j++)
-                {
-                    Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
-                }
-                Write(Environment.NewLine);
-            }
-
-            for (int i = 0; i < bytesLength; i += bytesPerLine)
-            {
-                string offsetPart = string.Empty;
-                string hexPart = string.Empty;
-                string asciiPart = string.Empty;
-
-                offsetPart = (i + (zeroOffset ? 0 : Math.Abs(bytes.Offset))).ToString("X").ToLower().PadLeft(offsetLength, '0');
-
-                for (int j = 0; j < bytesPerLine; j++)
-                {
-                    int pos = i + j;
-                    int relativePos = pos + (int)bytes.Offset;
-
-                    if (j > 0 && (j & (dynamicSteps - 1)) == 0)
-                        hexPart += spaceChar;
-
-                    if (pos >= bytesLength)
-                    {
-                        for (int s = 0; s <= padding; s++) hexPart += spaceChar; // Spaces before ascii-part 
-                    }
-                    else
-                    {
-                       
-                        byte b = bytes.Data[pos];
-                        int first = (b >> 4) & 0xF;
-                        int second = b & 0xF;
-
-                        string newHexPart = string.Empty;
-
-
-                        if (outputMode == OutputMode.Hex)
-                        {
-
-                            newHexPart += HexChars[first];
-                            newHexPart += HexChars[second];
-
-                            //newHexPart += " (" +b.ToString().PadLeft(3, '0') + ")";
-                        }
-                        else if (outputMode == OutputMode.Dec)
-                        {
-                            newHexPart += b.ToString().PadLeft(3, '0');
-                        }
-                        else if (outputMode == OutputMode.Oct)
-                        {
-                            newHexPart += Convert.ToString(b, 8).PadLeft(3, '0');
-                        }
-
-                        else if (outputMode == OutputMode.Bin)
-                        {
-                            newHexPart += Convert.ToString(first, 2).PadLeft(4, '0');
-                            newHexPart += Convert.ToString(second, 2).PadLeft(4, '0');
-                        }
-
-                        string color = ColorTheme.GetColor(b, j % 2 == 0);
-
-                        if((highlightOffset != -1 && highlightLength != -1))
-                        {
-                            if((relativePos < highlightOffset) || (relativePos >= (highlightOffset + highlightLength)))
-                                color = "#666666";
-                        }
-
-                        hexPart += newHexPart.Pastel(color);
-                        hexPart += spaceChar;
-
-                        asciiPart += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
-
-                    }
-                }
-                WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
-            }
-        }
-
-
         // based on https://stackoverflow.com/a/38625726
         public static int Find(byte[] needle, byte[] haystack, int offset = 0)
         {
@@ -929,75 +798,23 @@ namespace hexe
 
         static void ShowHelp()
         {
-            Console.WriteLine($"hexe, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file}}");
-            Console.WriteLine($"Options:");
+            WriteLine(" ▄  █ ▄███▄      ▄  ▄███▄   ".Pastel("#e01e37"));
+            WriteLine("█   █ █▀   ▀ ▀▄   █ █▀   ▀  ".Pastel("#c71f37"));
+            WriteLine("██▀▀█ ██▄▄     █ ▀  ██▄▄    ".Pastel("#bd1f36"));
+            WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
+            WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
+            WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#e01e37"));
+            //WriteLine($"hexe, {ConsoleHelper.GetVersionString()}");
+            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file|-i \"input string\"}}");
+            WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
-                Console.WriteLine(l);
+                string l = $"  --{c.Name}".Pastel("e01e37") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("e01e37")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("a71e34")).ToArray()) + ">" : "") + ": " + c.Description;
+                WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Environment.Exit(0);
         }
 
-        /// Based on https://www.codeproject.com/Articles/36747/Quick-and-Dirty-HexDump-of-a-Byte-Array
-        /*
-        public static void HexDump2(byte[] bytes)
-        {
-            if (bytes == null) return;
-            int bytesLength = bytes.Length;
-
-            char[] line = (new String(spaceChar, lineLength - Environment.NewLine.Length) + Environment.NewLine).ToCharArray();
-            //int expectedLines = (bytesLength + bytesPerLine - 1) / bytesPerLine;
-            //StringBuilder result = new StringBuilder(expectedLines * lineLength);
-
-
-
-            for (int i = 0; i < bytesLength; i += bytesPerLine)
-            {
-                // Offset
-                if (!noOffset)
-                {
-                    line[0] = HexChars[((i + startOffset) >> 28) & 0xF];
-                    line[1] = HexChars[((i + startOffset) >> 24) & 0xF];
-                    line[2] = HexChars[((i + startOffset) >> 20) & 0xF];
-                    line[3] = HexChars[((i + startOffset) >> 16) & 0xF];
-                    line[4] = HexChars[((i + startOffset) >> 12) & 0xF];
-                    line[5] = HexChars[((i + startOffset) >> 8) & 0xF];
-                    line[6] = HexChars[((i + startOffset) >> 4) & 0xF];
-                    line[7] = HexChars[((i + startOffset) >> 0) & 0xF];
-                    // End Offset
-                }
-                int hexColumn = firstHexColumn;
-                int charColumn = firstCharColumn;
-
-                for (int j = 0; j < bytesPerLine; j++)
-                {
-                    if (j > 0 && (j & (dynamicSteps - 1)) == 0)
-                        hexColumn++;
-
-                    if (i + j >= bytesLength)
-                    {
-                        //line[hexColumn] = spaceChar;
-                        //line[hexColumn + 1] = spaceChar;
-                        line[charColumn] = spaceChar;
-                    }
-                    else
-                    {
-                        byte b = bytes[i + j];
-                        line[hexColumn] = HexChars[(b >> 4) & 0xF];
-                        line[hexColumn + 1] = HexChars[b & 0xF];
-                        line[charColumn] = (b < 32 ? nonPrintableChar : (char)b);
-                    }
-                    hexColumn += 3;
-                    charColumn++;
-                }
-                //result.Append(line);
-                Console.Write(line);
-            }
-            //return result.ToString();
-        }
-        */
     }
 }

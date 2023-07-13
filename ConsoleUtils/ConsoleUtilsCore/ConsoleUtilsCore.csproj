@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="AESGCM.cs" />
     <Compile Include="Base58.cs" />
+    <Compile Include="Blob.cs" />
     <Compile Include="ColorTheme.cs" />
     <Compile Include="CommandLineHelper.cs" />
     <Compile Include="CommandLineParser.cs" />

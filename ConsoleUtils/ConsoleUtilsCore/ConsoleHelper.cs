@@ -5,16 +5,53 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
-
+using ConsoleUtilsCore;
 
 public class ConsoleHelper
 {
+    public enum OutputMode
+    {
+        Hex,
+        Dec,
+        Oct,
+        Bin,
+        Char,
+        Auto
+    }
+
+    static char[] HexChars = "0123456789abcdef".ToCharArray();
     static char nonPrintableChar = '·';
     static char spaceChar = ' ';
 
+    static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
+    static int firstCharColumn = 0;
+    static int lineLength = 0;
+    static int dynamicSteps = 8;
+    static int bytesPerLine = 16;
+
+    static int windowWidth = 120;
+    static int windowHeight = 80;
+
+
+
+    public static void Write(char input)
+    {
+        Console.Write(input);
+    }
+
+    public static void Write(string input)
+    {
+        Console.Write(input);
+    }
+
+    public static void WriteLine(string input)
+    {
+        Write(input + Environment.NewLine);
+    }
+
     public static void WriteError(string message)
     {
-            Console.Error.Write($"{message.Pastel(Color.OrangeRed)}\n");
+            Console.Error.Write($"{message.Pastel(ColorTheme.Error1)}\n");
     }
 
     public static void WriteError(Exception ex)
@@ -214,6 +251,165 @@ public class ConsoleHelper
             result.Append(line);
         }
         Console.WriteLine(result.ToString());
+    }
+
+    static int SetBytesPerLine(int bPerLine)
+    {
+        bytesPerLine = bPerLine;
+
+        firstCharColumn = firstHexColumn
+                            + bytesPerLine * 3       // - 2 digit for the hexadecimal value and 1 space
+                            + (bytesPerLine - 1) / dynamicSteps // - 1 extra space every 8 characters from the 9th
+                            + 2;                  // 2 spaces 
+
+        lineLength = firstCharColumn + bytesPerLine + Environment.NewLine.Length;       // - characters to show the ascii value + Carriage return and line feed (should normally be 2)
+
+        return lineLength;
+    }
+
+
+    public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1, OutputMode outputMode = OutputMode.Hex, bool noOffset = false, bool noText = false)
+
+    {
+        if (!Console.IsOutputRedirected)
+        {
+            windowHeight = Console.WindowHeight;
+            windowWidth = Console.WindowWidth;
+        }
+
+        if (bytes == null) return;
+
+        string spacer = "   ";
+        string offsetPrefix = "0x";
+        int bytesLength = bytes.Length;
+
+        int offsetLength = largestOffset != 0 ? (largestOffset).ToString("X").Length : (bytes.Offset + bytes.Length - 1).ToString("X").Length;
+
+        if (offsetLength % 2 != 0) offsetLength++;
+
+        if (BytesPerLine == 0)  // dynamic
+        {
+            int dynWidth = windowWidth;
+            int minWidth = 32;
+            while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
+            {
+                SetBytesPerLine(bytesPerLine += dynamicSteps);
+                if (lineLength > dynWidth)
+                {
+                    SetBytesPerLine(bytesPerLine -= dynamicSteps);
+                    break;
+                }
+
+            }
+            if (lineLength < minWidth)
+                SetBytesPerLine(dynamicSteps);
+        }
+        else
+        {
+            SetBytesPerLine(BytesPerLine);
+        }
+
+        int padding = 2;
+        if (outputMode == OutputMode.Hex)
+            padding = 2;
+        else if (outputMode == OutputMode.Dec || outputMode == OutputMode.Oct)
+            padding = 3;
+        else if (outputMode == OutputMode.Bin)
+            padding = 8;
+
+
+        //Console.WriteLine(bytes.Length.ToString("X"));
+
+        // header
+        if (header)
+        {
+            for (int i = 0; i < offsetLength + offsetPrefix.Length; i++)
+                Write(spaceChar);
+            Write(spacer); // spacer
+            for (int j = 0; j < bytesPerLine; j++)
+            {
+                if (j > 0 && (j & (dynamicSteps - 1)) == 0)
+                    Write(spaceChar);
+                Write(j.ToString("X").ToLower().PadLeft(padding, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
+            }
+            Write(spacer); // spacer
+            for (int j = 0; j < bytesPerLine; j++)
+            {
+                Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
+            }
+            Write(Environment.NewLine);
+        }
+
+        for (int i = 0; i < bytesLength; i += bytesPerLine)
+        {
+            string offsetPart = string.Empty;
+            string hexPart = string.Empty;
+            string asciiPart = string.Empty;
+
+            offsetPart = (i + (zeroOffset ? 0 : Math.Abs(bytes.Offset))).ToString("X").ToLower().PadLeft(offsetLength, '0');
+
+            for (int j = 0; j < bytesPerLine; j++)
+            {
+                int pos = i + j;
+                int relativePos = pos + (int)bytes.Offset;
+
+                if (j > 0 && (j & (dynamicSteps - 1)) == 0)
+                    hexPart += spaceChar;
+
+                if (pos >= bytesLength)
+                {
+                    for (int s = 0; s <= padding; s++) hexPart += spaceChar; // Spaces before ascii-part 
+                }
+                else
+                {
+
+                    byte b = bytes.Data[pos];
+                    int first = (b >> 4) & 0xF;
+                    int second = b & 0xF;
+
+                    string newHexPart = string.Empty;
+
+
+                    if (outputMode == OutputMode.Dec)
+                    {
+                        newHexPart += b.ToString().PadLeft(3, '0');
+                    }
+                    else if (outputMode == OutputMode.Oct)
+                    {
+                        newHexPart += Convert.ToString(b, 8).PadLeft(3, '0');
+                    }
+
+                    else if (outputMode == OutputMode.Bin)
+                    {
+                        newHexPart += Convert.ToString(first, 2).PadLeft(4, '0');
+                        newHexPart += Convert.ToString(second, 2).PadLeft(4, '0');
+                    }
+                    else //(outputMode == OutputMode.Hex)
+                    {
+
+                        newHexPart += HexChars[first];
+                        newHexPart += HexChars[second];
+
+                        //newHexPart += " (" +b.ToString().PadLeft(3, '0') + ")";
+                    }
+
+                    string color = ColorTheme.GetColor(b, j % 2 == 0);
+
+                    if ((highlightOffset != -1 && highlightLength != -1))
+                    {
+                        if ((relativePos < highlightOffset) || (relativePos >= (highlightOffset + highlightLength)))
+                            color = "#666666";
+                    }
+
+                    hexPart += newHexPart.Pastel(color);
+                    hexPart += spaceChar;
+
+                    asciiPart += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
+
+                }
+            }
+            WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
+        }
     }
 }
 

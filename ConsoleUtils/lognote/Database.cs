@@ -97,7 +97,7 @@ namespace lognote
         public void PrintMessage(string msg, bool error = false)
         {
             if (error)
-                Console.WriteLine($"{DateTime.Now.ToString(this.dateTimeFormat).Pastel(ColorTheme.OffsetColor)} {("(!) " + msg).Pastel(ColorTheme.Error)}");
+                Console.WriteLine($"{DateTime.Now.ToString(this.dateTimeFormat).Pastel(ColorTheme.OffsetColor)} {("(!) " + msg).Pastel(ColorTheme.Error1)}");
             else
                 Console.WriteLine($"{DateTime.Now.ToString(this.dateTimeFormat).Pastel(ColorTheme.OffsetColor)} {msg}");
         }

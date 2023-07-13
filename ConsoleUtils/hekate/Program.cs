@@ -87,7 +87,7 @@ namespace hekate
                     password = stringEncoding.GetBytes(cmd["password"].String);
                 else if (cmd["password-hex"].WasUserSet)
                 {
-                    password = ConvertHelper.StringToByteArray(cmd["password"].String);
+                    password = ConvertHelper.HexStringToByteArray(cmd["password"].String);
                 }
                 int result = CredentialManager.WriteCredential(name, username, password, CredentialManager.CredentialPersistence.Enterprise);
                 if (result == 0)

@@ -46,7 +46,7 @@ namespace hexe
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
-
+                { "version", "V", CmdCommandTypes.FLAG, "Shows the version." },
 
                 //{ "show", null, CmdCommandTypes.VERB, $"Show complete file. Default." },
                 //{ "find", null, CmdCommandTypes.VERB, $"Find byte pattern in complete file" },
@@ -143,6 +143,12 @@ namespace hexe
 
                 if (cmd.HasFlag("help"))
                     ShowHelp();
+                if (cmd.HasFlag("version"))
+                {
+                    ShowVersion();
+                    Environment.Exit(0);
+                }
+                
 
                 noText = cmd.HasFlag("no-ascii");
                 noOffset = cmd.HasFlag("no-offset");
@@ -798,13 +804,7 @@ namespace hexe
 
         static void ShowHelp()
         {
-            WriteLine(" ▄  █ ▄███▄      ▄  ▄███▄   ".Pastel("#e01e37"));
-            WriteLine("█   █ █▀   ▀ ▀▄   █ █▀   ▀  ".Pastel("#c71f37"));
-            WriteLine("██▀▀█ ██▄▄     █ ▀  ██▄▄    ".Pastel("#bd1f36"));
-            WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
-            WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
-            WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#e01e37"));
-            //WriteLine($"hexe, {ConsoleHelper.GetVersionString()}");
+            ShowVersion();
             WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{file|-i \"input string\"}}");
             WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
@@ -814,6 +814,16 @@ namespace hexe
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Environment.Exit(0);
+        }
+        static void ShowVersion()
+        {
+            WriteLine(" ▄  █ ▄███▄      ▄  ▄███▄   ".Pastel("#e01e37"));
+            WriteLine("█   █ █▀   ▀ ▀▄   █ █▀   ▀  ".Pastel("#c71f37"));
+            WriteLine("██▀▀█ ██▄▄     █ ▀  ██▄▄    ".Pastel("#bd1f36"));
+            WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
+            WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
+            WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#e01e37"));
+            WriteLine(ConsoleHelper.GetVersionString());
         }
 
     }

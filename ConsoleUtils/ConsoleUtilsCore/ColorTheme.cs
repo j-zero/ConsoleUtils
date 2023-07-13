@@ -21,7 +21,7 @@ public class ColorTheme
     public static string Default1 { get { return "81a2be"; } }
     public static string Default2 { get { return "5f819d"; } }
     public static string DarkColor { get { return "268C96"; } }
-    public static string HighLight2 { get { return "deaff5"; } }
+    public static string HighLight2 { get { return "dea740"; } }
     public static string HighLight1 { get { return "f0c674"; } }
     public static string OffsetColor {  get { return "808080";} }
     public static string OffsetColorHighlight { get { return "D2CC8D"; } }

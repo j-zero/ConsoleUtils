@@ -325,18 +325,29 @@ namespace gremlins
 
         static void ShowHelp()
         {
-            Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
+            ShowVersion();
+            //Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
             Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--file|-f] file}}");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                string l = $"  --{c.Name}".Pastel("70e000") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("70e000")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("008000")).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Exit(0);
         }
 
+        static void ShowVersion()
+        {
+            Console.WriteLine(@"  ▄▀  █▄▄▄▄ ▄███▄   █▀▄▀█ █    ▄█    ▄      ▄▄▄▄▄   ".Pastel("#ccff33"));
+            Console.WriteLine(@"▄▀    █  ▄▀ █▀   ▀  █ █ █ █    ██     █    █     ▀▄ ".Pastel("#9ef01a"));
+            Console.WriteLine(@"█ ▀▄  █▀▀▌  ██▄▄    █ ▄ █ █    ██ ██   █ ▄  ▀▀▀▀▄   ".Pastel("#70e000"));
+            Console.WriteLine(@"█   █ █  █  █▄   ▄▀ █   █ ███▄ ▐█ █ █  █  ▀▄▄▄▄▀    ".Pastel("#38b000"));
+            Console.WriteLine(@" ███    █   ▀███▀      █      ▀ ▐ █  █ █            ".Pastel("#008000"));
+            Console.WriteLine(@"       ▀              ▀           █   ██ ".Pastel("#007200")+("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#006400"));
+
+        }
 
         static void Exit(int exitCode)
         {

@@ -23,8 +23,8 @@ namespace download
         static bool _debug = false;
         static string filename = "";
 
-        static long lastUpdate;
-        static long lastBytes = 0;
+        //static long lastUpdate;
+        //static long lastBytes = 0;
         static DateTime _startedAt;
 
         static void Main(string[] args)

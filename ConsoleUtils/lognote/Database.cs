@@ -13,7 +13,7 @@ namespace lognote
         
         string fileExtension = ".log";
         //string thema = "default";
-        bool exit = false;
+        //bool exit = false;
         public string dateTimeFormat = "yyyy'-'MM'-'dd' 'HH':'mm':'ss";
         string fileDateTimeFormat = "yyyy''MM''dd''HH''mm''ss";
         string linePrefix = " ";

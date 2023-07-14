@@ -119,7 +119,7 @@ namespace DamienG.Security.Cryptography
 
         public const UInt64 Iso3309Polynomial = 0xD800000000000000;
 
-        public static Crc64Iso Create()
+        public static new Crc64Iso Create()
         {
             return new Crc64Iso();
         }

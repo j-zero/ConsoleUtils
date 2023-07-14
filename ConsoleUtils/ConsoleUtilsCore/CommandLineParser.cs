@@ -49,7 +49,7 @@ public class CmdParameters : List<CmdParameter>
         base.Add(item);
         return this;
     }
-    public new CmdParameters Add(CmdParameterTypes type, object value)
+    public CmdParameters Add(CmdParameterTypes type, object value)
     {
         base.Add(new CmdParameter(type, value));
         return this;
@@ -191,7 +191,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 {
     private string _longParamPrefix = "--";
     private string _shortParamPrefix = "-";
-    private string _defaultVerb = "";
+    //private string _defaultVerb = "";
 
     private Queue<string> fifo = new Queue<string>();
 
@@ -494,7 +494,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         throw new InvalidOperationException("Option has no names!");
     }
 
-    public new CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, string Description)
+    public CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, string Description)
     {
         CmdParameters defParam = new CmdParameters();
 
@@ -506,18 +506,18 @@ public class CmdParser : KeyedCollection<string, CmdOption>
         return this;
     }
 
-    public new CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameters CmdParams, string Description)
+    public CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameters CmdParams, string Description)
     {
         base.Add(new CmdOption(Name, Shortname, CmdType, CmdParams, Description));
         return this;
     }
 
-    public new CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameterTypes Type, object DefaultValue, string Description)
+    public CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, CmdParameterTypes Type, object DefaultValue, string Description)
     {
         base.Add(new CmdOption(Name, Shortname, CmdType, new CmdParameters() { { Type, DefaultValue } }, Description));
         return this;
     }
-    public new CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, bool DefaultValue, string Description)
+    public CmdParser Add(string Name, string Shortname, CmdCommandTypes CmdType, bool DefaultValue, string Description)
     {
         base.Add(new CmdOption(Name, Shortname, CmdType, new CmdParameters() { { CmdParameterTypes.BOOL, DefaultValue } }, Description));
         return this;

@@ -74,14 +74,6 @@ public class MIMEHelper
     public static string GetMIMEFlag(FileStream Stream, MagicOpenFlags Flag)
     {
         return (new HeyRed.Mime.Magic(Flag)).Read(Stream, 1024);
-        try
-        {
-            Stream.Close();
-        }
-        catch
-        {
-
-        }
     }
 
 }

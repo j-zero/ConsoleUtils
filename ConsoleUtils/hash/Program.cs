@@ -107,7 +107,7 @@ namespace hash
                 }
 
             }
-            catch(Exception ex)
+            catch
             {
 
             }

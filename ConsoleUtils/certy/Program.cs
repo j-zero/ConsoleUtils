@@ -225,8 +225,8 @@ namespace certy
             DateTime notBefore = X5092.NotBefore;
             DateTime notAfter = X5092.NotAfter;
 
-            string notBeforeString = "";
-            string notAfterString = "";
+            //string notBeforeString = "";
+            //string notAfterString = "";
 
 
             if (ecdsa != null)
@@ -245,7 +245,7 @@ namespace certy
                 bits = dsa.KeySize;
             }
 
-            int pos = 3;
+            //int pos = 3;
 
             int maxDescLength = Console.WindowWidth - 8;
 

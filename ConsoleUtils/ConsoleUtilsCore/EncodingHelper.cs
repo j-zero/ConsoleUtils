@@ -39,7 +39,6 @@ public class EncodingHelper
 
     public static Encoding GetEncodingFromName(string Name)
     {
-        Encoding encoding;
         string enc = Name.Replace("-", "").ToLower().Trim();
         // "utf8" (default), "ascii", "utf7", "utf16", "utf16be","utf32", "utf32be"
 

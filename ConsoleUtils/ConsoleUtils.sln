@@ -39,8 +39,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hekate", "hekate\hekate.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unpack", "unpack\unpack.csproj", "{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{9582632E-436B-460F-BB76-8DD014B13411}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash", "hash\hash.csproj", "{609CEAB9-54A6-4A12-AAEC-56796A65511E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coffee", "coffee\coffee.csproj", "{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}"
@@ -54,6 +52,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ed", "ed\ed.csproj", "{DBEC9AB6-5D05-4904-9E45-B9BBD0F185F0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seek", "seek\seek.csproj", "{64A17372-B6C9-4B63-BD76-255453C5D9C5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{A625D241-04EF-4571-A0D6-66292755CDAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -205,14 +205,6 @@ Global
 		{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}.Release|Any CPU.Build.0 = Release|x64
 		{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}.Release|x64.ActiveCfg = Release|x64
 		{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}.Release|x64.Build.0 = Release|x64
-		{9582632E-436B-460F-BB76-8DD014B13411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Debug|x64.Build.0 = Debug|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Release|x64.ActiveCfg = Release|Any CPU
-		{9582632E-436B-460F-BB76-8DD014B13411}.Release|x64.Build.0 = Release|Any CPU
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{609CEAB9-54A6-4A12-AAEC-56796A65511E}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -269,6 +261,14 @@ Global
 		{64A17372-B6C9-4B63-BD76-255453C5D9C5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{64A17372-B6C9-4B63-BD76-255453C5D9C5}.Release|x64.ActiveCfg = Release|Any CPU
 		{64A17372-B6C9-4B63-BD76-255453C5D9C5}.Release|x64.Build.0 = Release|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Debug|x64.Build.0 = Debug|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|x64.ActiveCfg = Release|Any CPU
+		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

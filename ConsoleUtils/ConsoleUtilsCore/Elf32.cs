@@ -16,7 +16,7 @@ namespace DamienG.Security.Cryptography
     {
         UInt32 hash;
 
-        public static Elf32 Create()
+        public static new Elf32 Create()
         {
             return new Elf32();
         }

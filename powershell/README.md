@@ -1,7 +1,7 @@
 # Powershell helper
 
 ```powershell
-notepad $PROFILE
+touch $PROFILE
 ``` 
 
 and add 

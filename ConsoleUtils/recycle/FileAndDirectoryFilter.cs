@@ -44,7 +44,7 @@ using System.Linq;
                         {
                             dir = Path.GetFullPath(dir);
                         }
-                        catch (Exception ex)
+                        catch
                         {
                             ;
                         }

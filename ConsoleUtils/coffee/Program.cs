@@ -55,8 +55,6 @@ namespace coffee
             cmd.DefaultParameter = "start";
             cmd.Parse();
 
-            bool somethingSet = false;
-
             if (cmd.HasFlag("help"))
                 ShowHelp();
             else
@@ -64,14 +62,10 @@ namespace coffee
 
             if (cmd.HasFlag("topmost"))
             {
-                somethingSet = true;
-                //Console.Error.WriteLine($"Set window always on top.");
                 WindowHelper.SetCurrentWindowTopMost(true);
             }
             else if (cmd.HasFlag("no-topmost"))
             {
-                somethingSet = true;
-                //Console.Error.WriteLine($"Set window not always on top.");
                 WindowHelper.SetCurrentWindowTopMost(false);
             }
 

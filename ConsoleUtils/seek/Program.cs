@@ -51,8 +51,7 @@ namespace seek
                     ShowHelp();
                 }
             }
-            catch (Exception ex)
-            {
+            catch {
 
             }
         }

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Windows.Forms;
 
@@ -468,6 +469,7 @@ namespace klemmbrett
                     }
                     catch(IOException iox)
                     {
+                        string ignore = iox.Message;
                         WriteError("File already exists. Use the force!");
                         //WriteError(iox.Message);
                     }
@@ -634,7 +636,7 @@ namespace klemmbrett
                 int Pos1 = FullText.IndexOf(StartString) + StartString.Length; int Pos2 = FullText.IndexOf(EndString, Pos1); return ((IncludeStartString) ? StartString : "")
                   + FullText.Substring(Pos1, Pos2 - Pos1) + ((IncludeEndString) ? EndString : "");
             }
-            catch (Exception ex) { return ""; }
+            catch { return ""; }
         }
 
         static void WriteDebug(string msg)

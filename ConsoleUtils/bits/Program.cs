@@ -12,10 +12,10 @@ namespace bits
 {
     internal class Program
     {
-        static long firstTick = 621355968000000000;
+       // static long firstTick = 621355968000000000;
 
         static double value = 0;
-        static long int_value = 0;
+        //static long int_value = 0;
 
         static bool isBits = false;
         static string color1 = "#2dc653";
@@ -124,7 +124,7 @@ namespace bits
                 string unit = l == -1 ? "" : UnitHelper.ByteSuffixes[l];
 
 
-                bool isBin = false;
+                //bool isBin = false;
 
                 string unit_name = "";
 
@@ -133,7 +133,7 @@ namespace bits
                 if (byte_suffix.ToLower().Contains("i"))
                 {
                     c = 1024;
-                    isBin = true;
+                    //isBin = true;
                     unit_name = UnitHelper.BinSuffixNames[unit.ToLower()];
                     Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
                 }

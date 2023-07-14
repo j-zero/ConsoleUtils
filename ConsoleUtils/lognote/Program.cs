@@ -13,7 +13,7 @@ namespace lognote
 {
     internal class Program
     {
-        static bool debug = false;
+        //static bool debug = false;
         static bool exit = false;
         static string prompt = " $ ".Pastel(ColorTheme.OffsetColor);
         static string thema = "notes";

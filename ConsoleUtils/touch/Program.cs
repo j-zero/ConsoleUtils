@@ -15,7 +15,10 @@ namespace touch
                 {
                     string fullPath = Path.GetFullPath(f);
                     if (!File.Exists(fullPath))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
                         File.Create(fullPath).Close();
+                    }
                     File.SetLastWriteTimeUtc(fullPath, DateTime.UtcNow);
                 }
                 catch (Exception ex2)

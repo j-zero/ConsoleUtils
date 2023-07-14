@@ -37,7 +37,7 @@ namespace DamienG.Security.Cryptography
         {
         }
 
-        public static Crc32 Create()
+        public static new Crc32 Create()
         {
             return new Crc32();
         }

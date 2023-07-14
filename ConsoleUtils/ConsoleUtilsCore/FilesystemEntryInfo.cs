@@ -118,7 +118,7 @@ public class FilesystemEntryInfo
                 X509Certificate theSigner = X509Certificate.CreateFromSignedFile(this.FullPath);
                 theCertificate = new X509Certificate2(theSigner);
             }
-            catch (Exception ex)
+            catch
             {
             //Console.WriteLine("No digital signature found: " + ex.Message);
                 return null;
@@ -329,7 +329,7 @@ public class FilesystemEntryInfo
         if (timestamp.Ticks == 0)
             return "-";
         ;
-        string result = "";
+       // string result = "";
         string field1 = "";
         string field2 = "";
 
@@ -403,6 +403,7 @@ public class FilesystemEntryInfo
             }
             catch(UnauthorizedAccessException unAuthEx)
             {
+                string ignore = unAuthEx.Message;
                 return false;
             }
             catch
@@ -415,7 +416,7 @@ public class FilesystemEntryInfo
             try
             {
                 Directory.GetDirectories(this.FullPath);
-                FileSystemSecurity security;
+                //FileSystemSecurity security;
                 return true;
             }
             catch

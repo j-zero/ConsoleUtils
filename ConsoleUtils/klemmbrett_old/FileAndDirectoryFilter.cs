@@ -46,7 +46,7 @@ namespace klemmbrett
                         {
                             dir = Path.GetFullPath(dir);
                         }
-                        catch (Exception ex)
+                        catch
                         {
                             ;
                         }

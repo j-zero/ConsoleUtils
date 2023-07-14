@@ -552,8 +552,11 @@ namespace list
 
 
 
-                    int filepos = Console.CursorLeft;
-                    int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
+                    //int filepos = Console.CursorLeft;
+                    int filepos = 0;
+                    string prefix = "";
+                    //int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
+                    int maxDescLength = Console.WindowWidth - 4;
 
                     /*
                     string spaces = "";
@@ -578,11 +581,14 @@ namespace list
                     {
                         Console.WriteLine();
                         //ConsoleHelper.WriteSplittedText("File information:\n", maxDescLength, "  ", filepos, ColorTheme.Comment);
-                        ConsoleHelper.WriteSplittedText($"Additional information\n", maxDescLength, "  ", filepos, "808080");
-                        ConsoleHelper.WriteSplittedText($"MIME-Type: " + e.MIMEType + "\n", maxDescLength-2, "  ", filepos + 2, ColorTheme.Comment);
-                        ConsoleHelper.WriteSplittedText($"Encoding: " + e.Encoding + "\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
-                        ConsoleHelper.WriteSplittedText("Description\n", maxDescLength, "  ", filepos, "808080");
-                        ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength-2, "  ", filepos+2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText($"Additional information\n", maxDescLength, "", filepos, "808080");
+                        ConsoleHelper.WriteSplittedText($"Created: " + e.CreationTime.ToLongDateString() + ", " + e.CreationTime.ToLongTimeString() + "\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText($"Modified: " + e.LastWriteTime.ToLongDateString() + ", " + e.LastWriteTime.ToLongTimeString() + "\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText($"Last Access: " + e.LastAccessTime.ToLongDateString() + ", " + e.LastAccessTime.ToLongTimeString() + "\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText($"MIME-Type: " + e.MIMEType + "\n", maxDescLength-2, prefix, filepos + 2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText($"Encoding: " + e.Encoding + "\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                        ConsoleHelper.WriteSplittedText("Description\n", maxDescLength, prefix, filepos, "808080");
+                        ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength-2, prefix, filepos+2, ColorTheme.Comment);
                     }
 
 
@@ -597,7 +603,7 @@ namespace list
                             if (cert.NotAfter < DateTime.Now)
                                 dateColor = ColorTheme.Error1;
 
-                            ConsoleHelper.WriteSplittedText("Digital signature\n", maxDescLength, "  ", filepos, "808080");
+                            ConsoleHelper.WriteSplittedText("Digital signature\n", maxDescLength, prefix, filepos, "808080");
                             /*
                             if (!e.IsCertificateValid)
                             {
@@ -611,12 +617,12 @@ namespace list
                             string hasPrivKey = cert.HasPrivateKey ? "Yes" : "No";
                             //ConsoleHelper.WriteSplittedText($"Serial: {cert.SerialNumber}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
 
-                            ConsoleHelper.WriteSplittedText($"Signature algorithm: {cert.SignatureAlgorithm.FriendlyName}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
-                            ConsoleHelper.WriteSplittedText($"Not before: {cert.NotBefore.ToShortDateString()}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
-                            ConsoleHelper.WriteSplittedText($"Not after: {cert.NotAfter.ToShortDateString().Pastel(dateColor)}\n", maxDescLength, "  ", filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"Signature algorithm: {cert.SignatureAlgorithm.FriendlyName}\n", maxDescLength, prefix, filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"Not before: {cert.NotBefore.ToShortDateString()}\n", maxDescLength, prefix, filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"Not after: {cert.NotAfter.ToShortDateString().Pastel(dateColor)}\n", maxDescLength, prefix, filepos + 2, ColorTheme.Comment);
                             
-                            ConsoleHelper.WriteSplittedText("Subject:\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
-                            ConsoleHelper.WriteSplittedText($"{cert.Subject}\n", maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText("Subject:\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                            ConsoleHelper.WriteSplittedText($"{cert.Subject}", maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
 
                             //ConsoleHelper.WriteSplittedText("Issuer:\n", maxDescLength - 2, "  ", filepos + 2, ColorTheme.Comment);
                             //ConsoleHelper.WriteSplittedText($"{cert.Issuer}\n", maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
@@ -661,7 +667,7 @@ namespace list
                                 spaceSpaces += " ";
                             
                             if (e.AlternateDataStreams.Count() > 1)
-                                ConsoleHelper.WriteSplittedText("Alternate Data Streams\n", maxDescLength, "  ", filepos, "808080");
+                                ConsoleHelper.WriteSplittedText("Alternate Data Streams\n", maxDescLength, prefix, filepos, "808080");
 
                             try
                             {
@@ -671,9 +677,8 @@ namespace list
                                     {
                                         string streamName = s.Name.Replace(":$DATA", "");
                                         (string streamSize, string streamSizeSuffix) = UnitHelper.GetHumanReadableSize(s.Length);
-                                        Console.WriteLine($"{spaceSpaces}" +
-                                                            $"{streamSize.PadLeft(s.Length == 0 || streamSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)}" +
-                                                            $"    :{streamName.Pastel(ColorTheme.Comment)} ");
+                                        Console.WriteLine(//$"{spaceSpaces}" +
+                                                            $"  {e.Name.Pastel(e.ColorString)}{":".Pastel(ColorTheme.Text)}{streamName.Pastel("808080")} (Size: {streamSize.Pastel(ColorTheme.Default1)}{streamSizeSuffix.Pastel(ColorTheme.Default2)})".Pastel(ColorTheme.Comment));
                                         
                                         if (streamName == "Zone.Identifier")
                                         {
@@ -688,7 +693,7 @@ namespace list
                                                     if (match.Success)
                                                     {
                                                         var hostUrl = match.Groups[1].Value;
-                                                        ConsoleHelper.WriteSplittedText(hostUrl, maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
+                                                        ConsoleHelper.WriteSplittedText(hostUrl, maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
                                                         Console.WriteLine();
                                                     }
                                                 }
@@ -705,15 +710,16 @@ namespace list
                                             ConsoleHelper.WriteSplittedText(MIMEHelper.GetDescription(s.OpenRead()), maxDescLength - 4, "  ", filepos + 4, ColorTheme.Comment);
                                             Console.WriteLine();
                                         }
-
+                                        
                                     }
-
+                                    
                                 }
                             }
                             catch
                             {
                                 Console.WriteLine($"{spaceSpaces}{string.Empty.PadLeft(longestSize, ' ')}{"Access denied".Pastel(ColorTheme.Error1)}");
                             }
+                            //if (e.AlternateDataStreams.Count() > 1) Console.WriteLine();
                         }
                     }
 

@@ -474,8 +474,8 @@ namespace bits
             Console.WriteLine(@"▐█▀▀█▄ ▐█  ▐█  ▄▀▀▀█▄".Pastel("#208b3a"));
             Console.WriteLine(@"██▄ ▐█ ▐█▌ ▐█▌ ▐█▄ ▐█".Pastel("#1a7431"));
             Console.WriteLine(@"·▀▀▀▀  ▀▀▀ ▀▀▀  ▀▀▀▀ ".Pastel("#155d27")+(version_string + @"").Pastel("#1a7431"));
-            
-            Console.WriteLine("bits is part of " + ConsoleHelper.GetVersionString());
+
+            Console.WriteLine($"{"bits".Pastel(color1)} is part of " + ConsoleHelper.GetVersionString(color2, color2));
         }
 
         static void Exit(int exitCode)

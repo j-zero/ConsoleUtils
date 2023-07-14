@@ -195,7 +195,7 @@ public class FilesystemEntryInfo
             if (this.IsDirectory)
                 return null;
             else if (this.IsFile)
-                return new FileInfo(this.FullPath).GetDataStreams();
+                return  (new FileInfo(this.FullPath).GetDataStreams());
             else
                 return null;
         }

@@ -75,7 +75,11 @@ public class ConsoleHelper
 
     public static string GetVersionString()
     {
-        return "ConsoleUtils (https://github.com/j-zero/ConsoleUtils)";
+        return GetVersionString(null, null);
+    }
+    public static string GetVersionString(string color1, string color2)
+    {
+        return "ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")";
     }
 
     // Enumerate by nearest space
@@ -147,6 +151,10 @@ public class ConsoleHelper
         if (input.Length > length)
         {
             var strings = SplitByNearestSpace(input, length).ToArray();
+
+            if (strings.Length == 1 && strings[0].Length > length)
+                strings = StringHelper.SplitInParts(strings[0], length).ToArray() ;
+
             for (int i = 0; i < strings.Length; i++)
             {
                 Console.Write(spaces + prefix + strings[i].Pastel(color));
@@ -160,6 +168,8 @@ public class ConsoleHelper
         }
         return true;
     }
+
+
 
     public static void BinDump(byte[] bytes, int lineLength = 0)
     {   if(lineLength == 0)

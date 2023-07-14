@@ -21,6 +21,8 @@ namespace gremlins
         static Encoding encoding = Encoding.UTF8;
         static Encoding defaultEncoding = Encoding.UTF8;
 
+        static string color1 = "70e000";
+        static string color2 = "008000";
         static void Main(string[] args)
         {
             cmd = new CmdParser(args)
@@ -34,8 +36,8 @@ namespace gremlins
                     "Look from here to there." 
                 },
 
-                { "head", "h", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with --lines."},
-                { "tail", "t", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with --lines."},
+                { "head", "h", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with {"--lines".Pastel(color1)}."},
+                { "tail", "t", CmdCommandTypes.FLAG, $"Show first X lines, can be modified with {"--lines".Pastel(color1)}."},
 
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
 
@@ -61,7 +63,7 @@ namespace gremlins
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
                 { "no-hex", "", CmdCommandTypes.FLAG, "Don't show unprintable chars as hex values" },
 
-                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-tab, --no-line-numbers, --no-colors, --no-hex" },
+                { "plain", "p", CmdCommandTypes.FLAG, $"Combines {"--no-cr".Pastel(color1)}, {"--no-space".Pastel(color1)}, {"--no-tab".Pastel(color1)},{"--no-line-numbers".Pastel(color1)}, {"--no-colors".Pastel(color1)}, {"--no-hex".Pastel(color1)}" },
 
                 { "regex", "r", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
@@ -79,7 +81,8 @@ namespace gremlins
 
                  { "encoding", "e", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, "utf8" }
-                    }, "Force encoding. <string> could be \"utf8\" (default), \"ascii\", \"utf7\", \"utf16\", \"utf16be\",\"utf32le\", \"utf32be\"" },
+                  },   $"Force encoding to {"ascii".Pastel(color2)}, {"utf8".Pastel(color2)} (default), {"utf16".Pastel(color2)}, {"utf7".Pastel(color2)}, {"utf32".Pastel(color2)}, {"utf16be".Pastel(color2)} or <{"int".Pastel(color2)}> as codepage" },
+                 //   }, "Force encoding. <string> could be \"utf8\" (default), \"ascii\", \"utf7\", \"utf16\", \"utf16be\",\"utf32le\", \"utf32be\"" },
 
                 { "output-append", "A", CmdCommandTypes.FLAG, "Append to output file" },
 
@@ -129,7 +132,48 @@ namespace gremlins
                 if (cmd["encoding"].WasUserSet)
                 {
                     // "utf8" (default), "ascii", "utf7", "utf16", "utf16be","utf32", "utf32be"
-                    encoding = EncodingHelper.GetEncodingFromName(cmd["encoding"].Strings[0]);
+                    //encoding = EncodingHelper.GetEncodingFromName(cmd["encoding"].Strings[0]);
+                    string str_encoding = cmd["encoding"].String.Trim().ToLower();
+
+                    switch (str_encoding)
+                    {
+                        case "ascii":
+                            encoding = Encoding.ASCII;
+                            break;
+                        case "utf8":
+                            encoding = Encoding.UTF8;
+                            break;
+                        case "utf16":
+                            encoding = Encoding.Unicode;
+                            break;
+                        case "utf7":
+                            encoding = Encoding.UTF7;
+                            break;
+                        case "utf32":
+                            encoding = Encoding.UTF32;
+                            break;
+                        case "utf16be":
+                            encoding = Encoding.BigEndianUnicode;
+                            break;
+                        default:
+                            int codepage = 0;
+                            if (int.TryParse(str_encoding, out codepage))
+                            {
+                                try
+                                {
+                                    encoding = Encoding.GetEncoding(codepage);
+                                }
+                                catch
+                                {
+                                    Die("Invalid codepage for " + "--encoding".Pastel("#a71e34") + ": \"" + str_encoding + "\"", 2);
+                                }
+                            }
+                            else
+                            {
+                                Die("Unkown option for " + "--encoding".Pastel("#a71e34") + ": \"" + str_encoding + "\"", 2);
+                            }
+                            break;
+                    }
                 }
 
                 if (Console.IsInputRedirected)
@@ -146,7 +190,7 @@ namespace gremlins
                 }
                 else
                 {
-                    if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
+                    if (cmd["file"].StringIsNotNull)
                     {
                         string path = cmd["file"].Strings[0];
 
@@ -322,21 +366,27 @@ namespace gremlins
                 Console.Write(output);
             }
         }
+        public static void Die(string msg, int errorcode)
+        {
+            ConsoleHelper.WriteError(msg);
+            Environment.Exit(errorcode);
+        }
+
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("70e000")} [{"Options".Pastel("008000")}] {{\"file\"|{"-i".Pastel("008000")} \"input string\"}}\n");
-            if(more)
-                Console.WriteLine($"For more options, use {"--help".Pastel("70e000")}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Replace(".exe", "").Pastel(color1)} [{"Options".Pastel(color2)}] \"{"file".Pastel(color2)}\"");
+            if (more)
+                Console.WriteLine($"For more options, use {"--help".Pastel(color1)}");
         }
         static void ShowLongHelp()
         {
             ShowHelp(false);
             //Console.WriteLine($"gremlins, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"\n{"Options".Pastel("008000")}:");
+            Console.WriteLine($"\n{"Options".Pastel(color2)}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("70e000") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("70e000")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("008000")).ToArray()) + ">" : "") + ": " + c.Description;
+                string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
@@ -351,7 +401,7 @@ namespace gremlins
             Console.WriteLine(@"█   █ █  █  █▄   ▄▀ █   █ ███▄ ▐█ █ █  █  ▀▄▄▄▄▀    ".Pastel("#38b000"));
             Console.WriteLine(@" ███    █   ▀███▀      █      ▀ ▐ █  █ █            ".Pastel("#008000"));
             Console.WriteLine(@"       ▀              ▀           █   ██ ".Pastel("#007200")+("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#006400"));
-            Console.WriteLine("gremlins is part of " + ConsoleHelper.GetVersionString());
+            Console.WriteLine($"{"gremlins".Pastel(color1)} is part of " + ConsoleHelper.GetVersionString(color2, color2));
         }
 
         static void Exit(int exitCode)

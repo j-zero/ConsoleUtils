@@ -166,7 +166,7 @@ namespace coffee
             Console.WriteLine(@"▀███▀         █      █     ▀███▀   ▀███▀   ".Pastel("#8b5e34"));
             Console.WriteLine((@"               ▀      ▀ " + version_string.Pastel("#8b5e34")).Pastel("#6f4518"));
 
-            Console.WriteLine("coffee is part of " + ConsoleHelper.GetVersionString());
+            Console.WriteLine($"{"coffee".Pastel(color1)} is part of " + ConsoleHelper.GetVersionString(color2, color2));
         }
 
 

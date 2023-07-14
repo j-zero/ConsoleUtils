@@ -183,6 +183,8 @@ namespace Pastel
         /// <param name="color">The color to use on the specified string.</param>
         public static string Pastel(this string input, Color color)
         {
+            if (color == null)
+                return input;
             return _colorFormatFuncs[_enabled][ColorPlane.Foreground](input, color);
         }
 
@@ -193,6 +195,8 @@ namespace Pastel
         /// <param name="hexColor">The color to use on the specified string.<para>Supported format: [#]RRGGBB.</para></param>
         public static string Pastel(this string input, string hexColor)
         {
+            if (hexColor == null)
+                return input;
             string result = _hexColorFormatFuncs[_enabled][ColorPlane.Foreground](input, hexColor);
             return result;
         }
@@ -206,6 +210,8 @@ namespace Pastel
         /// <param name="color">The color to use on the specified string.</param>
         public static string PastelBg(this string input, Color color)
         {
+            if (color == null)
+                return input;
             return _colorFormatFuncs[_enabled][ColorPlane.Background](input, color);
         }
 
@@ -216,6 +222,8 @@ namespace Pastel
         /// <param name="hexColor">The color to use on the specified string.<para>Supported format: [#]RRGGBB.</para></param>
         public static string PastelBg(this string input, string hexColor)
         {
+            if (hexColor == null)
+                return input;
             return _hexColorFormatFuncs[_enabled][ColorPlane.Background](input, hexColor);
         }
 

@@ -29,8 +29,10 @@ namespace file
                     Console.WriteLine("File:      " + Path.GetFullPath(path));
                 }
 
+                FilesystemEntryInfo fs = new FilesystemEntryInfo(path);
                 string mime = MIMEHelper.GetMIMEType(path);
 
+                Console.WriteLine("Size:      " + fs.HumanReadbleSize + fs.HumanReadbleSizeSuffix + " (" + fs.Length + " bytes)");
                 Console.WriteLine("Info:      " + MIMEHelper.GetDescription(path));
                 Console.WriteLine("MIME-Type: " + mime);
                 Console.WriteLine("Encoding:  " + MIMEHelper.GetEncoding(path));

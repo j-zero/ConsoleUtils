@@ -119,38 +119,45 @@ namespace subnet
                 //Console.WriteLine($"{"CIDR:".Pastel(Color.White)}      {intToAddr(net)}{cidr.ToString().Pastel(highlight)}");
                 //Console.WriteLine($"{"Mask:".Pastel(Color.White)}      {"/".Pastel(Color.White)}{cidr.ToString().Pastel(highlight)}, {intToAddr(mask)}");
 
-                if (net != 0) {
-                    Console.WriteLine($"{"IP:".Pastel(Color.White)}               {intToAddr(ip).Pastel(color1)} {("(" + ipinfo + ")").Pastel(ColorTheme.DarkText)}");
-                    Console.WriteLine($"{"Other rep.:".Pastel(Color.White)}       {ip.ToString()}, 0x{ip.ToString("X").ToLower()}, { StringHelper.AddSeperator(Convert.ToString(ip, 2).PadLeft(32, '0'), ".", 8)}, {getArpaStringFromIP(ip)}"); //, from 0x{start.ToString("X").ToLower()} - 0x{end.ToString("X").ToLower()}");
-                    Console.WriteLine($"{"IPv6 conv.:".Pastel(Color.White)}       ::ffff:{StringHelper.AddSeperator(ip.ToString("X").ToLower(), ":", 4)}, {mappedv6}");
-                }
+                if (cidr != 32)
+                {
 
-                if (net != 0 && cidr != 32)
-                    Console.WriteLine();
-
-                if (cidr != 32) {
-                    
-                    Console.WriteLine($"{"Network:".Pastel(Color.White)}          {intToAddr(net).Pastel(color1)}{"/".Pastel(color2)}{cidr.ToString().Pastel(color1)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(mask)}");
-                    Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {(count - 2).ToString().Pastel(color1)} ({count.ToString().Pastel(color2)}{" - 2".Pastel(ColorTheme.DarkText)}) {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
-                    Console.WriteLine($"{"Broadcast:".Pastel(Color.White)}        {intToAddr(bc)}");
+                    Console.WriteLine($"{"Network".Pastel(color2)}:          {intToAddr(net).Pastel(color1)}{"/".Pastel(color2)}{cidr.ToString().Pastel(color1)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(mask)}");
+                    Console.WriteLine($"{"Hosts".Pastel(color2)}:            {(count - 2).ToString().Pastel(color1)} ({count.ToString().Pastel(color2)}{" - 2".Pastel(ColorTheme.DarkText)}) {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
+                    Console.WriteLine($"{"Broadcast".Pastel(color2)}:        {intToAddr(bc)}");
                     Console.WriteLine();
 
                     if (!(net < prevNet))
                     {
                         count = getInfosFromIp(prevNet, cidr, out mask, out net, out bc, out start, out end);
-                        Console.WriteLine($"{"Previous network:".Pastel(Color.White)} {intToAddr(prevNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
+                        Console.WriteLine($"{"Previous network".Pastel(color2)}: {intToAddr(prevNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
                     }
 
                     if (nextNet > net)
                     {
                         count = getInfosFromIp(nextNet, cidr, out mask, out net, out bc, out start, out end);
-                        Console.WriteLine($"{"Next network:".Pastel(Color.White)}     {intToAddr(nextNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
+                        Console.WriteLine($"{"Next network".Pastel(color2)}:     {intToAddr(nextNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
                     }
                 }
-                else { 
+                else
+                {
                     //Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {"1".Pastel(color1)}");
-                    
+
                 }
+
+                if (net != 0 && cidr != 32)
+                    Console.WriteLine();
+
+                if (net != 0)
+                {
+                    Console.WriteLine($"{"IP".Pastel(color2)}:               {intToAddr(ip).Pastel(color1)} {("(" + ipinfo + ")").Pastel(ColorTheme.DarkText)}");
+                    Console.WriteLine($"{"Other rep.".Pastel(color2)}:       {ip.ToString()}{",".Pastel(color2)} 0x{ip.ToString("X").ToLower()}{",".Pastel(color2)} { StringHelper.AddSeperator(Convert.ToString(ip, 2).PadLeft(32, '0'), ".", 8)}{",".Pastel(color2)} {getArpaStringFromIP(ip)}"); //, from 0x{start.ToString("X").ToLower()} - 0x{end.ToString("X").ToLower()}");
+                    Console.WriteLine($"{"IPv6 conv.".Pastel(color2)}:       ::ffff:{StringHelper.AddSeperator(ip.ToString("X").ToLower(), ":", 4)}{",".Pastel(color2)} {mappedv6}");
+                }
+
+
+
+
 
             }
             catch(Exception ex)

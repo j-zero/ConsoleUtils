@@ -40,6 +40,10 @@ namespace hexe
 
         static ConsoleHelper.OutputMode outputMode = ConsoleHelper.OutputMode.Hex;
 
+        static string color1 = "#e01e37";
+        static string color2 = "#a71e34";
+
+
         static void Main(string[] args)
         {
 
@@ -65,13 +69,13 @@ namespace hexe
                 { "skip", "", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 0},
                     { CmdParameterTypes.INT, 1},
-                }, "Skip from offset <int>, count <int>" },
+                }, $"Skip from offset <{"int".Pastel(color2)}>, count <{"int".Pastel(color2)}>" },
 
-                { "head", "h", CmdCommandTypes.FLAG, $"Show first X bytes, can be modified with --count."},
-                { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with --count."},
+                { "head", "h", CmdCommandTypes.FLAG, $"Show first X bytes, can be modified with {"--count".Pastel(color1)}."},
+                { "tail", "t", CmdCommandTypes.FLAG, $"Show last X bytes, can be modified with {"--count".Pastel(color1)}."},
 
                 { "debug", "D", CmdCommandTypes.FLAG, "Debug mode" },
-                { "no-header", "", CmdCommandTypes.FLAG, "disable header" },
+                { "no-header", "", CmdCommandTypes.FLAG, "Disable header" },
                 { "zero", "z", CmdCommandTypes.FLAG, "Set offset to zero on cut" },
                 { "no-offset", "", CmdCommandTypes.FLAG, "Show no offset" },
                 { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
@@ -82,9 +86,9 @@ namespace hexe
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
                 { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values in string mode" },
 
-                { "plain", "p", CmdCommandTypes.FLAG, "Combines --no-cr, --no-space, --no-line-numbers, --no-colors" },
+                { "plain", "p", CmdCommandTypes.FLAG, $"Combines {"--no-cr".Pastel(color1)},{"--no-space".Pastel(color1)}, {"--no-line-numbers".Pastel(color1)}, {"--no-colors".Pastel(color1)}" },
 
-                { "dump", "d", CmdCommandTypes.FLAG, "dump binary to [output]-file" },
+                { "dump", "d", CmdCommandTypes.FLAG, $"Dump binary to the file specified by {"--output".Pastel(color1)}" },
 
                 { "count", "n", CmdCommandTypes.PARAMETER,
                     new CmdParameters() {
@@ -101,7 +105,7 @@ namespace hexe
 
                 { "bytes-per-line", "L", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
-                }, "bytes per line" },
+                }, "Bytes per line" },
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
@@ -123,11 +127,12 @@ namespace hexe
 
                 { "byte-mode", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, "hex" }
-                }, "View bytes as: hex (default), dec, oct, bin or char" },
+                }, $"View bytes as: {"hex".Pastel(color2)} (default), {"dec".Pastel(color2)}, {"oct".Pastel(color2)} or {"bin".Pastel(color2)}" },
 
                 { "encoding", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, "utf8" }
-                }, "Sets string encoding to: ascii, utf8 (default), utf16, utf7, utf32, utf16be or <int> as codepage" },
+                }, $"Sets string encoding to {"ascii".Pastel(color2)}, {"utf8".Pastel(color2)} (default), {"utf16".Pastel(color2)}, {"utf7".Pastel(color2)}, {"utf32".Pastel(color2)}, {"utf16be".Pastel(color2)} or <{"int".Pastel(color2)}> as codepage" },
+                //}, $"Sets string encoding to: ascii, utf8 (default), utf16, utf7, utf32, utf16be or <{"int".Pastel(color2)}> as codepage" },
   
                 { "output", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
@@ -805,17 +810,17 @@ namespace hexe
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("e01e37")} [{"Options".Pastel("a71e34")}] {{\"file\"|{"-i".Pastel("a71e34")} \"input string\"}}\n");
+            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Replace(".exe","").Pastel(color1)} [{"Options".Pastel(color2)}] \"{"file".Pastel(color2)}\" {"|".Pastel(ColorTheme.DarkText)} {"-i".Pastel(color1)} \"{"input string".Pastel(color2)}\"");
             if(more)
-                WriteLine($"For more options, use {"--help".Pastel("e01e37")}");
+                WriteLine($"\nFor more options, use {"--help".Pastel(color1)}");
         }
         static void ShowLongHelp()
         {
             ShowHelp(false);
-            WriteLine($"\n{"Options".Pastel("a71e34")}:");
+            WriteLine($"\n{"Options".Pastel(color2)}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("e01e37") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("e01e37")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("a71e34")).ToArray()) + ">" : "") + ": " + c.Description;
+                string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
                 WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
@@ -829,7 +834,7 @@ namespace hexe
             WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
             WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
             WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#a71e34"));
-            WriteLine("hexe is part of " + ConsoleHelper.GetVersionString());
+            WriteLine($"{"hexe".Pastel(color1)} is part of " + ConsoleHelper.GetVersionString(color2,color2));
         }
 
     }

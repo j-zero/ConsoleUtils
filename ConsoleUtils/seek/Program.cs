@@ -68,11 +68,12 @@ namespace seek
             DebugWrite($"seeking {needle}...\n");
 
             // File name search (case insensitive), also searches sub directories
-            var query1 = @"SELECT System.ItemPathDisplay FROM SystemIndex WHERE " + scope + " ='file:" + haystack + "' AND System.ItemName LIKE '" + needle + "'";
+            var query1 = @"SELECT System.ItemPathDisplay FROM SystemIndex WHERE " + scope + " = 'file:" + haystack + "\\' AND System.ItemName LIKE '" + needle + "'";
+            DebugWrite(query1);
 
             /*
             // File name search (case insensitive), does not search sub directories
-            var query2 = @"SELECT System.ItemPathDisplay FROM SystemIndex "WHERE directory = 'file:C:/' AND System.ItemName LIKE '%Test%' ";
+            var query2 = @"SELECT System.ItemPathDisplay FROM SystemIndex WHERE directory = 'file:C:/' AND System.ItemName LIKE '%Test%' ";
 
             // Folder name search (case insensitive)
             var query3 = @"SELECT System.ItemPathDisplay FROM SystemIndex " +

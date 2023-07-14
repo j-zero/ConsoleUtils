@@ -17,11 +17,11 @@ namespace subnet
         static void ShowVersion()
         {
             string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
-            Console.WriteLine(@"         _           _   ".Pastel("#caf0f8"));
-            Console.WriteLine(@" ___ _ _| |_ ___ ___| |_ ".Pastel("#90e0ef"));
-            Console.WriteLine(@"|_ -| | | . |   | -_|  _|".Pastel("#00b4d8"));
+            Console.WriteLine( @"         _           _   ".Pastel("#caf0f8"));
+            Console.WriteLine( @" ___ _ _| |_ ___ ___| |_ ".Pastel("#90e0ef"));
+            Console.WriteLine( @"|_ -| | | . |   | -_|  _|".Pastel("#00b4d8"));
             Console.WriteLine((@"|___|___|___|_|_|___|_| "  + version_string).Pastel("#0077b6"));
-            Console.WriteLine("subnet is part of " + ConsoleHelper.GetVersionString());
+            
         }
         static void Main(string[] args)
         {
@@ -32,8 +32,8 @@ namespace subnet
             {
                 if (args.Length == 0 || (args.Length == 1 && args[0] == "--help"))
                 {
-
                     ShowVersion();
+                    Console.WriteLine("subnet is part of " + ConsoleHelper.GetVersionString());
                     ConsoleHelper.WriteError("\nUsage: subnet [/cidr|host-count|ip/cidr|ip/mask|ip host-count]");
                     Environment.Exit(1);
                 }

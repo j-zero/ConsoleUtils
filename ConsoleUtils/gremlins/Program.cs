@@ -48,15 +48,15 @@ namespace gremlins
 
 
                 { "only-non-ascii", "", CmdCommandTypes.FLAG, "Everything above 0xff is gremlin" },
-                { "empty-lines", "E", CmdCommandTypes.FLAG, "Parse empty lines as gremlins" },
-                { "no-space-on-line-end", "S", CmdCommandTypes.FLAG, "Parse spaces on line end not as gremlin" },
+                { "no-empty-lines", "E", CmdCommandTypes.FLAG, "Don't parse empty lines as gremlins" },
+                { "no-space-on-line-end", "S", CmdCommandTypes.FLAG, "Don't parse spaces on line end as gremlin" },
 
                 { "all", "a", CmdCommandTypes.FLAG, "Show all lines" },
                 { "invert", "v", CmdCommandTypes.FLAG, "Show all lines but no gremlins" },
 
                 { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
-                { "no-space", "", CmdCommandTypes.FLAG, "Don't mark space" },
-                { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
+                { "no-space", "", CmdCommandTypes.FLAG, "Don't mark spaces" },
+                { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark tabulators" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
                 { "no-hex", "", CmdCommandTypes.FLAG, "Don't show unprintable chars as hex values" },
@@ -229,7 +229,7 @@ namespace gremlins
                 bool isGremlin = false;
 
                 if (!cmd.HasFlag("regex-only"))
-                    isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || cmd.HasFlag("empty-lines") && (string.IsNullOrEmpty(line) || Regex.IsMatch(line, @"^\s*$"));
+                    isGremlin = (!cmd.HasFlag("no-space-on-line-end") && lineEndsWithSpace) || !cmd.HasFlag("no-empty-lines") && (string.IsNullOrEmpty(line) || Regex.IsMatch(line, @"^\s*$"));
 
                 bool isCustomGremlin = false;
 
@@ -325,7 +325,7 @@ namespace gremlins
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("70e000")} [{"Options".Pastel("008000")}] {{\"file\"|{"-i".Pastel("008000")} \"input string\"}}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("70e000")} [{"Options".Pastel("008000")}] {{\"file\"|{"-i".Pastel("008000")} \"input string\"}}\n");
             if(more)
                 Console.WriteLine($"For more options, use {"--help".Pastel("70e000")}");
         }
@@ -351,7 +351,7 @@ namespace gremlins
             Console.WriteLine(@"█   █ █  █  █▄   ▄▀ █   █ ███▄ ▐█ █ █  █  ▀▄▄▄▄▀    ".Pastel("#38b000"));
             Console.WriteLine(@" ███    █   ▀███▀      █      ▀ ▐ █  █ █            ".Pastel("#008000"));
             Console.WriteLine(@"       ▀              ▀           █   ██ ".Pastel("#007200")+("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#006400"));
-
+            Console.WriteLine("gremlins is part of " + ConsoleHelper.GetVersionString());
         }
 
         static void Exit(int exitCode)

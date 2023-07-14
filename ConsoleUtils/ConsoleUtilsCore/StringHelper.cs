@@ -40,5 +40,29 @@ public class StringHelper
         string result = (pads > 0 ? string.Empty.PadLeft(blocksize - pads, paddingchar) : string.Empty) + value;
         return AddSeperator(result, seperator, blocksize);
     }
+
+    public static int CountWords(string text)
+    {
+        int wordCount = 0, index = 0;
+
+        // skip whitespace until first word
+        while (index < text.Length && char.IsWhiteSpace(text[index]))
+            index++;
+
+        while (index < text.Length)
+        {
+            // check if current char is part of a word
+            while (index < text.Length && !char.IsWhiteSpace(text[index]))
+                index++;
+
+            wordCount++;
+
+            // skip whitespace until next word
+            while (index < text.Length && char.IsWhiteSpace(text[index]))
+                index++;
+        }
+
+        return wordCount;
+    }
 }
 

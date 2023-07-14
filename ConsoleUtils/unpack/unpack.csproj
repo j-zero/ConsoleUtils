@@ -51,9 +51,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ConsoleUtilsCore\ConsoleUtilsCore.csproj">
+    <ProjectReference Include="..\ConsoleUtilsCore\leviathan.core.csproj">
       <Project>{f2eee824-5019-44f2-a06a-f7aef10c2549}</Project>
-      <Name>ConsoleUtilsCore</Name>
+      <Name>leviathan.core</Name>
     </ProjectReference>
     <ProjectReference Include="..\SevenZipExtractor\SevenZipExtractor.csproj">
       <Project>{9582632e-436b-460f-bb76-8dd014b13411}</Project>

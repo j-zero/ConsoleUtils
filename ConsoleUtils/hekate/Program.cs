@@ -162,11 +162,12 @@ namespace hekate
             Console.WriteLine(@"   █  ▀███▀     █      █  ▀      ▀███▀   ".Pastel("#1976d2"));
             Console.WriteLine(@"  ▀            ▀      █                  ".Pastel("#1565c0"));
             Console.WriteLine(@"                     ▀ ".Pastel("#0d47a1") +("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#0d47a1"));
+            Console.WriteLine("hekate is part of " + ConsoleHelper.GetVersionString());
         }
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("64b5f6")} [{"Verb".Pastel("1976d2")}] [{"Options".Pastel("1976d2")}]");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("64b5f6")} [{"Verb".Pastel("1976d2")}] [{"Options".Pastel("1976d2")}]\n");
             if(more)
                 Console.WriteLine($"For more options, use {"--help".Pastel("64b5f6")}");
             Console.WriteLine($"{"Verb".Pastel("1976d2")}s:");

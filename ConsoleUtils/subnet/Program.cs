@@ -12,7 +12,17 @@ namespace subnet
     internal class Program
     {
         static string defaultIP = "0.0.0.0";
-
+        static string color1 = "#00b4d8";
+        static string color2 = "#0077b6";
+        static void ShowVersion()
+        {
+            string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
+            Console.WriteLine(@"         _           _   ".Pastel("#caf0f8"));
+            Console.WriteLine(@" ___ _ _| |_ ___ ___| |_ ".Pastel("#90e0ef"));
+            Console.WriteLine(@"|_ -| | | . |   | -_|  _|".Pastel("#00b4d8"));
+            Console.WriteLine((@"|___|___|___|_|_|___|_| "  + version_string).Pastel("#0077b6"));
+            Console.WriteLine("subnet is part of " + ConsoleHelper.GetVersionString());
+        }
         static void Main(string[] args)
         {
             uint ip = 0, mask = 0, net = 0, cidr = 0, bc = 0, start = 0, end = 0;
@@ -22,7 +32,9 @@ namespace subnet
             {
                 if (args.Length == 0 || (args.Length == 1 && args[0] == "--help"))
                 {
-                    ConsoleHelper.WriteError("Usage: subnet [/cidr|host-count|ip/cidr|ip/mask|ip host-count]");
+
+                    ShowVersion();
+                    ConsoleHelper.WriteError("\nUsage: subnet [/cidr|host-count|ip/cidr|ip/mask|ip host-count]");
                     Environment.Exit(1);
                 }
                 else if (args.Length == 1)
@@ -93,6 +105,8 @@ namespace subnet
 
                 //Color highlight = Color.LightSkyBlue;
 
+                ShowVersion();
+                Console.WriteLine();
 
                 uint count = getInfosFromIp(ip, cidr, out mask, out net, out bc, out start, out end);
 
@@ -106,7 +120,7 @@ namespace subnet
                 //Console.WriteLine($"{"Mask:".Pastel(Color.White)}      {"/".Pastel(Color.White)}{cidr.ToString().Pastel(highlight)}, {intToAddr(mask)}");
 
                 if (net != 0) {
-                    Console.WriteLine($"{"IP:".Pastel(Color.White)}               {intToAddr(ip).Pastel(ColorTheme.Default1)} {("(" + ipinfo + ")").Pastel(ColorTheme.DarkText)}");
+                    Console.WriteLine($"{"IP:".Pastel(Color.White)}               {intToAddr(ip).Pastel(color1)} {("(" + ipinfo + ")").Pastel(ColorTheme.DarkText)}");
                     Console.WriteLine($"{"Other rep.:".Pastel(Color.White)}       {ip.ToString()}, 0x{ip.ToString("X").ToLower()}, { StringHelper.AddSeperator(Convert.ToString(ip, 2).PadLeft(32, '0'), ".", 8)}, {getArpaStringFromIP(ip)}"); //, from 0x{start.ToString("X").ToLower()} - 0x{end.ToString("X").ToLower()}");
                     Console.WriteLine($"{"IPv6 conv.:".Pastel(Color.White)}       ::ffff:{StringHelper.AddSeperator(ip.ToString("X").ToLower(), ":", 4)}, {mappedv6}");
                 }
@@ -116,25 +130,25 @@ namespace subnet
 
                 if (cidr != 32) {
                     
-                    Console.WriteLine($"{"Network:".Pastel(Color.White)}          {intToAddr(net).Pastel(ColorTheme.Default1)}{"/".Pastel(ColorTheme.Default2)}{cidr.ToString().Pastel(ColorTheme.Default1)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(mask)}");
-                    Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {(count - 2).ToString().Pastel(ColorTheme.Default1)} ({count.ToString().Pastel(ColorTheme.Default2)}{" - 2".Pastel(ColorTheme.DarkText)}) {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(ColorTheme.Default2)} {intToAddr(end)}");
+                    Console.WriteLine($"{"Network:".Pastel(Color.White)}          {intToAddr(net).Pastel(color1)}{"/".Pastel(color2)}{cidr.ToString().Pastel(color1)} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(mask)}");
+                    Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {(count - 2).ToString().Pastel(color1)} ({count.ToString().Pastel(color2)}{" - 2".Pastel(ColorTheme.DarkText)}) {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
                     Console.WriteLine($"{"Broadcast:".Pastel(Color.White)}        {intToAddr(bc)}");
                     Console.WriteLine();
 
                     if (!(net < prevNet))
                     {
                         count = getInfosFromIp(prevNet, cidr, out mask, out net, out bc, out start, out end);
-                        Console.WriteLine($"{"Previous network:".Pastel(Color.White)} {intToAddr(prevNet)}{"/".Pastel(ColorTheme.Default2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(ColorTheme.Default2)} {intToAddr(end)}");
+                        Console.WriteLine($"{"Previous network:".Pastel(Color.White)} {intToAddr(prevNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
                     }
 
                     if (nextNet > net)
                     {
                         count = getInfosFromIp(nextNet, cidr, out mask, out net, out bc, out start, out end);
-                        Console.WriteLine($"{"Next network:".Pastel(Color.White)}     {intToAddr(nextNet)}{"/".Pastel(ColorTheme.Default2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(ColorTheme.Default2)} {intToAddr(end)}");
+                        Console.WriteLine($"{"Next network:".Pastel(Color.White)}     {intToAddr(nextNet)}{"/".Pastel(color2)}{cidr} {"|".Pastel(ColorTheme.DarkText)} {intToAddr(start)} {"-".Pastel(color2)} {intToAddr(end)}");
                     }
                 }
                 else { 
-                    //Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {"1".Pastel(ColorTheme.Default1)}");
+                    //Console.WriteLine($"{"Hosts:".Pastel(Color.White)}            {"1".Pastel(color1)}");
                     
                 }
 

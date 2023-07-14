@@ -805,7 +805,7 @@ namespace hexe
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("e01e37")} [{"Options".Pastel("a71e34")}] {{\"file\"|{"-i".Pastel("a71e34")} \"input string\"}}");
+            WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel("e01e37")} [{"Options".Pastel("a71e34")}] {{\"file\"|{"-i".Pastel("a71e34")} \"input string\"}}\n");
             if(more)
                 WriteLine($"For more options, use {"--help".Pastel("e01e37")}");
         }
@@ -829,7 +829,7 @@ namespace hexe
             WriteLine("█   █ █▄   ▄▀ ▄ █   █▄   ▄▀ ".Pastel("#a71e34"));
             WriteLine("   █  ▀███▀  █   ▀▄ ▀███▀   ".Pastel("#85182a"));
             WriteLine("  ▀           ▀ ".Pastel("#641220") + ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#a71e34"));
-            WriteLine(ConsoleHelper.GetVersionString());
+            WriteLine("hexe is part of " + ConsoleHelper.GetVersionString());
         }
 
     }

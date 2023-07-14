@@ -28,13 +28,10 @@ namespace coffee
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
+        static string color1 = "#e7bc91";
+        static string color2 = "#bc8a5f";
         static CmdParser cmd;
 
-        void PreventSleep()
-        {
-            // Prevent Idle-to-Sleep (monitor not affected) (see note above)
-            SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_AWAYMODE_REQUIRED);
-        }
 
         static void Main(string[] args)
         {
@@ -62,6 +59,8 @@ namespace coffee
 
             if (cmd.HasFlag("help"))
                 ShowHelp();
+            else
+                ShowVersion();
 
             if (cmd.HasFlag("topmost"))
             {
@@ -138,16 +137,36 @@ namespace coffee
 
         static void ShowHelp()
         {
-            Console.WriteLine($"coffee, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] [[--start] [command] [arguments]]");
-            Console.WriteLine($"Options:");
+            ShowVersion();
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}] [[{"--start".Pastel(color2)}] [{"command".Pastel(color2)}] [{"arguments".Pastel(color2)}]]");
+            Console.WriteLine($"Example: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} {"--topmost".Pastel(color2)} {"--start".Pastel(color2)} ping -t 192.168.0.1");
+            Console.WriteLine($"{"Options".Pastel(color2)}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Exit(0);
+        }
+
+        static void ShowVersion()
+        {
+            string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "").PadLeft(0);
+            /*
+            Console.WriteLine(@"          __  __         ".Pastel("#d6ab7d"));
+            Console.WriteLine(@"  __ ___ / _|/ _|___ ___ ".Pastel("#b3895d"));
+            Console.WriteLine(@" / _/ _ \  _|  _/ -_) -_)".Pastel("#9b744a"));
+            Console.WriteLine(@" \__\___/_| |_| \___\___| ".Pastel("#81583a"));
+            */
+            Console.WriteLine(@"▄█▄    ████▄ ▄████  ▄████  ▄███▄   ▄███▄   ".Pastel("#e7bc91"));
+            Console.WriteLine(@"█▀ ▀▄  █   █ █▀   ▀ █▀   ▀ █▀   ▀  █▀   ▀  ".Pastel("#d4a276"));
+            Console.WriteLine(@"█   ▀  █   █ █▀▀    █▀▀    ██▄▄    ██▄▄    ".Pastel("#bc8a5f"));
+            Console.WriteLine(@"█▄  ▄▀ ▀████ █      █      █▄   ▄▀ █▄   ▄▀ ".Pastel("#a47148"));
+            Console.WriteLine(@"▀███▀         █      █     ▀███▀   ▀███▀   ".Pastel("#8b5e34"));
+            Console.WriteLine((@"               ▀      ▀ " + version_string.Pastel("#8b5e34")).Pastel("#6f4518"));
+
+            Console.WriteLine("coffee is part of " + ConsoleHelper.GetVersionString());
         }
 
 

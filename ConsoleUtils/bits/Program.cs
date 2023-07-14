@@ -18,6 +18,8 @@ namespace bits
         static long int_value = 0;
 
         static bool isBits = false;
+        static string color1 = "#2dc653";
+        static string color2 = "#208b3a";
 
         enum DataTypes
         {
@@ -51,7 +53,7 @@ namespace bits
             }
 
             if (cmd.HasFlag("help"))
-                ShowHelp();
+                ShowLongHelp();
 
             string data = null;
             
@@ -62,9 +64,10 @@ namespace bits
 
             if (data == null)
             {
+                ShowVersion();
                 while (true)
                 {
-                    Console.Write("> ".Pastel(ColorTheme.Default1));
+                    Console.Write("> ".Pastel(color1));
                     data = Console.ReadLine();
                     Parse(data);
 
@@ -84,7 +87,7 @@ namespace bits
             if (data.ToLower().StartsWith("0x") || data.ToLower().StartsWith("#") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
             {
                 // hex
-                Console.WriteLine("interpretation: hex number");
+                Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
 
                 if (data.ToLower().StartsWith("0x"))
                     success = double.TryParse(data.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
@@ -103,7 +106,7 @@ namespace bits
                 int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == suffix.ToLower());
 
                 string unit_name = UnitHelper.SISuffixNames[suffix.ToLower()];
-                Console.WriteLine($"interpretation: {si_interpret_val} {unit_name}, Number with SI Prefix");
+                Console.WriteLine($"{"interpretation".Pastel(color1)}: {si_interpret_val} {unit_name}, Number with SI Prefix");
 
                 for (int i = 0; i < l; i++)
                     si_interpret_val *= 1000;
@@ -132,12 +135,12 @@ namespace bits
                     c = 1024;
                     isBin = true;
                     unit_name = UnitHelper.BinSuffixNames[unit.ToLower()];
-                    Console.WriteLine($"interpretation: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
                 }
                 else
                 {
                     unit_name = UnitHelper.SISuffixNames[unit.ToLower()];
-                    Console.WriteLine($"interpretation: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
                 }
 
                 //Console.WriteLine($"Assuming {val} {unit_name}" + (isBits ? "bits" : "Bytes"));
@@ -154,7 +157,7 @@ namespace bits
 
             else if (data.All(Char.IsDigit) && data.StartsWith("0") && data.All(c => c >= '0' && c <= '7'))
             {
-                Console.WriteLine("interpretation: octal number");
+                Console.WriteLine($"{"interpretation".Pastel(color1)}: octal number");
                 try
                 {
                     value = Convert.ToInt64(data, 8);
@@ -168,7 +171,7 @@ namespace bits
             else if ((data.ToLower().StartsWith("0b") && data.Substring(2).All(c => c == '0' || c == '1')) || data.Length >= 8 && data.All(c => c == '0' || c == '1'))
             {
                 // dual
-                Console.WriteLine("interpretation: binary number");
+                Console.WriteLine($"{"interpretation".Pastel(color1)}: binary number");
                 try
                 {
                     value = Convert.ToInt64(data, 2);
@@ -182,7 +185,7 @@ namespace bits
             else if (data.All(Char.IsDigit) || (data.StartsWith("-") && data.Substring(1).All(Char.IsDigit)))
             {
                 // decimal/octal
-                Console.WriteLine("interpretation: decimal number");
+                Console.WriteLine($"{"interpretation".Pastel(color1)}: decimal number");
                 try
                 {
                     value = Convert.ToInt64(data, 10);
@@ -195,7 +198,21 @@ namespace bits
             }
             else
             {
-                Console.WriteLine("???");
+                try
+                {
+                    byte[] bytes = ConvertHelper.HexStringToByteArray(data);
+                }
+                catch
+                {
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: string");
+                    Console.WriteLine($"{"chars".Pastel(color1)} : {data.Length}");
+                    Console.WriteLine($"{"words".Pastel(color1)} : {StringHelper.CountWords(data)}");
+                }
+
+                
+                //Console.WriteLine("???".Pastel(color2));
+
+                return false;
             }
 
             long int_value = (long)value;
@@ -213,20 +230,20 @@ namespace bits
 
             Console.WriteLine();
 
-            Console.WriteLine($"decimal: {value} ({decimalValue})");
+            Console.WriteLine($"{"decimal".Pastel(color1)}: {value} ({decimalValue})");
 
             if (value % 1 == 0)
             {
                 string hexValue = StringHelper.PadLeftToBlocks(int_value.ToString("X").ToLower(), 2, '0', " ");
                 string binaryValue = StringHelper.PadLeftToBlocks(Convert.ToString(int_value, 2), 4, '0', " ");
                 string octalValue = Convert.ToString(int_value, 8);
-                Console.WriteLine($"hex    : {hexValue}");
-                Console.WriteLine($"octal  : {octalValue}");
-                Console.WriteLine($"binary : {binaryValue}");
+                Console.WriteLine($"{"hex".Pastel(color1)}    : {hexValue}");
+                Console.WriteLine($"{"octal".Pastel(color1)}  : {octalValue}");
+                Console.WriteLine($"{"binary".Pastel(color1)} : {binaryValue}");
             }
 
 
-            Console.WriteLine($"bits   : {bitsValue} (2^{bitsValue} = {maxBits}, +{maxBits - (double)value})");
+            Console.WriteLine($"{"bits".Pastel(color1)}   : {bitsValue} (2^{bitsValue} = {maxBits}, +{maxBits - (double)value})");
 
 
 
@@ -244,12 +261,12 @@ namespace bits
 
                 string hexRGB = int_value.ToString("X").ToLower().PadLeft((value > 0xffffff ? 8 : 6), '0');
 
-                Console.WriteLine($"color  : HEX #{hexRGB}; RGB {r}, {g}, {b} (Alpha {a}); {"██████".Pastel(Color.FromArgb(r, g, b))}");
+                Console.WriteLine($"{"color".Pastel(color1)}  : HEX #{hexRGB}; RGB {r}, {g}, {b} (Alpha {a}); {"██████".Pastel(Color.FromArgb(r, g, b))}");
             }
 
             if (value % 1 == 0 && value > 0 && (value > DateTime.MinValue.Ticks && value < DateTime.MaxValue.Ticks))
             {
-                Console.Write("ticks  : ");
+                Console.Write($"{"ticks".Pastel(color1)}  : ");
 
                 DateTime dt = new DateTime(int_value);
                 TimeSpan ts = new TimeSpan(int_value);
@@ -261,7 +278,7 @@ namespace bits
                 DateTime unixTime = UnixTimeStampToDateTime(int_value);
                 if (unixTime.Ticks != 0)
                 {
-                    Console.Write("unix   : ");
+                    Console.Write($"{"unix".Pastel(color1)}   : ");
                     Console.WriteLine($"{unixTime.ToShortDateString()} {unixTime.ToLongTimeString()}");
                 }
 
@@ -308,7 +325,7 @@ namespace bits
 
                 if (i == 0)
                 {
-                    Console.WriteLine($"size   : {sizeValue} Bytes, {bit_sizeValue} bits");
+                    Console.WriteLine($"{"size".Pastel(color1)}   : {sizeValue} Bytes, {bit_sizeValue} bits");
                 }
                 else
                 {
@@ -430,18 +447,37 @@ namespace bits
 
 
 
-        static void ShowHelp()
+        static void ShowHelp(bool more = true)
         {
-            Console.WriteLine($"{System.AppDomain.CurrentDomain.FriendlyName}, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} data");
-            Console.WriteLine($"Options:");
+            ShowVersion();
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}] {{\"file\"|{"-i".Pastel(color2)} \"input string\"}}\n");
+            if (more)
+                Console.WriteLine($"For more options, use {"--help".Pastel(color1)}");
+        }
+        static void ShowLongHelp()
+        {
+            ShowHelp(false);
+            Console.WriteLine($"\n{"Options".Pastel(color2)}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
-                string l = $"  --{c.Name}".Pastel("9CDCFE") + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel("9CDCFE")}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel("569CD6")).ToArray()) + ">" : "") + ": " + c.Description;
+                string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
-            Exit(0);
+            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+            Environment.Exit(0);
         }
+        static void ShowVersion()
+        {
+            string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + " ").PadLeft(0).Pastel(color2);
+            Console.WriteLine(@"▄▄▄▄   ▀ ▄▄▄▄▄▄ ▄▄   ".Pastel("#2dc653"));
+            Console.WriteLine(@"▐█ ▀█  ██  ██  ▐█ ▀  ".Pastel("#25a244"));
+            Console.WriteLine(@"▐█▀▀█▄ ▐█  ▐█  ▄▀▀▀█▄".Pastel("#208b3a"));
+            Console.WriteLine(@"██▄ ▐█ ▐█▌ ▐█▌ ▐█▄ ▐█".Pastel("#1a7431"));
+            Console.WriteLine(@"·▀▀▀▀  ▀▀▀ ▀▀▀  ▀▀▀▀ ".Pastel("#155d27")+(version_string + @"").Pastel("#1a7431"));
+            
+            Console.WriteLine("bits is part of " + ConsoleHelper.GetVersionString());
+        }
+
         static void Exit(int exitCode)
         {
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;

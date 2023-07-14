@@ -16,7 +16,9 @@ namespace list
         
         static CmdParser cmd;
         //static string path = null;
-        
+
+        static string color1 = "#ff5d8f";
+        static string color2 = "#ffa6c1";
 
         static bool ShowInfo = false;
         static bool ShowHidden = false;
@@ -44,7 +46,7 @@ namespace list
                 {"help", "", CmdCommandTypes.FLAG, "show list of command-line options" },
                 {"long","l", CmdCommandTypes.FLAG, "display extended file metadata as a table" },
                 {"all","a", CmdCommandTypes.FLAG, "show hidden files" },
-                {"header","h", CmdCommandTypes.FLAG, "show mime type" },
+                {"header","h", CmdCommandTypes.FLAG, "show header" },
                 {"encoding","", CmdCommandTypes.FLAG, "show encoding type" },
                 {"oneline","1", CmdCommandTypes.FLAG, "display one entry per line" },
                 {"reverse","r", CmdCommandTypes.FLAG, "reverses the sort order" },
@@ -215,10 +217,11 @@ namespace list
             ConsoleHelper.WriteError(msg);
             Environment.Exit(errorcode);
         }
+        /*
         static void ShowHelp()
         {
             Console.WriteLine($"list, {ConsoleHelper.GetVersionString()}");
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Replace(".exe","")} [Options] [[--path|-p] path]");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Replace(".exe","")} [{"Options".Pastel(color2)}] [[{"--path".Pastel(color2)}|{"-p".Pastel(color2)}] path]");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
@@ -227,6 +230,38 @@ namespace list
             }
             //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
             Exit(0);
+        }
+        */
+
+        static void ShowHelp(bool more = true)
+        {
+            ShowVersion();
+            //Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}] {{\"file\"|{"-i".Pastel(color2)} \"input string\"}}");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Replace(".exe", "")} [{"Options".Pastel(color2)}] [[{"--path".Pastel(color2)}|{"-p".Pastel(color2)}] path]");
+            Console.WriteLine($"\n{"Options".Pastel(color2)}:");
+            foreach (CmdOption c in cmd.OrderBy(x => x.Name))
+            {
+                string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
+                Console.WriteLine(l);
+            }
+            //WriteError("Usage: subnet [ip/cidr|ip/mask|ip number_of_hosts]");
+            Environment.Exit(0);
+        }
+        static void ShowLongHelp()
+        {
+            ShowHelp(false);
+
+        }
+        static void ShowVersion()
+        {
+            string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + " ").PadLeft(0);
+            Console.WriteLine(@"█    ▄█    ▄▄▄▄▄      ▄▄▄▄▀ ".Pastel("#ff5d8f"));
+            Console.WriteLine(@"█    ██   █     ▀▄ ▀▀▀ █    ".Pastel("#ff87ab"));
+            Console.WriteLine(@"█    ██ ▄  ▀▀▀▀▄       █    ".Pastel("#ffa6c1"));
+            Console.WriteLine(@"███▄ ▐█  ▀▄▄▄▄▀       █     ".Pastel("#ffc4d6"));
+            Console.WriteLine(@"    ▀ ▐              ▀  ".Pastel("#fadde1") + version_string.Pastel("#fadde1"));
+            Console.WriteLine();
+            Console.WriteLine("list is part of " + ConsoleHelper.GetVersionString());
         }
 
         static string ShortenString(string str, int maxchars, string color1, string color2, string color3)
@@ -423,6 +458,7 @@ namespace list
             int longestDesciption = 0;
 
 
+
             if (ShowEncoding)
                 longestEncoding = ei.Max(r => r.Encoding.Length);
 
@@ -430,6 +466,15 @@ namespace list
                 longestDesciption = ei.Max(r => r.FileTypeDescription.Length);
 
             int maxPos = 9 + longestSize + 1 + longestName + 1 + longestShortOwner + 1 + (longestDesciption != 0 ? longestDesciption + 1 : 0) + (longestEncoding != 0 ? longestEncoding + 1 : 0);
+
+            if (ShowHeader)
+            {
+                string owner = ShowLongOwner ? "Owner".PadRight(longestLongOwner) : "Owner".PadRight(longestShortOwner);
+                string size = "Size".PadRight(longestSize);
+                string header = $"Attrib.  {owner} Date   Time  {size}  Filename";
+                Console.WriteLine(header);
+                Console.WriteLine("".PadLeft(header.Length,'-'));
+            }
 
             foreach (FilesystemEntryInfo e in SortFileSystemList(ei))
             {

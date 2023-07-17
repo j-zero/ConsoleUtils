@@ -72,7 +72,7 @@ namespace ed
                     from = 0;
                 PrintLines();
             }
-            if (cki.Key == ConsoleKey.PageDown)
+            if (cki.Key == ConsoleKey.PageDown || cki.Key == ConsoleKey.Spacebar)
             {
                 backup_from = from;
                 from = current_last_line - 1;

@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seek", "seek\seek.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{A625D241-04EF-4571-A0D6-66292755CDAB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chaos", "chaos\chaos.csproj", "{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -269,6 +271,14 @@ Global
 		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|x64.ActiveCfg = Release|Any CPU
 		{A625D241-04EF-4571-A0D6-66292755CDAB}.Release|x64.Build.0 = Release|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Debug|x64.Build.0 = Debug|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Release|x64.ActiveCfg = Release|Any CPU
+		{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

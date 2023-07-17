@@ -204,9 +204,7 @@ namespace bits
                 }
                 catch
                 {
-                    Console.WriteLine($"{"interpretation".Pastel(color1)}: string");
-                    Console.WriteLine($"{"chars".Pastel(color1)} : {data.Length}");
-                    Console.WriteLine($"{"words".Pastel(color1)} : {StringHelper.CountWords(data)}");
+                    ParseString(data);
                 }
 
                 
@@ -445,7 +443,72 @@ namespace bits
             return "n/a";
         }
 
+        public static void ParseString(string data)
+        {
+            bool hasInterpretation = false;
 
+            Console.WriteLine($"{"interpretation".Pastel(color1)}: string");
+            Console.WriteLine($"{"chars".Pastel(color1)}: {data.Length}");
+            Console.WriteLine($"{"words".Pastel(color1)}: {StringHelper.CountWords(data)}");
+            Console.WriteLine($"{"rot13".Pastel(color1)}: {Rot13(data)}");
+            Console.WriteLine();
+
+            try
+            {
+
+                byte[] bse64Data = FormatAndDecodeMalformedBase64(data, out string fixed_input);
+                if (bse64Data.Length > 0)
+                {
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: base64 encoded data");
+                    if (fixed_input != null)
+                    {
+                        Console.WriteLine($"{"info".Pastel(color1)}: base64 had bad padding, fixed to: ");
+                        Console.WriteLine($"{fixed_input.Pastel(ColorTheme.OffsetColor)}");
+                    }
+                    Console.WriteLine($"{"content length".Pastel(color1)}: {bse64Data.Length}");
+                    Console.WriteLine($"{"content".Pastel(color1)}: ");
+                    ConsoleHelper.HexDump(bse64Data);
+                    hasInterpretation = true;
+                }
+            }
+            catch
+            {
+
+            }
+
+
+
+        }
+
+        public static byte[] FormatAndDecodeMalformedBase64(string input, out string fixed_input)
+        {
+            char pad = '=';
+            int padLength = 0;
+            fixed_input = null;
+
+            if (input.Length % 4 != 0) // try fix padding
+            {
+                padLength = input.Length + (input.Length % 4);
+                input = input.PadRight(padLength, pad);
+                fixed_input = input;
+            }
+
+            try
+            {
+
+                byte[] bse64Data = Convert.FromBase64String(input);
+
+                return bse64Data;
+            }
+            catch
+            {
+                return new byte[0];
+            }
+
+        }
+
+        // https://stackoverflow.com/a/18739120
+        public static string Rot13(string input) => Regex.Replace(input, "[a-zA-Z]", new MatchEvaluator(c => ((char)(c.Value[0] + (Char.ToLower(c.Value[0]) >= 'n' ? -13 : 13))).ToString()));
 
         static void ShowHelp(bool more = true)
         {

@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace gremlins
 {
-    internal class Program
+    internal class gremlins
     {
         static CmdParser cmd;
         static int defaultLineCount = 10;

@@ -10,7 +10,7 @@ using System.Globalization;
 
 namespace bits
 {
-    internal class Program
+    internal class bits
     {
        // static long firstTick = 621355968000000000;
 
@@ -87,10 +87,17 @@ namespace bits
             if (data.ToLower().StartsWith("0x") || data.ToLower().StartsWith("#") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
             {
                 // hex
-                Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
+                
 
                 if (data.ToLower().StartsWith("0x"))
-                    success = double.TryParse(data.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
+                {
+                    string hexdata = data.Substring(2);
+                    ulong va = 0;
+                    success = ulong.TryParse(hexdata, System.Globalization.NumberStyles.HexNumber, null, out va);
+                    if(success)
+                        Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
+                    value = (double)va;
+                }
                 else if (data.ToLower().StartsWith("#"))
                     success = double.TryParse(data.Substring(1), System.Globalization.NumberStyles.HexNumber, null, out value);
                 else
@@ -112,7 +119,7 @@ namespace bits
                     si_interpret_val *= 1000;
 
                 value = si_interpret_val;
-
+                success = true;
             }
 
             else if (HasByteSuffix(data, out double byte_interpret_value, out string byte_suffix, out isBits))
@@ -205,6 +212,7 @@ namespace bits
                 catch
                 {
                     ParseString(data);
+                    success = true;
                 }
 
                 
@@ -212,6 +220,10 @@ namespace bits
 
                 return false;
             }
+
+
+            if (!success)
+                Die("Can't parse input.",255);
 
             long int_value = (long)value;
 
@@ -445,7 +457,6 @@ namespace bits
 
         public static void ParseString(string data)
         {
-            bool hasInterpretation = false;
 
             Console.WriteLine($"{"interpretation".Pastel(color1)}: string");
             Console.WriteLine($"{"chars".Pastel(color1)}: {data.Length}");
@@ -468,12 +479,13 @@ namespace bits
                     Console.WriteLine($"{"content length".Pastel(color1)}: {bse64Data.Length}");
                     Console.WriteLine($"{"content".Pastel(color1)}: ");
                     ConsoleHelper.HexDump(bse64Data);
-                    hasInterpretation = true;
+
                 }
+
             }
             catch
             {
-
+                
             }
 
 
@@ -551,5 +563,13 @@ namespace bits
             }
             Environment.Exit(exitCode);
         }
+
+        public static void Die(string msg, int errorcode)
+        {
+            //ShowVersion();
+            ConsoleHelper.WriteError(msg);
+            Environment.Exit(errorcode);
+        }
+
     }
 }

@@ -14,23 +14,21 @@ namespace tulpn
         static void Main(string[] args)
         {
             var table = TCPTable.GetAllTcpConnections();
-            int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
+            int maxDescLength = Console.WindowWidth - Console.CursorLeft;
             foreach (var t in table)
             {
                 var cmdline = GetCommandLine(t.owningPid);
 
                 if (t.state == TCPTable.TCP_STATE.MIB_TCP_STATE_LISTEN)
                 {
-                    Console.Write($"{t.LocalIP.Pastel(ColorTheme.Default1)}{":".Pastel(ColorTheme.Default2)}{t.LocalPort.ToString().PadRight(5, ' ').Pastel(ColorTheme.Default1)}");
+                   
+                    Console.Write($"{t.LocalIP.Pastel(ColorTheme.Default1)}{":".Pastel(ColorTheme.Default2)}{t.LocalPort.ToString().Pastel(ColorTheme.Default1)}");
                     
                     // REMOTE
-                    //Console.Write($"> {t.RemoteIP.Pastel(ColorTheme.Default1)}{":".Pastel(ColorTheme.Default2)}{t.RemotePort.ToString().PadRight(5, ' ').Pastel(ColorTheme.Default1)}");
+                    //Console.Write($" <-> {t.RemoteIP.Pastel(ColorTheme.Default1)}{":".Pastel(ColorTheme.Default2)}{t.RemotePort.ToString().PadRight(5, ' ').Pastel(ColorTheme.Default1)}");
                     if (cmdline != null)
                     {
-
                         Console.Write($"\n{cmdline}".Pastel(ColorTheme.Comment));
-                        ///ConsoleHelper.WriteSplittedText(cmdline, maxDescLength, "   ", 4, ColorTheme.Comment);
-
                     }
                     Console.WriteLine();
                 }

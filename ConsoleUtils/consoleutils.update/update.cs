@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,24 +21,160 @@ namespace consoleutils.update
         static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         static bool _debug = false;
         static bool _result = false;
-        static string filename = "";
+        static string _filename = "";
+        static string _asm_filename = "consoleutils.update.exe";
+        static string color1 = "#fbb539";
+        static string color2 = "#e85d04";
 
         static DateTime _startedAt;
-        static string filePath = Path.GetTempFileName();
+        static string tmpFile = "";
+        static string tmpDir = "";
 
         public static void Update()
         {
-            Console.WriteLine($"Downloading \"{URL}\" to \"{filePath}\"...");
-            if (StartDownloadFile(new Uri(URL), filePath, 5000))
+            Console.WriteLine($"[{"*".Pastel(color1)}] downloading \"{URL}\"");
+            Console.WriteLine($"[{"*".Pastel(color1)}] to \"{tmpFile}\"...");
+            if (StartDownloadFile(new Uri(URL), tmpFile, 5000))
             {
-                Console.WriteLine($"Extracting to \"{AssemblyDirectory}\"");
+              
+                string newAsm = "";
+                if (ExtractSingleFileFromZIP(tmpFile, _asm_filename, tmpDir)) // get fresh uploader from zip
+                {
+                    Console.WriteLine($"[{"*".Pastel(color1)}] extracting updater to \"{tmpDir}\"");
+                    newAsm = Path.Combine(tmpDir, _asm_filename);
+                    
+                }
+                else // copy myself to update
+                {
+                    Console.WriteLine($"[{"*".Pastel(color1)}] copying updater to \"{tmpDir}\"");
+                    newAsm = Path.Combine(tmpDir, _asm_filename);
+                    File.Copy(Assembly.GetExecutingAssembly().Location, newAsm, true);
+
+                }
+
+                
+                Console.Write($"[{"*".Pastel(color1)}] running updater \"{newAsm}\" ... ");
+
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.StartInfo.FileName = newAsm;
+                proc.StartInfo.Arguments = $"extract \"{tmpFile}\" \"{AssemblyDirectory}\""; // ugly as fuck?
+                proc.StartInfo.UseShellExecute = true;
+
+                if (proc.Start())
+                    Console.WriteLine($"{"success!".Pastel(color1)}");
+                else
+                    Console.WriteLine($"{"failed!".Pastel(color2)}");
+
+                //File.Delete(tmpFile);
+                //Directory.Delete(tmpDir, true);
                 ;
             }
+
+        }
+
+        static void ShowVersion()
+        {
+            string version_string = ("v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString() + "").PadRight(20);
+
+            Console.WriteLine(@"▄█▄    ████▄    ▄      ▄▄▄▄▄   ████▄ █     ▄███▄     ▄     ▄▄▄▄▀ ▄█ █      ▄▄▄▄▄   ".Pastel("#fbb539"));
+            Console.WriteLine(@"█▀ ▀▄  █   █     █    █     ▀▄ █   █ █     █▀   ▀     █ ▀▀▀ █    ██ █     █     ▀▄ ".Pastel("#faa307"));
+            Console.WriteLine(@"█   ▀  █   █ ██   █ ▄  ▀▀▀▀▄   █   █ █     ██▄▄    █   █    █    ██ █   ▄  ▀▀▀▀▄   ".Pastel("#f48c06"));
+            Console.WriteLine(@"█▄  ▄▀ ▀████ █ █  █  ▀▄▄▄▄▀    ▀████ ███▄  █▄   ▄▀ █   █   █     ▐█ ███▄ ▀▄▄▄▄▀    ".Pastel("#e85d04"));
+            Console.WriteLine(@"▀███▀        █  █ █                      ▀ ▀███▀   █▄ ▄█  ▀       ▐     ▀          ".Pastel("#dc2f02"));
+            Console.WriteLine((@"             █   ██   Updater " + version_string + @" ▀▀▀                            ").Pastel("#d00000"));
         }
 
         static void Main(string[] args)
         {
-            Update();
+
+
+            if (args.Length == 0)
+            {
+                string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color1);
+                Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                tmpFile = Path.GetTempFileName();
+                tmpDir = Path.Combine(Path.GetTempPath());
+                Update();
+            }
+            else if (args.Length == 3)
+            {
+   
+                if (args[0] == "extract")
+                {
+                    //Console.WriteLine(args[1]);
+                    //Console.WriteLine(args[2]);
+
+                    try
+                    {
+                        Console.WriteLine($"[{"*".Pastel(color1)}] extracting \"{args[1]}\"");
+                        Console.WriteLine($"[{"*".Pastel(color1)}] to \"{args[2]}\"...");
+                        ExtractAllFilesFromZIP(args[1], args[2], true);
+                        Console.WriteLine($"\r[{"*".Pastel(color1)}] deleting temporary files ...");
+                        File.Delete(args[1]);
+                        Console.WriteLine($"[{"*".Pastel(color1)}] done!\n") ;
+                        
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine($"[{"E".Pastel(color2)}] {e.Message}");
+
+                    }
+
+                }
+                ShowVersion();
+                Console.Error.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+                Environment.Exit(0);
+            }
+
+        }
+
+        static bool ExtractSingleFileFromZIP(string zipPath, string fileToExtract, string extractPath)
+        {
+            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+            {
+                foreach (ZipArchiveEntry entry in archive.Entries.Where(e => e.FullName.ToLower() == fileToExtract))
+                {
+                    string tmpPath = Path.Combine(extractPath, entry.FullName);
+                    entry.ExtractToFile(tmpPath,true);
+                    return File.Exists(tmpPath);
+                }
+            }
+            return false;
+
+        }
+
+        static bool ExtractAllFilesFromZIP(string zipPath, string extractPath, bool verbose)
+        {
+            try
+            {
+                using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        Console.WriteLine($"[{"*".Pastel(color1)}] extracting \"{entry.FullName}\" to \"{extractPath}\"");
+                        string tmpPath = Path.Combine(extractPath, entry.FullName);
+
+                        string fullPath = Path.GetFullPath(Path.Combine(extractPath, entry.FullName));
+
+                        if (Path.GetFileName(fullPath).Length != 0)
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                            // The boolean parameter determines whether an existing file that has the same name as the destination file should be overwritten
+                            entry.ExtractToFile(fullPath, true);
+                        }
+
+                       
+                    }
+                }
+                return true;
+            }
+            catch(Exception ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                return false;
+            }
+
         }
 
 
@@ -48,6 +187,12 @@ namespace consoleutils.update
                 string path = Uri.UnescapeDataString(uri.Path);
                 return Path.GetDirectoryName(path);
             }
+        }
+        public static string GetTemporaryDirectory()
+        {
+            string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDirectory);
+            return tempDirectory;
         }
 
         private static bool StartDownloadFile(Uri uri, string path, int timeout)
@@ -112,7 +257,7 @@ namespace consoleutils.update
             string readableBytes = CalculateHumanReadableSize((ulong)e.BytesReceived);
             string readableBytesTotal = CalculateHumanReadableSize((ulong)e.TotalBytesToReceive, 1024, 1, true);
 
-            Console.Write($"\r{filename} -> {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
+            Console.Write($"\r[{"*".Pastel(color1)}] progress: {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
         }
 
         private static void WebClientDownloadCompleted(object sender, AsyncCompletedEventArgs args)
@@ -153,7 +298,7 @@ namespace consoleutils.update
             }
             else
             {
-                Console.WriteLine(Environment.NewLine + "Download finished!");
+                Console.WriteLine(Environment.NewLine + $"[{"*".Pastel(color1)}] download finished!");
                 _result = true;
             }
 

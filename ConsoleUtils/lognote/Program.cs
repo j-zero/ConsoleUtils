@@ -13,22 +13,27 @@ namespace lognote
 {
     internal class Program
     {
+        static string color1 = "cb997e";
+        static string color2 = "b7b7a4";
         //static bool debug = false;
         static bool exit = false;
-        static string prompt = " $ ".Pastel(ColorTheme.OffsetColor);
+        static string prompt = " $ ".Pastel(color1);
         static string thema = "notes";
         static string dateTimeFormat = "yyyy'-'MM'-'dd' 'HH':'mm':'ss";
         static char cmdSeperator = ' ';
         static string folder = "";
 
 
+
+
         [STAThread] // needed for clipboard data
         static void Main(string[] args)
         {
-
+            Console.Clear();
+            ShowVersion();
             //var f = Environment.CommandLine;
             //Console.WriteLine(f);
-            
+
             // setup
             folder = PathHelper.GetSpecialFolder(Environment.SpecialFolder.MyDocuments, "LogNote");
 
@@ -52,7 +57,7 @@ namespace lognote
             do
             {
 
-                string line = ReadLine.Read($"{thema.Pastel(ColorTheme.OffsetColorHighlight)}{prompt}");
+                string line = ReadLine.Read($"{thema.Pastel(color2)}{prompt}");
                 if (!string.IsNullOrWhiteSpace(line))
                 {
                     ParseLine(line);
@@ -125,7 +130,7 @@ namespace lognote
                 {
                     string[] dirs = Globals.db.GetAllThemas();
                     foreach(string dir in dirs)
-                        Console.WriteLine(dir.Pastel(ColorTheme.Default2));
+                        Console.WriteLine(dir.Pastel(color2));
                 }
                 else if (cmd.StartsWith(":cat"))
                 {
@@ -164,7 +169,7 @@ namespace lognote
                 {
                     thema = parts.FirstOrDefault();
                     SaveLastThema(thema);
-                    //Console.WriteLine($"Switched to {thema.Pastel(ColorTheme.Default1)}");
+                    //Console.WriteLine($"Switched to {thema.Pastel(color1)}");
                 }
 
                 
@@ -183,20 +188,30 @@ namespace lognote
 
         static void ShowHelp()
         {
-            Console.WriteLine(":".Pastel(ColorTheme.Default2) + "COMMAND".Pastel(ColorTheme.Default1));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "q".Pastel(ColorTheme.Default1) + "[".Pastel(ColorTheme.DarkText) + "uit".Pastel(ColorTheme.Default2) + "]".Pastel(ColorTheme.DarkText) + "     - quits this application".Pastel(ColorTheme.Text));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "i".Pastel(ColorTheme.Default1) + "[".Pastel(ColorTheme.DarkText) + "mage".Pastel(ColorTheme.Default2) + "]".Pastel(ColorTheme.DarkText) + "    - saves screenshot from clipboard".Pastel(ColorTheme.Text));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "clear".Pastel(ColorTheme.Default1) + "      - clears current console".Pastel(ColorTheme.Text));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "l".Pastel(ColorTheme.Default1) + "[".Pastel(ColorTheme.DarkText) + "ist".Pastel(ColorTheme.Default2) + "]".Pastel(ColorTheme.DarkText) + "|".Pastel(ColorTheme.Text) + "ls".Pastel(ColorTheme.Default1) + "  - list all themes".Pastel(ColorTheme.Text));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "cat".Pastel(ColorTheme.Default1) + "        - shows current content".Pastel(ColorTheme.Text));
-            Console.WriteLine("\t" + ":".Pastel(ColorTheme.Default2) + "open".Pastel(ColorTheme.Default1) + "       - open current folder".Pastel(ColorTheme.Text));
+            Console.WriteLine(":".Pastel(color2) + "COMMAND".Pastel(color1));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "q".Pastel(color1) + "[".Pastel(ColorTheme.DarkText) + "uit".Pastel(color2) + "]".Pastel(ColorTheme.DarkText) + "     - quits this application".Pastel(ColorTheme.Text));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "i".Pastel(color1) + "[".Pastel(ColorTheme.DarkText) + "mage".Pastel(color2) + "]".Pastel(ColorTheme.DarkText) + "    - saves screenshot from clipboard".Pastel(ColorTheme.Text));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "clear".Pastel(color1) + "      - clears current console".Pastel(ColorTheme.Text));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "l".Pastel(color1) + "[".Pastel(ColorTheme.DarkText) + "ist".Pastel(color2) + "]".Pastel(ColorTheme.DarkText) + "|".Pastel(ColorTheme.Text) + "ls".Pastel(color1) + "  - list all themes".Pastel(ColorTheme.Text));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "cat".Pastel(color1) + "        - shows current content".Pastel(ColorTheme.Text));
+            Console.WriteLine("\t" + ":".Pastel(color2) + "open".Pastel(color1) + "       - open current folder".Pastel(ColorTheme.Text));
             Console.WriteLine();
-            Console.WriteLine("#".Pastel(ColorTheme.Default2) + "THEME".Pastel(ColorTheme.Default1) + ", switches to theme " + "COMMAND".Pastel(ColorTheme.Default1) + ".");
-            Console.WriteLine("\t" + "#".Pastel(ColorTheme.Default2) + "theme".Pastel(ColorTheme.Default1) + " " + "[".Pastel(ColorTheme.DarkText) + "text".Pastel(ColorTheme.Default2) + "]".Pastel(ColorTheme.DarkText) + " - adds text to theme.".Pastel(ColorTheme.Text));
+            Console.WriteLine("#".Pastel(color2) + "THEME".Pastel(color1) + ", switches to theme " + "COMMAND".Pastel(color1) + ".");
+            Console.WriteLine("\t" + "#".Pastel(color2) + "theme".Pastel(color1) + " " + "[".Pastel(ColorTheme.DarkText) + "text".Pastel(color2) + "]".Pastel(ColorTheme.DarkText) + " - adds text to theme.".Pastel(ColorTheme.Text));
 
         }
 
+        static void ShowVersion()
+        {
+            Console.WriteLine(@"█    ████▄   ▄▀     ▄   ████▄    ▄▄▄▄▀ ▄███▄   ".Pastel("#b98b73"));
+            Console.WriteLine(@"█    █   █ ▄▀        █  █   █ ▀▀▀ █    █▀   ▀  ".Pastel("#cb997e"));
+            Console.WriteLine(@"█    █   █ █ ▀▄  ██   █ █   █     █    ██▄▄    ".Pastel("#ddbea9"));
+            Console.WriteLine(@"███▄ ▀████ █   █ █ █  █ ▀████    █     █▄   ▄▀ ".Pastel("#ffe8d6"));
+            Console.WriteLine(@"    ▀       ███  █  █ █         ▀      ▀███▀   ".Pastel("#d4c7b0"));
+            Console.WriteLine((@"                 █   ██  v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel("#b7b7a4"));
 
+            Console.WriteLine($"{"lognote".Pastel(color1)} is part of " + ConsoleHelper.GetVersionString(color2, color2));
+        }
 
 
 

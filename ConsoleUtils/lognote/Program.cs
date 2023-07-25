@@ -97,7 +97,7 @@ namespace lognote
 
         static void ParseLine(string line)
         {
-            string cmd = line.Trim();
+            string cmd = line.Trim().ToLower();
             if (cmd == "?")
             {
                 ShowHelp();

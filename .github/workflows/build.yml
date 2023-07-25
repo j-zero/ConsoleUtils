@@ -35,7 +35,7 @@ jobs:
     - name: Display structure of downloaded files
       run: ls -R
     - name: Create Version File
-      run: git --describe tags > VERSION
+      run: git describe --tags > VERSION
     - name: Release
       uses: softprops/action-gh-release@v1
       with:

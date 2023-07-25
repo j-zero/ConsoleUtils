@@ -1,11 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
 public class PathHelper
 {
+    public static string AssemblyDirectory
+    {
+        get
+        {
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            return Path.GetDirectoryName(path);
+        }
+    }
     public static string GetSpecialFolder(Environment.SpecialFolder Folder, string FolderName, string prefix = "")
     {
         string folder = GuaranteeBackslash(Path.Combine(Environment.GetFolderPath(Folder), prefix, FolderName));

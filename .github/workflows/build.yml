@@ -34,8 +34,6 @@ jobs:
       run: zip ConsoleUtils.zip ./* -r
     - name: Display structure of downloaded files
       run: ls -R
-    - name: Create Version File
-      run: git describe --tags > VERSION
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
@@ -66,6 +64,8 @@ jobs:
         working-directory: ./ConsoleUtils
       - name: Show Builddir
         run: ls ./bin
+      - name: Create Version File
+        run: git describe --tags > ./bin/VERSION
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:

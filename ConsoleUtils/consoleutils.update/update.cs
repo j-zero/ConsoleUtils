@@ -81,7 +81,7 @@ namespace consoleutils.update
             Console.WriteLine(@"█   ▀  █   █ ██   █ ▄  ▀▀▀▀▄   █   █ █     ██▄▄    █   █    █    ██ █   ▄  ▀▀▀▀▄   ".Pastel("#f48c06"));
             Console.WriteLine(@"█▄  ▄▀ ▀████ █ █  █  ▀▄▄▄▄▀    ▀████ ███▄  █▄   ▄▀ █   █   █     ▐█ ███▄ ▀▄▄▄▄▀    ".Pastel("#e85d04"));
             Console.WriteLine(@"▀███▀        █  █ █                      ▀ ▀███▀   █▄ ▄█  ▀       ▐     ▀          ".Pastel("#dc2f02"));
-            Console.WriteLine((@"             █   ██   Updater " + version_string + @" ▀▀▀                            ").Pastel("#d00000"));
+            Console.WriteLine((@"             █   ██   Updater " + version_string.Pastel(color1) + @" ▀▀▀ ").Pastel("#d00000") + "https://github.com/j-zero/ConsoleUtils".Pastel(color2));
         }
 
         static void Main(string[] args)
@@ -90,7 +90,7 @@ namespace consoleutils.update
 
             if (args.Length == 0)
             {
-                string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color1);
+                string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color2) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color1) + ")";
                 Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
                 tmpFile = Path.GetTempFileName();
                 tmpDir = Path.Combine(Path.GetTempPath());
@@ -122,7 +122,7 @@ namespace consoleutils.update
 
                 }
                 ShowVersion();
-                Console.Error.WriteLine("Press any key to exit...");
+                Console.Error.WriteLine($"[{"*".Pastel(color1)}] Press any key to exit...");
                 Console.ReadKey();
                 Environment.Exit(0);
             }

@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime;
 using System.Security.Cryptography;
@@ -18,6 +19,8 @@ namespace consoleutils.update
     internal class update
     {
         static string URL = "https://github.com/j-zero/ConsoleUtils/releases/latest/download/ConsoleUtils.zip";
+        static string VersionURL = "https://github.com/j-zero/ConsoleUtils/releases/latest/download/VERSION";
+
         static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         static bool _debug = false;
         static bool _result = false;
@@ -32,6 +35,7 @@ namespace consoleutils.update
 
         public static void Update()
         {
+            
             Console.WriteLine($"[{"*".Pastel(color1)}] downloading \"{URL}\"");
             Console.WriteLine($"[{"*".Pastel(color1)}] to \"{tmpFile}\"...");
             if (StartDownloadFile(new Uri(URL), tmpFile, 5000))
@@ -84,21 +88,61 @@ namespace consoleutils.update
             Console.WriteLine((@"             █   ██   Updater " + version_string.Pastel(color1) + @" ▀▀▀ ").Pastel("#d00000") + "https://github.com/j-zero/ConsoleUtils".Pastel(color2));
         }
 
+        static bool CheckForNewVersion(out string LocalVersion, out string RemoteVersion) 
+        {
+            RemoteVersion = new WebClient().DownloadString(VersionURL).Replace("v", "").Trim();
+            string versionFile = Path.Combine(AssemblyDirectory, "VERSION");
+
+
+            if (File.Exists(versionFile)) {
+                LocalVersion = File.ReadAllText(versionFile).Replace("v", "").Trim();
+            }
+            else
+                LocalVersion = "0.0.0.0";
+
+            var version1 = new Version(LocalVersion);
+            var version2 = new Version(RemoteVersion);
+
+            var result = version1.CompareTo(version2);
+            if (result > 0)
+                return false; // Console.WriteLine("version1 is greater");
+            else if (result < 0)
+                return true;//Console.WriteLine("version2 is greater");
+            else
+                return false; // Console.WriteLine("versions are equal");
+
+        }
+
         static void Main(string[] args)
         {
-
+            string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color2) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color1) + ")";
+            Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
 
             if (args.Length == 0)
             {
-                string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color2) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color1) + ")";
-                Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                string localVersion;
+                string remoteVersion;
+                if(CheckForNewVersion(out localVersion,out remoteVersion))
+                {
+                    Console.WriteLine($"[{"*".Pastel(color1)}] new release available: {remoteVersion.Pastel(color1)}");
+                    Console.WriteLine($"[{"*".Pastel(color1)}] run {"consoleutils.update".Pastel(color1)} {"upgrade".Pastel(color2)} for upgrading");
+                }
+                else
+                {
+                    Console.WriteLine($"[{"*".Pastel(color1)}] you run the latest release");
+                    //Console.WriteLine($"Your version: {localVersion} Remote version: {remoteVersion}");
+                }
+            }
+            else if (args.Length == 1 && args[0] == "upgrade")
+            {
+
                 tmpFile = Path.GetTempFileName();
                 tmpDir = Path.Combine(Path.GetTempPath());
                 Update();
             }
             else if (args.Length == 3)
             {
-   
+
                 if (args[0] == "extract")
                 {
                     //Console.WriteLine(args[1]);
@@ -111,8 +155,8 @@ namespace consoleutils.update
                         ExtractAllFilesFromZIP(args[1], args[2], true);
                         Console.WriteLine($"\r[{"*".Pastel(color1)}] deleting temporary files ...");
                         File.Delete(args[1]);
-                        Console.WriteLine($"[{"*".Pastel(color1)}] done!\n") ;
-                        
+                        Console.WriteLine($"[{"*".Pastel(color1)}] done!\n");
+
                     }
                     catch (Exception e)
                     {

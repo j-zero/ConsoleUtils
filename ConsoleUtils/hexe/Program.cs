@@ -329,17 +329,17 @@ namespace hexe
                 else if (cmd["file"].Strings.Length > 0 && cmd["file"].Strings[0] != null)
                 {
                     string path = cmd["file"].Strings[0];
-                    if (File.Exists(path))
-                    {
+                    //if (File.Exists(path))
+                    //{
                         foreach (Selection s in parts)
                         {
                             Blob b = ReadFile(path, s.Offset, s.Length);
                             if (b != null)
                                 data.Add(b); // needs to skip
                         }
-                    }
-                    else
-                        throw new Exception($"File \"{path}\" not found!");
+                    //}
+                    //else
+                    //    throw new Exception($"File \"{path}\" not found!");
 
                 }
                 else if (cmd["input"].StringIsNotNull)
@@ -493,96 +493,71 @@ namespace hexe
         static Blob ReadFile(string path, long offset = 0, long length = 0)
         {
             byte[] result = new byte[0];
+            int idx = path.LastIndexOf(':');
+            long size = 0;
 
-            if (File.Exists(path))
+
+            FileStream fds;
+
+            if (idx != -1 && idx != 2) // Alternate File Stream
             {
-                if (offset == 0 && length == 0)
+                string filename = path.Substring(0, idx);
+                string datastream = path.Substring(idx + 1);
+                if (File.Exists(filename))
                 {
-                    result = File.ReadAllBytes(path);
+
+                    var fdss = new FileInfo(filename).GetDataStreams().Where(c => c.Name == datastream || c.Name == datastream + ":$DATA");
+
+                    if (fdss == null)
+                        throw new Exception($"Alternate data stream \"{path}\" not found!");
+
+                    FileDataStream fileDataStream = fdss.First();
+                    size = fileDataStream.Length;
+                    fds = fileDataStream.OpenRead();
                 }
                 else
-                {
-                    long size = new FileInfo(path).Length;
-
-                    if (offset < 0)
-                        offset = size + offset;
-
-                    if (offset < 0)
-                        return null;
-
-                    if (length == 0)
-                    {
-                        length = (int)size - offset;
-                    }
-
-                    
-                    if (offset > size)
-                        throw new Exception("Offset out of range.");
-                    if (offset + length > size)
-                        length = (int)size - offset;
-
-                    result = new byte[length];
-
-                    using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
-                    {
-                        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
-                        reader.Read(result, 0, (int)length);
-                    }
-                }
+                    throw new Exception($"File \"{path}\" not found!");
             }
-            else {
-
-                int idx = path.LastIndexOf(':');
-                if (idx != -1 && idx != 2)
+            else
+            {
+                if (File.Exists(path))
                 {
-                    string filename = path.Substring(0, idx);
-                    string datastream = path.Substring(idx + 1);
-                    if (File.Exists(filename))
-                    {
-
-                        var fdss = new FileInfo(filename).GetDataStreams().Where(c => c.Name == datastream || c.Name == datastream + ":$DATA");
-
-                        if(fdss == null)
-                            throw new Exception($"Alternate data stream \"{path}\" not found!");
-
-                        var fds = fdss.First();
-
-                        long size = fds.Length;
-
-                        if (offset < 0)
-                            offset = size + offset;
-
-                        if (offset < 0)
-                            return null;
-
-                        if (length == 0)
-                        {
-                            length = (int)size - offset;
-                        }
-
-
-                        if (offset > size)
-                            throw new Exception("Offset out of range.");
-                        if (offset + length > size)
-                            length = (int)size - offset;
-
-                        result = new byte[length];
-
-                        using (BinaryReader reader = new BinaryReader(fds.OpenRead()))
-                        {
-                            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
-                            reader.Read(result, 0, (int)length);
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception($"File \"{path}\" not found!");
-                    }
-                    
-
+                    fds = new FileStream(path, FileMode.Open);
+                    size = new FileInfo(path).Length;
                 }
-                    
+                else
+                    throw new Exception($"File \"{path}\" not found!");
+
             }
+
+
+
+            if (offset < 0)
+                offset = size + offset;
+
+            if (offset < 0)
+                return null;
+
+            if (length == 0)
+            {
+                length = (int)size - offset;
+            }
+
+
+            if (offset > size)
+                throw new Exception("Offset out of range.");
+            if (offset + length > size)
+                length = (int)size - offset;
+
+            result = new byte[length];
+
+            using (BinaryReader reader = new BinaryReader(fds))
+            {
+                reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+                reader.Read(result, 0, (int)length);
+            }
+
+            fds.Close();
 
             return new Blob((int)offset, result);
         }

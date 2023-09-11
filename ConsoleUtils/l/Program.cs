@@ -688,19 +688,64 @@ namespace list
                                                 {
                                                     string content = reader.ReadToEnd();
 
-                                                    var pattern = @"HostUrl=(.*)";
-                                                    var match = Regex.Match(content, pattern,RegexOptions.Multiline);
+                                                    string zoneID = null;
+                                                    string hostUrl = null;
+
+                                                    string zoneIdStr = null;
+                          
+                                                    var pattern = @"ZoneId=(\d)";
+                                                    var match = Regex.Match(content, pattern, RegexOptions.Multiline);
                                                     if (match.Success)
                                                     {
-                                                        var hostUrl = match.Groups[1].Value;
-                                                        ConsoleHelper.WriteSplittedText(hostUrl, maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
+                                                        zoneID = match.Groups[1].Value;
+                                                        switch (zoneID)
+                                                        {
+                                                            case "0":
+                                                                zoneIdStr = "locale machine";
+                                                                break;
+                                                            case "1":
+                                                                zoneIdStr = "local intranet";
+                                                                break;
+                                                            case "2":
+                                                                zoneIdStr = "trusted sites";
+                                                                break;
+                                                            case "3":
+                                                                zoneIdStr = "Internet";
+                                                                break;
+                                                            case "4":
+                                                                zoneIdStr = "restricted sites";
+                                                                break;
+                                                            default:
+                                                            
+                                                                break;
+
+                                                        }
+                                                    }
+
+                                                    pattern = @"HostUrl=(.*)";
+                                                    match = Regex.Match(content, pattern,RegexOptions.Multiline);
+
+                                                    if (match.Success)
+                                                        hostUrl = match.Groups[1].Value;
+
+
+                                                    if (zoneIdStr != null)
+                                                    {
+                                                        ConsoleHelper.WriteSplittedText($"Zone: {zoneID}, {zoneIdStr}", maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
                                                         Console.WriteLine();
                                                     }
+
+                                                    if (hostUrl != null)
+                                                        ConsoleHelper.WriteSplittedText($"Host URL: {hostUrl}", maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
+                                                    else
+                                                        ConsoleHelper.WriteSplittedText($"Host URL: <empty>", maxDescLength - 4, prefix, filepos + 4, ColorTheme.Comment);
+
+                                                    Console.WriteLine();
                                                 }
                                             }
                                             catch
                                             {
-                                                ;
+                                                ; // Console.WriteLine("Empty Zone Identifier?!");
                                             }
                                         }
                                         else

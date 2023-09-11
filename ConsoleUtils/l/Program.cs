@@ -314,7 +314,7 @@ namespace list
 
             OrderBy orderBy = (OrderBy)Enum.Parse(typeof(OrderBy), cmdSortString);
 
-            if (cmd.HasFlag("group-directories-first"))
+            if (cmd.HasFlag("group-directories-first") || cmd.HasFlag("full"))
             {
                 var dirs = SortFileSystemList(ei.Where(o => o.IsDirectory).ToList(), orderBy);
                 var files = SortFileSystemList(ei.Where(o => !o.IsDirectory).ToList(), orderBy);

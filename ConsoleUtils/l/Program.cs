@@ -54,6 +54,7 @@ namespace list
 
                 {"info","i", CmdCommandTypes.FLAG, "show magic file description"},
                 {"streams","R", CmdCommandTypes.FLAG, "show NTFS alternate file streams"},
+                {"bytes","B", CmdCommandTypes.FLAG, "show size in bytes"},
 
                 {"full","F", CmdCommandTypes.FLAG, "show all available files and informations"},
 
@@ -62,7 +63,7 @@ namespace list
 
                 { "sort", "s", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, "Name" }
-                }, "sort field" },
+                }, "sort field (name, Name, .name, .Name, size, extension, modified, accessed, created, type)" },
 
                 { "path", "p", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null }
@@ -458,6 +459,8 @@ namespace list
             int longestEncoding = 0;
             int longestDesciption = 0;
 
+            if(cmd.HasFlag("bytes"))
+                longestSize = ei.Max(r => r.Length.ToString().Length); // get number length
 
 
             if (ShowEncoding)
@@ -504,9 +507,7 @@ namespace list
                     mode += e.IsLink ? "l".Pastel(ColorTheme.Symlink) : minus;
                     mode += e.FileType == FileTypes.Executable ? "x".Pastel(e.ColorString) : minus;
 
-
                     Console.Write(mode + " ");
-
 
 
                     string owner = "";
@@ -532,7 +533,10 @@ namespace list
                             Console.Write(encoding);
                         }
 
-                        size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
+                        if(cmd.HasFlag("bytes"))
+                            size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.Length.ToString().PadLeft(longestSize).Pastel(ColorTheme.Default1);
+                        else
+                            size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
                         sizepos = Console.CursorLeft;
                         Console.Write($"{size} ");
                     }

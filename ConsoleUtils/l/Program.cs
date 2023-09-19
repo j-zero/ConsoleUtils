@@ -593,6 +593,13 @@ namespace list
                         ConsoleHelper.WriteSplittedText($"Encoding: " + e.Encoding + "\n", maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
                         ConsoleHelper.WriteSplittedText("Description\n", maxDescLength, prefix, filepos, "808080");
                         ConsoleHelper.WriteSplittedText(e.FileTypeDescription, maxDescLength-2, prefix, filepos+2, ColorTheme.Comment);
+
+                        var netVersion = AssemblyHelper.GetNETVersionFromAssembly(e.FullPath);
+                        if (netVersion != null)
+                        {
+                            ConsoleHelper.WriteSplittedText("\n.NET Version\n", maxDescLength, prefix, filepos, "808080");
+                            ConsoleHelper.WriteSplittedText(netVersion, maxDescLength - 2, prefix, filepos + 2, ColorTheme.Comment);
+                        }
                     }
 
 

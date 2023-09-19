@@ -54,4 +54,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(TargetDir)..\write-version.cmd</PostBuildEvent>
+  </PropertyGroup>
 </Project>

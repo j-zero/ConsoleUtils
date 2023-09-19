@@ -17,3 +17,7 @@ function rdp([string]$server){
 
 # powershell ssh tools
 . "$PSScriptRoot\profile-snippet-sshtools.ps1"
+
+if(Get-Command "consoleutils.update" -erroraction 'silentlycontinue'){
+    consoleutils.update check
+}

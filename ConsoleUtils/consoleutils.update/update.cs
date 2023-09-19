@@ -116,14 +116,16 @@ namespace consoleutils.update
         static void Main(string[] args)
         {
             string version_string = ("ConsoleUtilsUpdater v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()).Pastel(color2) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color1) + ")";
-            Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+            string localVersion;
+            string remoteVersion;
 
             if (args.Length == 0)
             {
-                string localVersion;
-                string remoteVersion;
-                if(CheckForNewVersion(out localVersion,out remoteVersion))
+
+               // Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                if (CheckForNewVersion(out localVersion,out remoteVersion))
                 {
+                    Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
                     Console.WriteLine($"[{"*".Pastel(color1)}] new release available: {remoteVersion.Pastel(color1)}");
                     Console.WriteLine($"[{"*".Pastel(color1)}] run {"consoleutils.update".Pastel(color1)} {"upgrade".Pastel(color2)} for upgrading");
                 }
@@ -131,6 +133,18 @@ namespace consoleutils.update
                 {
                     Console.WriteLine($"[{"*".Pastel(color1)}] you run the latest release");
                     //Console.WriteLine($"Your version: {localVersion} Remote version: {remoteVersion}");
+                }
+            }
+            else if (args.Length == 1 && args[0] == "check")
+            {
+                if (CheckForNewVersion(out localVersion, out remoteVersion))
+                {
+                    //Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                    Console.WriteLine($"\n[{"*".Pastel(color1)}] A new {"ConsoleUtils".Pastel(color1)} release is available at ({"https://github.com/j-zero/ConsoleUtils".Pastel(color1)}):\n    {localVersion.Pastel(color2)} -> {remoteVersion.Pastel(color1)}.\n    Please run {"consoleutils.update".Pastel(color2)} {"upgrade".Pastel(color2)} to upgrade.");
+                }
+                else
+                {
+
                 }
             }
             else if (args.Length == 1 && args[0] == "upgrade")

@@ -32,7 +32,53 @@ public class ConsoleHelper
     static int windowWidth = 120;
     static int windowHeight = 80;
 
+    public enum ConfirmDefault
+    {
+        None, Yes, No
+    }
 
+    public static bool Confirm(string title, ConfirmDefault confirmDefault = ConfirmDefault.None)
+    {
+        ConsoleKey response;
+
+        switch (confirmDefault)
+        {
+            case ConfirmDefault.Yes:
+                do
+                {
+                    Console.Write($"{title} [Y/n] ");
+                    response = Console.ReadKey(false).Key;
+                    if (response == ConsoleKey.Enter)
+                    {
+                        Console.WriteLine();
+                        return true;
+                    }
+                } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                break;
+            case ConfirmDefault.No:
+                do
+                {
+                    Console.Write($"{title} [y/N] ");
+                    response = Console.ReadKey(false).Key;
+                    if (response == ConsoleKey.Enter)
+                    {
+                        Console.WriteLine();
+                        return false;
+                    }
+                } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                break;
+            default:
+                do
+                {
+                    Console.Write($"{title} [y/n] ");
+                    response = Console.ReadKey(false).Key;
+                    Console.WriteLine();
+                } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                break;
+
+        }
+        return (response == ConsoleKey.Y);
+    }
 
     public static void Write(char input)
     {

@@ -121,17 +121,25 @@ namespace consoleutils.update
 
             if (args.Length == 0)
             {
-
-               // Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                ShowVersion();
+                Console.WriteLine("\n");
+                // Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
                 if (CheckForNewVersion(out localVersion,out remoteVersion))
                 {
-                    Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
-                    Console.WriteLine($"[{"*".Pastel(color1)}] new release available: {remoteVersion.Pastel(color1)}");
-                    Console.WriteLine($"[{"*".Pastel(color1)}] run {"consoleutils.update".Pastel(color1)} {"upgrade".Pastel(color2)} for upgrading");
+                    //Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
+                    Console.WriteLine($"[{"*".Pastel(color1)}] A new {"ConsoleUtils".Pastel(color1)} release is available at ({"https://github.com/j-zero/ConsoleUtils".Pastel(color1)}):\n    {localVersion.Pastel(color2)} -> {remoteVersion.Pastel(color1)}.");
+                    Console.Write($"[{"*".Pastel(color1)}] Do you want to upgrade now? (You can upgrade later running {"consoleutils.update upgrade".Pastel(color2)})");
+                    if (Confirm("",ConfirmDefault.No))
+                    {
+                        tmpFile = Path.GetTempFileName();
+                        tmpDir = Path.Combine(Path.GetTempPath());
+                        Update();
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"[{"*".Pastel(color1)}] you run the latest release");
+                    
+                    Console.WriteLine($"[{"*".Pastel(color1)}] You are running the latest release: {localVersion.Pastel(color1)}");
                     //Console.WriteLine($"Your version: {localVersion} Remote version: {remoteVersion}");
                 }
             }
@@ -140,7 +148,7 @@ namespace consoleutils.update
                 if (CheckForNewVersion(out localVersion, out remoteVersion))
                 {
                     //Console.WriteLine($"[{"*".Pastel(color1)}] {version_string}");
-                    Console.WriteLine($"\n[{"*".Pastel(color1)}] A new {"ConsoleUtils".Pastel(color1)} release is available at ({"https://github.com/j-zero/ConsoleUtils".Pastel(color1)}):\n    {localVersion.Pastel(color2)} -> {remoteVersion.Pastel(color1)}.\n    Please run {"consoleutils.update".Pastel(color2)} {"upgrade".Pastel(color2)} to upgrade.");
+                    Console.WriteLine($"\n[{"*".Pastel(color1)}] A new {"ConsoleUtils".Pastel(color1)} release is available at ({"https://github.com/j-zero/ConsoleUtils".Pastel(color1)}):\n    {localVersion.Pastel(color2)} -> {remoteVersion.Pastel(color1)}.\n    Please run {"consoleutils.update".Pastel(color2)} {"upgrade".Pastel(color2)} to upgrade.\n");
                 }
                 else
                 {
@@ -397,6 +405,55 @@ namespace consoleutils.update
 
             return String.Format(CultureInfo.InvariantCulture, "{0:n" + decimalPlaces + "}{1}", adjustedSize, SizeSuffixes[mag]);
 
+        }
+
+        public enum ConfirmDefault
+        {
+            None, Yes, No
+        }
+
+        public static bool Confirm(string title, ConfirmDefault confirmDefault = ConfirmDefault.None)
+        {
+            ConsoleKey response;
+
+            switch (confirmDefault)
+            {
+                case ConfirmDefault.Yes:
+                    do
+                    {
+                        Console.Write($"{title} [Y/n] ");
+                        response = Console.ReadKey(false).Key;
+                        if (response == ConsoleKey.Enter)
+                        {
+                            Console.WriteLine();
+                            return true;
+                        }
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+                case ConfirmDefault.No:
+                    do
+                    {
+                        Console.Write($"{title} [y/N] ");
+                        response = Console.ReadKey(false).Key;
+                        if (response == ConsoleKey.Enter)
+                        {
+                            Console.WriteLine();
+                            return false;
+                        }
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+                default:
+                    do
+                    {
+                        Console.Write($"{title} [y/n] ");
+                        response = Console.ReadKey(false).Key;
+                        Console.WriteLine();
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+
+            }
+            Console.WriteLine();
+            return (response == ConsoleKey.Y);
         }
     }
 }

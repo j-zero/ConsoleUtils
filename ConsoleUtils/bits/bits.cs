@@ -110,55 +110,63 @@ namespace bits
 
             else if (HasSISuffix(data, out double si_interpret_val, out string suffix))
             {
-                int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == suffix.ToLower());
+                try
+                {
+                    int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == suffix.ToLower());
 
-                string unit_name = UnitHelper.SISuffixNames[suffix.ToLower()];
-                Console.WriteLine($"{"interpretation".Pastel(color1)}: {si_interpret_val} {unit_name}, Number with SI Prefix");
+                    string unit_name = UnitHelper.SISuffixNames[suffix.ToLower()];
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {si_interpret_val} {unit_name}, Number with SI Prefix");
 
-                for (int i = 0; i < l; i++)
-                    si_interpret_val *= 1000;
+                    for (int i = 0; i < l; i++)
+                        si_interpret_val *= 1000;
 
-                value = si_interpret_val;
-                success = true;
+                    value = si_interpret_val;
+                    success = true;
+                }
+                catch { success = false; }
             }
 
             else if (HasByteSuffix(data, out double byte_interpret_value, out string byte_suffix, out isBits))
             {
-                string s = byte_suffix.ToLower().Replace("i", "").Replace("b", "");
-                int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == s);
-
-
-                string unit = l == -1 ? "" : UnitHelper.ByteSuffixes[l];
-
-
-                //bool isBin = false;
-
-                string unit_name = "";
-
-
-                int c = 1000;
-                if (byte_suffix.ToLower().Contains("i"))
+                try
                 {
-                    c = 1024;
-                    //isBin = true;
-                    unit_name = UnitHelper.BinSuffixNames[unit.ToLower()];
-                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
+                    string s = byte_suffix.ToLower().Replace("i", "").Replace("b", "");
+                    int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == s);
+
+
+                    string unit = l == -1 ? "" : UnitHelper.ByteSuffixes[l];
+
+
+                    //bool isBin = false;
+
+                    string unit_name = "";
+
+
+                    int c = 1000;
+                    if (byte_suffix.ToLower().Contains("i"))
+                    {
+                        c = 1024;
+                        //isBin = true;
+                        unit_name = UnitHelper.BinSuffixNames[unit.ToLower()];
+                        Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
+                    }
+                    else
+                    {
+                        unit_name = UnitHelper.SISuffixNames[unit.ToLower()];
+                        Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
+                    }
+
+                    //Console.WriteLine($"Assuming {val} {unit_name}" + (isBits ? "bits" : "Bytes"));
+
+                    for (int i = 0; i < l; i++)
+                        byte_interpret_value *= c;
+
+
+                    value = byte_interpret_value;
+
+                    success = true;
                 }
-                else
-                {
-                    unit_name = UnitHelper.SISuffixNames[unit.ToLower()];
-                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
-                }
-
-                //Console.WriteLine($"Assuming {val} {unit_name}" + (isBits ? "bits" : "Bytes"));
-
-                for (int i = 0; i < l; i++)
-                    byte_interpret_value *= c;
-
-
-                value = byte_interpret_value;
-
-
+                catch { success = false; }
             }
 
 
@@ -244,10 +252,11 @@ namespace bits
 
             if (value % 1 == 0)
             {
-                string hexValue = StringHelper.PadLeftToBlocks(int_value.ToString("X").ToLower(), 2, '0', " ");
+                string hexValue = int_value.ToString("X").ToLower();
+                string hexString = StringHelper.PadLeftToBlocks(hexValue, 2, '0', " ");
                 string binaryValue = StringHelper.PadLeftToBlocks(Convert.ToString(int_value, 2), 4, '0', " ");
                 string octalValue = Convert.ToString(int_value, 8);
-                Console.WriteLine($"{"hex".Pastel(color1)}    : {hexValue}");
+                Console.WriteLine($"{"hex".Pastel(color1)}    : {hexString} ({hexValue})");
                 Console.WriteLine($"{"octal".Pastel(color1)}  : {octalValue}");
                 Console.WriteLine($"{"binary".Pastel(color1)} : {binaryValue}");
             }

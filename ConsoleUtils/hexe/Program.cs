@@ -81,6 +81,7 @@ namespace hexe
                 { "no-ascii", "", CmdCommandTypes.FLAG, "Show no ascii" },
                 { "no-cr", "", CmdCommandTypes.FLAG, "Don't show carrige return" },
                 { "convert-space", "", CmdCommandTypes.FLAG, "Mark space in string mode" },
+                { "convert-zero-newline", "", CmdCommandTypes.FLAG, "Convert zero bytes to new line in string mode" },
                 //{ "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
@@ -724,8 +725,22 @@ namespace hexe
                     newLine = string.Empty;
                 }
 
+                else if (i == 0x00){    // Zero Byte
+                    if (cmd.HasFlag("convert-zero-newline"))
+                    {
+                        newLine += (cmd.HasFlag("plain") ? "" : Environment.NewLine);
+                    }
+                    else
+                    {
+                        newLine += (cmd.HasFlag("plain") ? " " : "\\x00").Pastel(ColorTheme.HighLight1);
+                    }
+                    
+                }
+                    
+
+
                 else if (i == 0x20)    // Space
-                    newLine += (((!cmd.HasFlag("convert-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor)));
+                    newLine += (!cmd.HasFlag("convert-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor);
 
                 else if (i == 0x0d)    // CR
                     newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor)));

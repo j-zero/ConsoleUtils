@@ -2,7 +2,7 @@
 
 ```powershell
 touch $PROFILE
-``` 
+```
 
 and add 
 

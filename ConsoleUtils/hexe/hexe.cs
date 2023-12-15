@@ -12,7 +12,7 @@ using ConsoleUtilsCore;
 namespace hexe
 {
     // TODO cut to binary, patch, remove, skip
-    internal class Program
+    internal class hexe
     { 
         static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
         static int firstCharColumn = 0;
@@ -500,7 +500,7 @@ namespace hexe
 
             FileStream fds;
 
-            if (idx != -1 && idx != 2) // Alternate File Stream
+            if (idx != -1 && idx != 1) // Alternate File Stream
             {
                 string filename = path.Substring(0, idx);
                 string datastream = path.Substring(idx + 1);
@@ -705,11 +705,10 @@ namespace hexe
 
                 if (!isGremlin)
                 {
-                    if (utf8Gremlin)
-                        //                                                LF           CR           TAB
-                        isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
-                    else
-                        isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
+                                                                                         // LF           CR           TAB
+                        //isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a && i != 0x0d && i != 0x09);
+                        isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a );
+
                 }
 
                 /*
@@ -742,9 +741,9 @@ namespace hexe
                 else if (i == 0x20)    // Space
                     newLine += (!cmd.HasFlag("convert-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor);
 
-                else if (i == 0x0d)    // CR
-                    newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor)));
-                else if (((i < 32) || (i > 255)) && i != 0xA)    // Unprintable (control chars, UTF-8, etc.)
+                //else if (i == 0x0d)    // CR
+                //    newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "\\x0d").Pastel(ColorTheme.HighLight2)));
+                else if (((i < 32) || (i > 255)) && i != 0xa || i == 0xd)    // Unprintable (control chars, UTF-8, etc.)
                     newLine += (((cmd.HasFlag("plain") || !cmd.HasFlag("convert-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2)));
                 else
                     newLine += ($"{c}".Pastel(color));

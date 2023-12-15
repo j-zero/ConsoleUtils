@@ -52,7 +52,7 @@ namespace gremlins
                 { "only-non-ascii", "", CmdCommandTypes.FLAG, "Everything above 0xff is gremlin" },
                 { "no-empty-lines", "E", CmdCommandTypes.FLAG, "Don't parse empty lines as gremlins" },
                 { "no-space-on-line-end", "S", CmdCommandTypes.FLAG, "Don't parse spaces on line end as gremlin" },
-
+                { "crlf", "W", CmdCommandTypes.FLAG, "Don't parse CR on line end as gremlin (Windows format)" },
                 { "all", "a", CmdCommandTypes.FLAG, "Show all lines" },
                 { "invert", "v", CmdCommandTypes.FLAG, "Show all lines but no gremlins" },
 
@@ -265,10 +265,13 @@ namespace gremlins
             if (lastLine > lines.Length || lastLine == 0)
                 lastLine = lines.Length;
 
+            bool isCRLFFormat = (lines.Length > 2 && lines[0].EndsWith("\r") && lines[1].EndsWith("\r"));
+
             for (int l = offset; l < lastLine; l++)
             {
                 string newLine = "";
                 string line = lines[l];
+                
                 bool lineEndsWithSpace = line.EndsWith("\t\r") || line.EndsWith(" \r") || line.EndsWith(" ") || line.EndsWith("\t");
                 bool isGremlin = false;
 
@@ -312,16 +315,21 @@ namespace gremlins
                     {
                         if (!isGremlin)
                         {
+                            //                                                               LF           CR           TAB
+                            //isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a && i != 0x0d && i != 0x09);
+                            isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a && (i != 0x0d || !cmd.HasFlag("crlf")) && i != 0x09);
+                            /*
                             if (utf8Gremlin)
-                                //                                                LF           CR           TAB
+                                //                                  LF           CR           TAB
                                 isGremlin = (i < 32 || i > 0xff) && (i != 0x0a && i != 0x0d && i != 0x09);
                             else
                                 isGremlin = (i < 32 || i > 0x7f) && (i != 0x0a && i != 0x0d && i != 0x09);
+                            */
                         }
                     }
 
                     if (i == 0x0d)    // CR
-                        newLine += ((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "¬").Pastel(ColorTheme.DarkColor));
+                        newLine += ((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "\\r").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x09)    // Tab
                         newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x20)    // Space

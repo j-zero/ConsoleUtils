@@ -24,14 +24,17 @@ namespace file
             {
                 string path = args[0];
 
+                /*
                 if (isStartedFromExplorer)
                 {
                     Console.WriteLine("File:      " + Path.GetFullPath(path));
                 }
+                */
 
                 FilesystemEntryInfo fs = new FilesystemEntryInfo(path);
                 string mime = MIMEHelper.GetMIMEType(path);
 
+                Console.WriteLine("Path:      " + fs.FullPath);
                 Console.WriteLine("Size:      " + fs.HumanReadbleSize + fs.HumanReadbleSizeSuffix + " (" + fs.Length + " bytes)");
                 Console.WriteLine("Info:      " + MIMEHelper.GetDescription(path));
                 Console.WriteLine("MIME-Type: " + mime);

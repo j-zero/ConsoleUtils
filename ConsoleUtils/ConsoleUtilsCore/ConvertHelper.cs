@@ -25,6 +25,17 @@ public class ConvertHelper
         ;
     }
 
-
+    public static byte[] CharToByteArray(char c)
+    {
+        if (c == 0x00)
+            return new byte[] { 0x00 };
+        List<byte> bytes = new List<byte>();
+        while (c != 0)
+        {
+            bytes.Add((byte)(c & 0xff));
+            c >>= 8;
+        }
+        return bytes.ToArray();
+    }
 }
 

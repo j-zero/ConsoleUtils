@@ -8,6 +8,9 @@ using Pastel;
 using System.Drawing;
 using NtfsDataStreams;
 using ConsoleUtilsCore;
+using static ConsoleHelper;
+using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.ConstrainedExecution;
 
 namespace hexe
 {
@@ -46,7 +49,7 @@ namespace hexe
 
         static void Main(string[] args)
         {
-
+            Console.OutputEncoding = encoding;
             cmd = new CmdParser(args)
             { // Todo: is default[verb|parameter]
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
@@ -85,7 +88,10 @@ namespace hexe
                 //{ "no-tab", "", CmdCommandTypes.FLAG, "Don't mark space" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
-                { "convert-hex", "", CmdCommandTypes.FLAG, "Show unprintable chars as hex values in string mode" },
+
+                { "convert-hex", "X", CmdCommandTypes.FLAG, "Show unprintable chars as hex values in string/binary mode" },
+                { "all-hex", "x", CmdCommandTypes.FLAG, "Show all chars as hex values in string/binary mode" },
+                { "no-zero", "Z", CmdCommandTypes.FLAG, "Don't show zero bytes in string mode" },
 
                 { "plain", "p", CmdCommandTypes.FLAG, $"Combines {"--no-cr".Pastel(color1)},{"--no-space".Pastel(color1)}, {"--no-line-numbers".Pastel(color1)}, {"--no-colors".Pastel(color1)}" },
 
@@ -106,7 +112,7 @@ namespace hexe
 
                 { "bytes-per-line", "L", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.INT, 16 }
-                }, "Bytes per line" },
+                }, "Bytes per line (0 for dynamic mode)" },
 
                 { "file", "f", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, null } 
@@ -129,6 +135,8 @@ namespace hexe
                 { "byte-mode", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, "hex" }
                 }, $"View bytes as: {"hex".Pastel(color2)} (default), {"dec".Pastel(color2)}, {"oct".Pastel(color2)} or {"bin".Pastel(color2)}" },
+
+                { "hybrid", "y", CmdCommandTypes.FLAG, "Hybrid mode (experimental)" },
 
                 { "encoding", "", CmdCommandTypes.PARAMETER, new CmdParameters() {
                     { CmdParameterTypes.STRING, "utf8" }
@@ -160,6 +168,17 @@ namespace hexe
                 noOffset = cmd.HasFlag("no-offset");
 
                 bytesPerLine = (int)cmd["bytes-per-line"].Longs[0];
+
+                if (cmd.HasFlag("hybrid"))
+                {
+                    outputMode = OutputMode.Hybrid;
+                    if (!cmd["bytes-per-line"].WasUserSet)
+                        bytesPerLine = 0;
+                }
+                    
+
+
+                
 
                 if (cmd.HasFlag("no-colors") || cmd.HasFlag("plain") || cmd.HasFlag("output") || Console.IsOutputRedirected)
                     Pastel.ConsoleExtensions.Disable();
@@ -256,10 +275,11 @@ namespace hexe
                             }
                             break;
 
-
+                            
                     }
+                    
                 }
-
+                Console.OutputEncoding = encoding;
 
                 if (cmd["byte-mode"].WasUserSet)
                 {
@@ -602,6 +622,7 @@ namespace hexe
 
         public static void BinDump(byte[] bytes, int lineLength = 0)
         {
+            bool hexMode = cmd.HasFlag("convert-hex");
             if (lineLength == 0)
                 lineLength = windowWidth - (windowWidth % 2) - 1;
             if (bytes == null) return;
@@ -614,8 +635,16 @@ namespace hexe
                     {
                         byte b = bytes[i + j];
                         string color = ColorTheme.GetColor(b, j % 2 == 0);
+                        string outputChar = "";
+                        //(b < 32 || b > 0x7f ?  : (char)b))
+                        bool isPrintable = !(b < 32 || b > 0x7f);
 
-                        line += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
+                        if (isPrintable)
+                            outputChar = "" + (char)b;
+                        else
+                            outputChar = (hexMode ? b.ToString("X2").ToLower() : nonPrintableChar.ToString());
+
+                        line += outputChar.Pastel(color);
                     }
                     else
                     {
@@ -691,23 +720,32 @@ namespace hexe
             // TODO Linenumbers + Gremlins
             if (bytes == null) return;
             string output = encoding.GetString(bytes);
+            
             //Console.WriteLine(output);
             bool isGremlin = false;
             bool utf8Gremlin = false;
             string newLine = string.Empty;
-            int lineCounter = 0;
+            int lineNumber = 0;
+            int lineCount = output.Count(c => c.Equals('\n'));
+            int lineNumberLength = (int)Math.Log10(lineCount) + 1;
+            int offset = 0;
+            int lastOffset = offset;
 
             foreach (char c in output)
             {
                 int i = (int)c;
                 string color = ColorTheme.GetColor(i, true);
 
+                byte[] charParts = ConvertHelper.CharToByteArray(c);
+                int charLen = charParts.Length;
+                offset += charLen;
+                //Console.WriteLine($"({charLen})");
 
                 if (!isGremlin)
                 {
                                                                                          // LF           CR           TAB
-                        //isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a && i != 0x0d && i != 0x09);
-                        isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a );
+                        isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a && i != 0x0d && i != 0x09);
+                        //isGremlin = (i < 32 || i > (utf8Gremlin ? 0xff : 0x7f)) && (i != 0x0a );
 
                 }
 
@@ -717,40 +755,78 @@ namespace hexe
                     Console.Write((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
 
                 */
+
+                bool isPrintable = ConsoleHelper.IsPrintable(c);
+                var t = Char.GetUnicodeCategory(c);
                 if (i == 0x0A)
                 {     // LF
-                    lineCounter++;
-                    WriteLine($"{newLine}");
+                    
+                    string strLineNumber = lineNumber++.ToString().PadLeft(lineCount != 0 ? lineNumberLength : 0, '0').Pastel(lineNumber % 2 == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2);
+                    Write(
+                        (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"
+                       );
                     newLine = string.Empty;
-                }
+                    lastOffset = offset ;
 
-                else if (i == 0x00){    // Zero Byte
+                }
+                else if (cmd.HasFlag("all-hex"))
+                {
+                    string s = "\\x" + i.ToString("X2").ToLower();
+                    newLine += ($"{s}".Pastel(color));
+                }
+                else if (i == 0x00)
+                {    // Zero Byte
                     if (cmd.HasFlag("convert-zero-newline"))
                     {
-                        newLine += (cmd.HasFlag("plain") ? "" : Environment.NewLine);
+                        newLine += Environment.NewLine;
+                    }
+                    if (cmd.HasFlag("no-zero"))
+                    {
+                        newLine += "";
                     }
                     else
                     {
-                        newLine += (cmd.HasFlag("plain") ? " " : "\\x00").Pastel(ColorTheme.HighLight1);
+                        newLine += (cmd.HasFlag("plain") ? " " : nonPrintableChar.ToString()).Pastel(ColorTheme.DarkColor);
                     }
-                    
+
                 }
-                    
 
 
-                else if (i == 0x20)    // Space
+
+                else if (i == 0x20 && !cmd.HasFlag("convert-hex"))    // Space
                     newLine += (!cmd.HasFlag("convert-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor);
 
-                //else if (i == 0x0d)    // CR
-                //    newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "\\x0d").Pastel(ColorTheme.HighLight2)));
-                else if (((i < 32) || (i > 255)) && i != 0xa || i == 0xd)    // Unprintable (control chars, UTF-8, etc.)
-                    newLine += (((cmd.HasFlag("plain") || !cmd.HasFlag("convert-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2)));
+                else if (i == 0x0d && !cmd.HasFlag("convert-hex"))    // CR
+                    newLine += (((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "\\r").Pastel(ColorTheme.HighLight2)));
+                //else if ((i < 32 && i > 255) && i != 0xa) {    // Unprintable (control chars, UTF-8, etc.)
+                else if (!isPrintable && i != 0xa)
+                {    // Unprintable (control chars, UTF-8, etc.)
+                   
+                    string s = "\\x" + i.ToString("X2").ToLower();
+                    newLine += (((cmd.HasFlag("plain") || !cmd.HasFlag("convert-hex") ? nonPrintableChar.ToString() : s).Pastel(ColorTheme.HighLight2)));
+                }
                 else
+                {
                     newLine += ($"{c}".Pastel(color));
+                }
 
+                
             }
-            if(lineCounter == 0)
-                WriteLine($"{newLine}");
+            if(newLine != string.Empty)
+            {
+                //lastOffset = offset;
+                string strLineNumber = lineNumber++.ToString().PadLeft(lineCount != 0 ? lineNumberLength : 0, '0').Pastel(lineNumber % 2 == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2);
+                Write(
+                    //(cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber} (0x{lastOffset.ToString("X2").ToLower()}): ") + $"{newLine}\n"
+                    (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"
+                   );
+            }
+                /*
+            if(lineNumber == 0)
+                Write(
+                    (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{lineNumber}: ") + $"{newLine}\n"
+                   );
+                */
         }
 
         // based on https://stackoverflow.com/a/38625726

@@ -95,7 +95,7 @@ namespace consoleutils.update
 
 
             if (File.Exists(versionFile)) {
-                LocalVersion = File.ReadAllText(versionFile).Replace("v", "").Trim();
+                LocalVersion = File.ReadAllText(versionFile).Replace("v", "").Trim().Split('-').First();
             }
             else
                 LocalVersion = "0.0.0.0";

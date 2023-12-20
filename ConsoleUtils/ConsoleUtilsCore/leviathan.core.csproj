@@ -93,6 +93,7 @@
     <Compile Include="InetHelper.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="ManagementObjectSearcher.cs" />
+    <Compile Include="MathHelper.cs" />
     <Compile Include="MIMEHelper.cs" />
     <Compile Include="NetworkShareHelper.cs" />
     <Compile Include="NtfsDataStreams.cs" />

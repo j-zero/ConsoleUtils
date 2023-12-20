@@ -61,7 +61,8 @@ namespace gremlins
                 { "no-tab", "", CmdCommandTypes.FLAG, "Don't mark tabulators" },
                 { "no-colors", "", CmdCommandTypes.FLAG, "Don't color output" },
                 { "no-line-numbers", "l", CmdCommandTypes.FLAG, "Don't show line numbers" },
-                { "no-hex", "", CmdCommandTypes.FLAG, "Don't show unprintable chars as hex values" },
+                { "no-hex", "X", CmdCommandTypes.FLAG, "Don't show unprintable gremlins as hex values" },
+                { "hex", "x", CmdCommandTypes.FLAG, "Show gremlins as hex values" },
 
                 { "plain", "p", CmdCommandTypes.FLAG, $"Combines {"--no-cr".Pastel(color1)}, {"--no-space".Pastel(color1)}, {"--no-tab".Pastel(color1)},{"--no-line-numbers".Pastel(color1)}, {"--no-colors".Pastel(color1)}, {"--no-hex".Pastel(color1)}" },
 
@@ -174,7 +175,9 @@ namespace gremlins
                             }
                             break;
                     }
+                    
                 }
+                Console.OutputEncoding = encoding;
 
                 if (Console.IsInputRedirected)
                 {
@@ -328,14 +331,31 @@ namespace gremlins
                         }
                     }
 
-                    if (i == 0x0d)    // CR
+                    if (i == 0x0d && !cmd.HasFlag("hex"))    // CR
                         newLine += ((cmd.HasFlag("no-cr") || cmd.HasFlag("plain") ? "\r" : "\\r").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x09)    // Tab
                         newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
                     else if (i == 0x20)    // Space
                         newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor));
-                    else if ((i < 32) || (i > 255))    // Unprintable (control chars, UTF-8, etc.)
-                        newLine += (cmd.HasFlag("plain") || cmd.HasFlag("no-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2);
+                    else if (isGremlin || !ConsoleHelper.IsPrintable(c))
+                    {    // Unprintable (control chars, UTF-8, etc.)
+                        if (cmd.HasFlag("hex"))
+                            newLine += ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
+                        else
+                        {
+                            if (cmd.HasFlag("plain"))
+                                newLine += c.ToString().Pastel(ColorTheme.HighLight2);
+                            else if (!ConsoleHelper.IsPrintable(c))
+                            {
+                                newLine += cmd.HasFlag("no-hex") ? c.ToString() : ("\\x" + i.ToString("X").ToLower()).Pastel(ColorTheme.HighLight2);
+                            }
+                            else
+                            {
+                                newLine += c.ToString().Pastel(ColorTheme.HighLight2);
+                            }
+                        }
+                            //newLine += (cmd.HasFlag("plain") || (!ConsoleHelper.IsPrintable(c) || cmd.HasFlag("no-hex")) ? c.ToString() : ("\\x" + i.ToString("X").ToLower())).Pastel(ColorTheme.HighLight2);
+                    }
                     else
                         newLine += ($"{c}".Pastel(color));
 
@@ -352,9 +372,14 @@ namespace gremlins
 
                 if ((!cmd.HasFlag("invert") && isGremlin) ^ (cmd.HasFlag("invert") && !isGremlin) || cmd.HasFlag("all"))
                 {
-                    string lineColor = isGremlin ? ColorTheme.OffsetColorHighlight : ColorTheme.OffsetColor;
+                    string offsetColor = lineNumber % 2 == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2;
+                    string offsetHighlightColor = lineNumber % 2 == 0 ? ColorTheme.OffsetColorHighlight : ColorTheme.OffsetColorHighlight2;
+
+                    string lineColor = isGremlin ? offsetHighlightColor : offsetColor;
+
                     if (isCustomGremlin)
                         lineColor = ColorTheme.HighLight2;
+
                     string strLineNumber = lineNumber.ToString().PadLeft(lineNumberLength, '0').Pastel(lineColor);
                     Write(
                         (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"

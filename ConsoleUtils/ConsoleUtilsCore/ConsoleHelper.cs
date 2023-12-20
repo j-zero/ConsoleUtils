@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
 using ConsoleUtilsCore;
+using System.Globalization;
 
 public class ConsoleHelper
 {
@@ -16,12 +17,13 @@ public class ConsoleHelper
         Oct,
         Bin,
         Char,
-        Auto
+        Auto,
+        Hybrid
     }
 
     static char[] HexChars = "0123456789abcdef".ToCharArray();
     static char nonPrintableChar = '·';
-    static char spaceChar = ' ';
+    static string spaceChar = " ";
 
     static int firstHexColumn = 12; // 8 characters for the address +  3 spaces
     static int firstCharColumn = 0;
@@ -309,6 +311,28 @@ public class ConsoleHelper
         Console.WriteLine(result.ToString());
     }
 
+    public static bool IsPrintable(char c)
+    {
+        // The set of Unicode character categories containing non-rendering,
+        // unknown, or incomplete characters.
+        // !! Unicode.Format and Unicode.PrivateUse can NOT be included in
+        // !! this set, because they may (private-use) or do (format)
+        // !! contain at least *some* rendering characters.
+        var nonRenderingCategories = new UnicodeCategory[] {
+            UnicodeCategory.Control,
+            UnicodeCategory.OtherNotAssigned,
+            UnicodeCategory.Surrogate, UnicodeCategory.OtherSymbol, UnicodeCategory.PrivateUse,
+        };
+
+        // Char.IsWhiteSpace() includes the ASCII whitespace characters that
+        // are categorized as control characters. Any other character is
+        // printable, unless it falls into the non-rendering categories.
+        var isPrintable = (c == 0x0a && c== 0x09) || !nonRenderingCategories.Contains(Char.GetUnicodeCategory(c));
+
+
+        return isPrintable;
+    }
+
     public static void HexDump(byte[] bytes, int bytesPerLine = 16)
     {
         HexDump(new Blob(bytes), bytesPerLine);
@@ -321,6 +345,10 @@ public class ConsoleHelper
 
     static int SetBytesPerLine(int bPerLine)
     {
+        return SetBytesPerLine(bPerLine, false);
+    }
+    static int SetBytesPerLine(int bPerLine, bool noAscii)
+    {
         bytesPerLine = bPerLine;
 
         firstCharColumn = firstHexColumn
@@ -328,7 +356,7 @@ public class ConsoleHelper
                             + (bytesPerLine - 1) / dynamicSteps // - 1 extra space every 8 characters from the 9th
                             + 2;                  // 2 spaces 
 
-        lineLength = firstCharColumn + bytesPerLine + Environment.NewLine.Length;       // - characters to show the ascii value + Carriage return and line feed (should normally be 2)
+        lineLength = firstCharColumn + (!noAscii ? bytesPerLine : 0) + Environment.NewLine.Length;       // - characters to show the ascii value + Carriage return and line feed (should normally be 2)
 
         return lineLength;
     }
@@ -353,35 +381,38 @@ public class ConsoleHelper
 
         if (offsetLength % 2 != 0) offsetLength++;
 
+        int padding = 2;
+        if (outputMode == OutputMode.Hex || outputMode == OutputMode.Hybrid)
+            padding = 2;
+        else if (outputMode == OutputMode.Dec || outputMode == OutputMode.Oct)
+            padding = 3;
+        else if (outputMode == OutputMode.Bin)
+            padding = 8;
+
+        noText = noText | outputMode == OutputMode.Hybrid;
+
         if (BytesPerLine == 0)  // dynamic
         {
             int dynWidth = windowWidth;
             int minWidth = 32;
             while (lineLength < dynWidth - dynamicSteps - Environment.NewLine.Length)
             {
-                SetBytesPerLine(bytesPerLine += dynamicSteps);
+                SetBytesPerLine(bytesPerLine += dynamicSteps, noText);
                 if (lineLength > dynWidth)
                 {
-                    SetBytesPerLine(bytesPerLine -= dynamicSteps);
+                    SetBytesPerLine(bytesPerLine -= dynamicSteps, noText);
                     break;
                 }
 
             }
             if (lineLength < minWidth)
-                SetBytesPerLine(dynamicSteps);
+                SetBytesPerLine(dynamicSteps, noText);
         }
         else
         {
-            SetBytesPerLine(BytesPerLine);
+            SetBytesPerLine(BytesPerLine, noText);
         }
 
-        int padding = 2;
-        if (outputMode == OutputMode.Hex)
-            padding = 2;
-        else if (outputMode == OutputMode.Dec || outputMode == OutputMode.Oct)
-            padding = 3;
-        else if (outputMode == OutputMode.Bin)
-            padding = 8;
 
 
         //Console.WriteLine(bytes.Length.ToString("X"));
@@ -396,18 +427,22 @@ public class ConsoleHelper
             {
                 if (j > 0 && (j & (dynamicSteps - 1)) == 0)
                     Write(spaceChar);
-                Write(j.ToString("X").ToLower().PadLeft(padding, '0').Pastel(ColorTheme.OffsetColor) + spaceChar);
+                Write(j.ToString("X").ToLower().PadLeft(padding, '0').Pastel(j % 2 == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spaceChar);
             }
             Write(spacer); // spacer
-            for (int j = 0; j < bytesPerLine; j++)
-            {
-                Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
-            }
+            if(!noText)
+                for (int j = 0; j < bytesPerLine; j++)
+                {
+                    Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
+                }
             Write(Environment.NewLine);
         }
 
+        int linecounter = 0;
+
         for (int i = 0; i < bytesLength; i += bytesPerLine)
         {
+            linecounter++;
             string offsetPart = string.Empty;
             string hexPart = string.Empty;
             string asciiPart = string.Empty;
@@ -450,6 +485,21 @@ public class ConsoleHelper
                         newHexPart += Convert.ToString(first, 2).PadLeft(4, '0');
                         newHexPart += Convert.ToString(second, 2).PadLeft(4, '0');
                     }
+                    else if(outputMode == OutputMode.Hybrid)
+                    {
+                        if(b < 32 || b > 0x7f)
+                        {
+                            newHexPart += HexChars[first];
+                            newHexPart += HexChars[second];
+                        }
+                        else
+                        {
+                            newHexPart += ((char)b).ToString().PadLeft(2, ' ');
+                        }
+
+
+                        //newHexPart += " (" +b.ToString().PadLeft(3, '0') + ")";
+                    }
                     else //(outputMode == OutputMode.Hex)
                     {
 
@@ -474,7 +524,7 @@ public class ConsoleHelper
 
                 }
             }
-            WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(ColorTheme.OffsetColor) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
+            WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(linecounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
         }
     }
 }

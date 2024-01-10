@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
-using ConsoleUtilsCore;
 using System.Globalization;
 
 public class ConsoleHelper

@@ -25,7 +25,7 @@ namespace gremlins
         static string color2 = "008000";
         static void Main(string[] args)
         {
-            cmd = new CmdParser(args)
+            cmd = new CmdParser()
             { 
 
                 { "cut", "c", CmdCommandTypes.PARAMETER, 
@@ -439,6 +439,7 @@ namespace gremlins
 
         static void Exit(int exitCode)
         {
+            /* Todo Windows/Linux 
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
@@ -447,7 +448,7 @@ namespace gremlins
                 Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
             }
-
+            */
             Environment.Exit(exitCode);
         }
     }

@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Pastel;
-using NtfsDataStreams;
-using ConsoleUtilsCore;
-using static ConsoleHelper;
+//using NtfsDataStreams;
+//using static ConsoleHelper;
 
 namespace hexe
 {
@@ -46,7 +45,7 @@ namespace hexe
         static void Main(string[] args)
         {
             Console.OutputEncoding = encoding;
-            cmd = new CmdParser(args)
+            cmd = new CmdParser()
             { // Todo: is default[verb|parameter]
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
                 { "version", "V", CmdCommandTypes.FLAG, "Shows the version." },
@@ -167,7 +166,7 @@ namespace hexe
 
                 if (cmd.HasFlag("hybrid"))
                 {
-                    outputMode = OutputMode.Hybrid;
+                    outputMode = ConsoleHelper.OutputMode.Hybrid;
                     if (!cmd["bytes-per-line"].WasUserSet)
                         bytesPerLine = 0;
                 }
@@ -513,9 +512,10 @@ namespace hexe
             int idx = path.LastIndexOf(':');
             long size = 0;
 
-
+            
             FileStream fds;
 
+            /* TODO: Alternate Data Streams Windows Only
             if (idx != -1 && idx != 1) // Alternate File Stream
             {
                 string filename = path.Substring(0, idx);
@@ -546,7 +546,15 @@ namespace hexe
                     throw new Exception($"File \"{path}\" not found!");
 
             }
+            */
 
+            if (File.Exists(path))
+            {
+                fds = new FileStream(path, FileMode.Open);
+                size = new FileInfo(path).Length;
+            }
+            else
+                throw new Exception($"File \"{path}\" not found!");
 
 
             if (offset < 0)

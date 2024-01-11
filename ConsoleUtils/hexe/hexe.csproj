@@ -8,7 +8,7 @@
     <AssemblyTitle>hexe</AssemblyTitle>
     <Product>hexe</Product>
     <Copyright>Copyright ©  2023</Copyright>
-    <AssemblyVersion>0.2.%2a</AssemblyVersion>
+    <AssemblyVersion>0.3.%2a</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>

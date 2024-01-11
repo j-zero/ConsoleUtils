@@ -1,4 +1,3 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -27,7 +26,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett2", "klemmbrett\k
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "list", "l\list.csproj", "{81455DB7-D77C-4903-BF79-DFE46EC810C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bits", "bits\bits.csproj", "{9C845D63-E9BD-42F7-9EA9-8148DCA41D62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "bits", "bits\bits.csproj", "{9C845D63-E9BD-42F7-9EA9-8148DCA41D62}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "free", "free\free.csproj", "{FE50DFE0-5452-4957-9AD3-725FEC5A0B1F}"
 EndProject
@@ -65,7 +64,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wiki", "wiki\wiki.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "events", "events\events.csproj", "{4D837E98-7400-4F00-89BA-F63434CE02B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cross.core", "cross.core\cross.core.csproj", "{E246BA5C-196B-4468-AF85-C7E0A44C0976}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cross.core", "cross.core\cross.core.csproj", "{E246BA5C-196B-4468-AF85-C7E0A44C0976}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "windows.core", "windows.core\windows.core.csproj", "{A13C59AC-D103-4848-A98A-6B8CC481BF3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -329,6 +330,14 @@ Global
 		{E246BA5C-196B-4468-AF85-C7E0A44C0976}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E246BA5C-196B-4468-AF85-C7E0A44C0976}.Release|x64.ActiveCfg = Release|Any CPU
 		{E246BA5C-196B-4468-AF85-C7E0A44C0976}.Release|x64.Build.0 = Release|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Debug|x64.Build.0 = Debug|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Release|x64.ActiveCfg = Release|Any CPU
+		{A13C59AC-D103-4848-A98A-6B8CC481BF3B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

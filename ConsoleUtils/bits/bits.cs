@@ -564,12 +564,20 @@ namespace bits
 
         static void Exit(int exitCode)
         {
+
+            /*
+             * #if Linux
+                Console.WriteLine("Built on Linux!"); 
+                #elif Windows
+                Console.WriteLine("Built in Windows!"); 
+                #endif
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
             if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
             {
                 Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
             }
+            */
             Environment.Exit(exitCode);
         }
 

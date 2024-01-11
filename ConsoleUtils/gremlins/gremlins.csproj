@@ -7,8 +7,8 @@
     <OutputPath>..\..\bin\</OutputPath>
     <AssemblyTitle>gremlins</AssemblyTitle>
     <Product>gremlins</Product>
-    <Copyright>Copyright © 2023 j-zero</Copyright>
-    <AssemblyVersion>0.1.%2a</AssemblyVersion>
+    <Copyright>Copyright © 2024 j-zero</Copyright>
+    <AssemblyVersion>0.3.%2a</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>

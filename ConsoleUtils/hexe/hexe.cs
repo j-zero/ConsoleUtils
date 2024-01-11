@@ -7,6 +7,7 @@ using Pastel;
 //using NtfsDataStreams;
 //using static ConsoleHelper;
 
+[assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace hexe
 {
     // TODO cut to binary, patch, remove, skip

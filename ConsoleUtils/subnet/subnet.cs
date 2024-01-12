@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Pastel;
-using System.Drawing;
 using System.Net;
 
+[assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace subnet
 {
-    internal class Program
+    
+    internal class subnet
     {
         static string defaultIP = "0.0.0.0";
         static string color1 = "#00b4d8";
@@ -33,7 +32,7 @@ namespace subnet
                 if (args.Length == 0 || (args.Length == 1 && args[0] == "--help"))
                 {
                     ShowVersion();
-                    Console.WriteLine("subnet is part of " + ConsoleHelper.GetVersionString());
+                    Console.WriteLine("subnet is part of " + ConsoleHelper.GetVersionString(color1, color2));
                     ConsoleHelper.WriteError("\nUsage: subnet [/cidr|host-count|ip/cidr|ip/mask|ip host-count]");
                     Environment.Exit(1);
                 }

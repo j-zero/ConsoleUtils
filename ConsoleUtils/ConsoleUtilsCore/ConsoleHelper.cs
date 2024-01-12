@@ -127,7 +127,10 @@ public class ConsoleHelper
     }
     public static string GetVersionString(string color1, string color2)
     {
-        return "ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")";
+        if(color1 == null || color2 == null)
+            return "ConsoleUtils" + " (" + "https://github.com/j-zero/ConsoleUtils" + ")";
+        else
+            return "ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")";
     }
 
     // Enumerate by nearest space

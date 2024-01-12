@@ -19,6 +19,7 @@ namespace events
         static string color2 = "f4845f";
         static bool DEBUG = false;
         static CmdParser cmd;
+        static string fullLogPath = null;
 
         public static void MainCore(string[] args)
         {
@@ -27,7 +28,12 @@ namespace events
 
             cmd = new CmdParser(args)
             {
-                { "help", "", CmdCommandTypes.FLAG, "Show this help." },
+                { "help", "h", CmdCommandTypes.FLAG, "Show this help." },
+                { "xml", "x", CmdCommandTypes.FLAG, "Save XML." },
+                { "append", "a", CmdCommandTypes.FLAG, "Append to Logfile" },
+                { "overwrite", "o", CmdCommandTypes.FLAG, "Do not ask for overwriting files." },
+                { "colored-log", "C", CmdCommandTypes.FLAG, "Colored log file (experimental)" },
+
                 { "query", "q", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, $"Custom query (e.g. \"{"*[System[(EventID='15')]]".Pastel(color2)}\"" },
@@ -37,7 +43,7 @@ namespace events
                     },
                     "LogLevel 0-5 (Default: 5), 0 = LogAlways, 1 = Critical, 2 = Error, 3 = Warning, 4 = Info, 5 = Verbose"
                 },
-                { "channel", "C", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
+                { "channel", "c", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, $"Channel(s) to open (Default: All; E.g: \"{"Applilcation".Pastel(color2)}\", \"{"System".Pastel(color2)}\", \"{"Security".Pastel(color2)}\")" },
                 { "file", "f", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
@@ -54,8 +60,33 @@ namespace events
 
             if (args is null) throw new ArgumentNullException(nameof(args));
 
-            //Console.Error.Write("Getting logs  ... ");
-            LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
+            if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
+            {
+                var filePath = cmd["file"].String;
+                fullLogPath = Path.GetFullPath(filePath);
+                if(!File.Exists(fullLogPath))
+                    File.Create(fullLogPath);
+                else
+                {
+                    if (!cmd.HasFlag("overwrite") && !cmd.HasFlag("append"))
+                    {
+                        if (ConsoleHelper.Confirm($"File \"{fullLogPath}\" already exists, would you like to overwrite it?", ConsoleHelper.ConfirmDefault.No))
+                            TruncateLogFile();
+                        else
+                            Environment.Exit(0);
+                    }
+                    else if (cmd.HasFlag("overwrite"))
+                    {
+                        TruncateLogFile();
+                    }
+                    
+
+                    
+                }
+            }
+
+                //Console.Error.Write("Getting logs  ... ");
+                LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
             //Console.Error.WriteLine("let's go!");
 
             while (!ask_to_close)
@@ -63,6 +94,22 @@ namespace events
                 //System.Threading.Thread.Sleep(50);
                 Console.ReadLine();
             }
+        }
+
+        static bool TruncateLogFile()
+        {
+            try
+            {
+                FileStream fileStream = new FileStream(fullLogPath, FileMode.Truncate);
+                //fileStream.SetLength(0);
+                fileStream.Close();
+            }
+            catch (Exception ex)
+            {
+                WriteErrorLine(ex.Message);
+                return false;
+            }
+            return true;
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -145,6 +192,7 @@ namespace events
                 var opCode = e.EventRecord.OpcodeDisplayName;
                 var mname = e.EventRecord.MachineName;
                 var description = e.EventRecord.FormatDescription();
+                var xml = e.EventRecord.ToXml();
 
 
                 var levelColor = ColorTheme.fg;
@@ -185,10 +233,20 @@ namespace events
                 WriteLine($"{description.Pastel(ColorTheme.light_grey)}\n");
                 if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
                 {
-                    ConsoleExtensions.Disable();
-                    WriteLogLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}".Pastel(ColorTheme.light_grey), cmd["file"].String);
-                    WriteLogLine($"{description.Pastel(ColorTheme.light_grey)}\n", cmd["file"].String);
-                    ConsoleExtensions.Enable();
+                    if (cmd.HasFlag("xml"))
+                    {
+                        WriteLogLine(xml, fullLogPath);
+                    }
+                    else
+                    {
+                        if (!cmd.HasFlag("colored-log"))
+                            ConsoleExtensions.Disable();
+
+                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}\n{description}\n---".Pastel(ColorTheme.light_grey), fullLogPath);
+                        
+                        if (!cmd.HasFlag("colored-log"))
+                            ConsoleExtensions.Enable();
+                    }
                 }
             }
             catch (Exception ex)
@@ -222,7 +280,7 @@ namespace events
         {
             try
             {
-                System.IO.File.AppendAllText(path, text);
+                System.IO.File.AppendAllText(path, text + Environment.NewLine);
             }
             catch (Exception ex)
             {

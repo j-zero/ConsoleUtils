@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "gremlins": {
+      "commandName": "Project",
+      "commandLineArgs": "c:\\temp\\sperrliste.txt -L"
+    }
+  }
+}

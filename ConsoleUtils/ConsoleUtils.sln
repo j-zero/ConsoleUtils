@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "trash", "recycle\trash.cspr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hexe", "hexe\hexe.csproj", "{24621B6B-1ACA-46D5-B5AC-54AA012C7968}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "subnet", "subnet\subnet.csproj", "{D4D77C73-4649-43F2-A898-1B410D61386B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "subnet", "subnet\subnet.csproj", "{D4D77C73-4649-43F2-A898-1B410D61386B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "google", "google\google.csproj", "{198C7D8B-7551-46F8-9121-349063E4C5C1}"
 EndProject
@@ -20,7 +20,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "leviathan.core", "ConsoleUt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gremlins", "gremlins\gremlins.csproj", "{F6556EE2-3B76-4B9F-9163-586D4573714F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "touch", "touch\touch.csproj", "{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mk", "touch\mk.csproj", "{EF9EAF22-FCC7-4CFF-B0E4-D5E23C80CA83}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "klemmbrett2", "klemmbrett\klemmbrett2.csproj", "{65A64087-F2D5-4824-A181-90701A71A0F1}"
 EndProject
@@ -40,7 +40,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unpack", "unpack\unpack.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hash", "hash\hash.csproj", "{609CEAB9-54A6-4A12-AAEC-56796A65511E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "coffee", "coffee\coffee.csproj", "{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "coffee", "coffee\coffee.csproj", "{07D5333A-C0C9-43FE-80A8-D5C049F0DCA9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lognote", "lognote\lognote.csproj", "{1D66DA1B-C820-44A4-AE63-12B3C6B21076}"
 EndProject
@@ -54,7 +54,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seek", "seek\seek.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{A625D241-04EF-4571-A0D6-66292755CDAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chaos", "chaos\chaos.csproj", "{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "chaos", "chaos\chaos.csproj", "{2970D6DD-13DF-4E2B-B0D0-9A1698D76C94}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "consoleutils.update", "consoleutils.update\consoleutils.update.csproj", "{A376A922-2EC6-4823-921C-01F2272BAA15}"
 EndProject
@@ -66,7 +66,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "events", "events\events.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cross.core", "cross.core\cross.core.csproj", "{E246BA5C-196B-4468-AF85-C7E0A44C0976}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "windows.core", "windows.core\windows.core.csproj", "{A13C59AC-D103-4848-A98A-6B8CC481BF3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "windows.core", "windows.core\windows.core.csproj", "{A13C59AC-D103-4848-A98A-6B8CC481BF3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -120,10 +120,6 @@ public class ConsoleHelper
         Console.Error.Write($"\n   {msg.Pastel(Color.OrangeRed)}\n{doggo.Pastel(Color.White)}\n\n");
     }
 
-    public static string GetVersionString()
-    {
-        return GetVersionString(null, null);
-    }
     public static string GetVersionString(string color1, string color2)
     {
         return "ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")";
@@ -324,7 +320,7 @@ public class ConsoleHelper
         // Char.IsWhiteSpace() includes the ASCII whitespace characters that
         // are categorized as control characters. Any other character is
         // printable, unless it falls into the non-rendering categories.
-        var isPrintable = (c == 0x0a && c== 0x09) || !nonRenderingCategories.Contains(Char.GetUnicodeCategory(c));
+        var isPrintable = (c == 0x0a || c == 0x09) || !nonRenderingCategories.Contains(Char.GetUnicodeCategory(c));
 
 
         return isPrintable;

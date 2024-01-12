@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "chaos": {
+      "commandName": "Project",
+      "commandLineArgs": "--shuffle c:\\temp\\foo.log"
+    }
+  }
+}

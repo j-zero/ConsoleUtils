@@ -10,9 +10,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 
+[assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace coffee
 {
-    internal class Program
+    internal class coffee
     {
         [FlagsAttribute]
         public enum EXECUTION_STATE : uint
@@ -166,7 +167,7 @@ namespace coffee
 
         static void Exit(int exitCode)
         {
-            string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
+            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
             if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag

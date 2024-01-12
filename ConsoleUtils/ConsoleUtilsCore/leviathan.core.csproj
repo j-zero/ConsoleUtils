@@ -36,6 +36,9 @@
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <OutputPath>..\..\bin\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mime, Version=3.6.0.0, Culture=neutral, PublicKeyToken=1b320cc08ad5aa89, processorArchitecture=MSIL">
       <HintPath>..\packages\Mime.3.6.0\lib\net48\Mime.dll</HintPath>

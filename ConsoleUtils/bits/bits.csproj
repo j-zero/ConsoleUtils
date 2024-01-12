@@ -1,16 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>..\..\bin\</OutputPath>
     <AssemblyTitle>bits</AssemblyTitle>
     <Product>bits</Product>
-    <Copyright>Copyright © 2023</Copyright>
+    <Copyright>Copyright © 2024</Copyright>
     <AssemblyVersion>0.0.%2a</AssemblyVersion>
     <StartupObject>bits.bits</StartupObject>
     <BaseOutputPath>..\..\bin</BaseOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\cross.core\cross.core.csproj" />

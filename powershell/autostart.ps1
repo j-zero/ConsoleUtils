@@ -6,7 +6,7 @@ if(Get-Command "list" -erroraction 'silentlycontinue'){
     New-Alias -Name 'ls' -Value 'list'
 }
 
-function mk([string]$new_dir){
+function mkd([string]$new_dir){
     mkdir $new_dir
     Set-Location $new_dir
 }

@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Globalization;
 
+[assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace bits
 {
     internal class bits

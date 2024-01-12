@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Pastel;
 
+[assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace chaos
 {
     internal class chaos
@@ -21,7 +22,7 @@ namespace chaos
         static void Main(string[] args)
         {
 
-
+            
             cmd = new CmdParser(args)
             {
                 { "help", "", CmdCommandTypes.FLAG, "Show this help." },
@@ -39,6 +40,7 @@ namespace chaos
                 { "to-lower", "l", CmdCommandTypes.FLAG, "output all lines lower case (after uniq & sort)" },
                 { "to-upper", "L", CmdCommandTypes.FLAG, "output all lines uppter case (after uniq & sort)" },
                 { "count", "c", CmdCommandTypes.FLAG, "count output lines" },
+                { "shuffle", "", CmdCommandTypes.FLAG, "shuffle lines" },
 
             };
 
@@ -100,6 +102,8 @@ namespace chaos
                         break;
                 }
             }
+            Console.InputEncoding = encoding;
+            Console.OutputEncoding = encoding;
 
             if (Console.IsInputRedirected)
             {
@@ -139,6 +143,7 @@ namespace chaos
             }
             result_lines = lines;
 
+            bool isSomethingSet = cmd.HasFlag("uniq-ignore-case") || cmd.HasFlag("uniq") || cmd.HasFlag("sort-ignore-case") || cmd.HasFlag("desc") || cmd.HasFlag("count") || cmd.HasFlag("to-lower") || cmd.HasFlag("to-upper") || cmd.HasFlag("shuffle");
 
 
             if (cmd.HasFlag("uniq-ignore-case"))
@@ -149,11 +154,18 @@ namespace chaos
             {
                 result_lines = result_lines.Distinct().ToArray();
             }
+
             if (cmd.HasFlag("sort-ignore-case"))
             {
                 Array.Sort(result_lines, StringComparer.CurrentCultureIgnoreCase);
             }
-            else if (cmd.HasFlag("sort"))
+
+            if (cmd.HasFlag("shuffle"))
+            {
+                result_lines = result_lines.Shuffle().ToArray();
+            }
+
+            if (cmd.HasFlag("sort") || !isSomethingSet) // sort if "sort" or nothing else is enabled
             {
                 Array.Sort(result_lines);
             }
@@ -228,6 +240,7 @@ namespace chaos
 
         static void Exit(int exitCode)
         {
+            /*
             string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
@@ -236,7 +249,7 @@ namespace chaos
                 Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
             }
-
+            */
             Environment.Exit(exitCode);
         }
 

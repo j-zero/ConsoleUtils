@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Pastel;
 
 namespace list
 {
-    internal class Program
+    internal class list
     {
-        
+        static Encoding encoding = Encoding.UTF8;
         public enum OrderBy
         {
             name, Name, dotname, Dotname, size, extension, modified, accessed, created, type, none
@@ -34,6 +35,8 @@ namespace list
 
         static void Main(string[] args)
         {
+            Console.InputEncoding = encoding;
+            Console.OutputEncoding = encoding;
             isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
 
             if (System.Diagnostics.Debugger.IsAttached)
@@ -263,7 +266,7 @@ namespace list
             Console.WriteLine(@"███▄ ▐█  ▀▄▄▄▄▀       █     ".Pastel("#ffc4d6"));
             Console.WriteLine(@"    ▀ ▐              ▀  ".Pastel("#fadde1") + version_string.Pastel("#fadde1"));
             Console.WriteLine();
-            Console.WriteLine("list is part of " + ConsoleHelper.GetVersionString());
+            Console.WriteLine("list is part of " + ConsoleHelper.GetVersionString(color1,color2));
         }
 
         static string ShortenString(string str, int maxchars, string color1, string color2, string color3)

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "mk": {
+      "commandName": "Project",
+      "commandLineArgs": "foo/"
+    }
+  }
+}

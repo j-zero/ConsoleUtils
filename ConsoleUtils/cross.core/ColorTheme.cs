@@ -9,6 +9,8 @@ public class ColorTheme
     public static string UnknownFileType = "#aaaaaa";
     public static string Error1 = "#e01e37"; // "#ff4500"
     public static string Error2 = "#a54242";
+    public static string Warning1 = "#fbb539"; // "#ff4500"
+    public static string Warning2 = "#f48c06";
     public static string Null1 = "#8abeb7";
     public static string Null2 = "#5e8d87";
     public static string SpecialChar1 = "#b5db68";
@@ -20,13 +22,14 @@ public class ColorTheme
     //public static string Default2 { get { return "5f819d"; } }
     public static string Default1 { get { return "64b5f6"; } }
     public static string Default2 { get { return "1976d2"; } }
-    public static string DarkColor { get { return "268C96"; } }
+    public static string DarkColor { get { return "2966a3"; } }
     public static string HighLight2 { get { return "dea740"; } }
     public static string HighLight1 { get { return "f0c674"; } }
     public static string OffsetColor {  get { return "808080";} }
     public static string OffsetColor2 { get { return "A0A0A0"; } }
     public static string OffsetColorHighlight { get { return "f5eea9"; } }
-    public static string OffsetColorHighlight2 { get { return "D2CC8D"; } }
+    public static string OffsetColorHighlight2 { get { return "B2BC7D"; } }
+    
     public static string Text { get { return "dddddd"; } }
     public static string DarkText { get { return "707070"; } }
 

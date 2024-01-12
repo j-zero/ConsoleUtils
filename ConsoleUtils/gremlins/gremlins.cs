@@ -312,7 +312,7 @@ namespace gremlins
                     }
                     else
                     {
-                        isGremlin |= !line.EndsWith("\r");
+                        isGremlin |= line.EndsWith("\r");
                         isCRBad = true;
                     }
                 }

@@ -480,7 +480,7 @@ public class ConsoleHelper
                     }
                     else if(outputMode == OutputMode.Hybrid)
                     {
-                        if(b < 32 || b > 0x7f)
+                        if(b < 32 || b >= 0x7f)
                         {
                             newHexPart += HexChars[first];
                             newHexPart += HexChars[second];
@@ -512,8 +512,10 @@ public class ConsoleHelper
 
                     hexPart += newHexPart.Pastel(color);
                     hexPart += spaceChar;
+                    var isPrintable = b < 32 || b >= 0x7f;
 
-                    asciiPart += ("" + (b < 32 ? nonPrintableChar : (char)b)).Pastel(color);
+
+                    asciiPart += ("" + (isPrintable ? nonPrintableChar : (char)b)).Pastel(color);
 
                 }
             }

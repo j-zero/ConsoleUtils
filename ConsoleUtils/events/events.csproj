@@ -46,18 +46,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ColorTheme.cs" />
+    <Compile Include="CommandLineParser.cs" />
+    <Compile Include="ConsoleExtensions.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="events.cs" />
+    <Compile Include="ParentProcessHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ConsoleUtilsCore\leviathan.core.csproj">
-      <Project>{f2eee824-5019-44f2-a06a-f7aef10c2549}</Project>
-      <Name>leviathan.core</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterResolveReferences">

@@ -20,6 +20,7 @@ namespace events
         static bool DEBUG = false;
         static CmdParser cmd;
         static string fullLogPath = null;
+        static long currentLogLevel = 5;
 
         public static void MainCore(string[] args)
         {
@@ -58,6 +59,8 @@ namespace events
             if (cmd.HasFlag("help"))
                 ShowHelp();
 
+            currentLogLevel = cmd["level"].Int;
+
             if (args is null) throw new ArgumentNullException(nameof(args));
 
             if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
@@ -70,7 +73,7 @@ namespace events
                 {
                     if (!cmd.HasFlag("overwrite") && !cmd.HasFlag("append"))
                     {
-                        if (ConsoleHelper.Confirm($"File \"{fullLogPath}\" already exists, would you like to overwrite it?", ConsoleHelper.ConfirmDefault.No))
+                        if (Confirm($"File \"{fullLogPath}\" already exists, would you like to overwrite it?", ConfirmDefault.No))
                             TruncateLogFile();
                         else
                             Environment.Exit(0);
@@ -85,14 +88,57 @@ namespace events
                 }
             }
 
-                //Console.Error.Write("Getting logs  ... ");
-                LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
+            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
+            //Console.WriteLine(parrentProcess);
+
+            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
+            {
+                //Console.WriteLine("\nPress any key to exit.");
+                //Console.ReadKey();
+            }
+
+            //Console.Error.Write("Getting logs  ... ");
+            LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
             //Console.Error.WriteLine("let's go!");
 
             while (!ask_to_close)
             {
                 //System.Threading.Thread.Sleep(50);
-                Console.ReadLine();
+                KeyPressEvent(Console.ReadKey(true));
+                ;
+            }
+        }
+
+        static void KeyPressEvent(ConsoleKeyInfo keyInfo)
+        {
+            switch (keyInfo.Key)
+            {
+                case ConsoleKey.D0:
+                    currentLogLevel = 0;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 0 (" + "LogAlways".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                case ConsoleKey.D1:
+                    currentLogLevel = 1;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 1 (" + "Critical".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                case ConsoleKey.D2:
+                    currentLogLevel = 2;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 2 (" + "Error".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                case ConsoleKey.D3:
+                    currentLogLevel = 3;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 3 (" + "Warning".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                case ConsoleKey.D4:
+                    currentLogLevel = 4;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 4 (" + "Info".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                case ConsoleKey.D5:
+                    currentLogLevel = 5;
+                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -167,11 +213,40 @@ namespace events
             }
         }
 
+        static string GetLevelColor(byte? level)
+        {
+            if (level.HasValue)
+                return GetLevelColor(level.Value);
+            else
+                return GetLevelColor(-1);
+        }
+
+        static string GetLevelColor(long level)
+        {
+            switch (level)
+            {
+                case 0: // LogAlways
+                    return ColorTheme.fg;
+                case 1: // Critical
+                    return ColorTheme.dark_red;
+                case 2: // Error
+                    return ColorTheme.red;
+                case 3: // Warning
+                    return ColorTheme.yellow;
+                case 4: // Informational
+                    return ColorTheme.blue;
+                case 5: // Verbose
+                    return ColorTheme.cyan;
+                default:
+                    return ColorTheme.coral;
+            }
+        }
+
         private static void LogWatcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
         {
             try
             {
-                if (e.EventRecord.Level > cmd["level"].Int)
+                if (e.EventRecord.Level > currentLogLevel)
                     return;
 
 
@@ -195,36 +270,29 @@ namespace events
                 var xml = e.EventRecord.ToXml();
 
 
-                var levelColor = ColorTheme.fg;
+                var levelColor = GetLevelColor(e.EventRecord.Level);
                 var levelText = e.EventRecord.LevelDisplayName;
                 switch (e.EventRecord.Level)
                 {
                     case 0: // LogAlways
-                        levelColor = ColorTheme.fg;
                         levelText = "Log";
                         break;
                     case 1: // Critical
-                        levelColor = ColorTheme.dark_red;
                         levelText = "Critical";
                         break;
                     case 2: // Error
-                        levelColor = ColorTheme.red;
                         levelText = "Error";
                         break;
                     case 3: // Warning
-                        levelColor = ColorTheme.yellow;
                         levelText = "Warning";
                         break;
                     case 4: // Informational
-                        levelColor = ColorTheme.blue;
                         levelText = "Info";
                         break;
                     case 5: // Verbose
-                        levelColor = ColorTheme.cyan;
                         levelText = "Verbose";
                         break;
                     default:
-                        levelColor = ColorTheme.coral;
                         levelText = "Unknown";
                         break;
                 }
@@ -271,7 +339,7 @@ namespace events
 
         static void WriteError(string text)
         {
-            Console.Error.WriteLine(text);
+            Console.Error.Write(text);
         }
 
         static void WriteErrorLine(string text) { WriteError(text + Environment.NewLine); }
@@ -287,6 +355,52 @@ namespace events
                 WriteError(ex.Message + Environment.NewLine);
                 Environment.Exit(1);
             }
+        }
+        public enum ConfirmDefault
+        {
+            None, Yes, No
+        }
+        public static bool Confirm(string title, ConfirmDefault confirmDefault = ConfirmDefault.None)
+        {
+            ConsoleKey response;
+
+            switch (confirmDefault)
+            {
+                case ConfirmDefault.Yes:
+                    do
+                    {
+                        Console.Write($"{title} [Y/n] ");
+                        response = Console.ReadKey(false).Key;
+                        if (response == ConsoleKey.Enter)
+                        {
+                            Console.WriteLine();
+                            return true;
+                        }
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+                case ConfirmDefault.No:
+                    do
+                    {
+                        Console.Write($"{title} [y/N] ");
+                        response = Console.ReadKey(false).Key;
+                        if (response == ConsoleKey.Enter)
+                        {
+                            Console.WriteLine();
+                            return false;
+                        }
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+                default:
+                    do
+                    {
+                        Console.Write($"{title} [y/n] ");
+                        response = Console.ReadKey(false).Key;
+                        Console.WriteLine();
+                    } while (response != ConsoleKey.Y && response != ConsoleKey.N);
+                    break;
+
+            }
+            return (response == ConsoleKey.Y);
         }
 
         static void ShowHelp()

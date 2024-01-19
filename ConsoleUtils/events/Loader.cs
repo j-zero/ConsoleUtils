@@ -9,7 +9,7 @@ namespace events
     {
         static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
+            //AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
             events.MainCore(args);
             Console.ReadLine();
         }

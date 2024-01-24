@@ -14,13 +14,17 @@ namespace events
     public class events
     {
         static bool ask_to_close = false;
-        static int lineCounter = 0;
         static string color1 = "f25c54";
         static string color2 = "f4845f";
         static bool DEBUG = false;
         static CmdParser cmd;
-        static string fullLogPath = null;
-        static long currentLogLevel = 5;
+        static string full_log_path = null;
+        static long current_log_level = 5;
+        static bool log_enabled = true;
+        static bool running = false;
+        static int all_logs_counter = 0;
+        static int attached_logs_counter = 0;
+
 
         public static void MainCore(string[] args)
         {
@@ -48,9 +52,10 @@ namespace events
                         { CmdParameterTypes.STRING, null }
                     }, $"Channel(s) to open (Default: All; E.g: \"{"Applilcation".Pastel(color2)}\", \"{"System".Pastel(color2)}\", \"{"Security".Pastel(color2)}\")" },
                 { "file", "f", CmdCommandTypes.MULTIPE_PARAMETER, new CmdParameters() {
-                        { CmdParameterTypes.STRING, null }
+                        { CmdParameterTypes.STRING, GetTempLogFile() }
                     }, "File to write logs)" },
 
+                { "disable-logging", "L", CmdCommandTypes.FLAG, "Disable logging into file" }
             };
 
             cmd.DefaultParameter = "start";
@@ -59,21 +64,23 @@ namespace events
             if (cmd.HasFlag("help"))
                 ShowHelp();
 
-            currentLogLevel = cmd["level"].Int;
+            log_enabled = !cmd.HasFlag("disable-logging");
+
+            current_log_level = cmd["level"].Int;
 
             if (args is null) throw new ArgumentNullException(nameof(args));
 
-            if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
+            if (!cmd.HasFlag("disable-logging") && cmd["file"].StringIsNotNull)
             {
                 var filePath = cmd["file"].String;
-                fullLogPath = Path.GetFullPath(filePath);
-                if(!File.Exists(fullLogPath))
-                    File.Create(fullLogPath);
+                full_log_path = Path.GetFullPath(filePath);
+                if(!File.Exists(full_log_path))
+                    File.Create(full_log_path);
                 else
                 {
                     if (!cmd.HasFlag("overwrite") && !cmd.HasFlag("append"))
                     {
-                        if (Confirm($"File \"{fullLogPath}\" already exists, would you like to overwrite it?", ConfirmDefault.No))
+                        if (Confirm($"File \"{full_log_path}\" already exists, would you like to overwrite it?", ConfirmDefault.No))
                             TruncateLogFile();
                         else
                             Environment.Exit(0);
@@ -86,6 +93,7 @@ namespace events
 
                     
                 }
+                WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to \"{filePath}\"");
             }
 
             string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
@@ -97,9 +105,11 @@ namespace events
                 //Console.ReadKey();
             }
 
+            WriteError("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Attaching to eventlog channels ... ");
             //Console.Error.Write("Getting logs  ... ");
             LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
-            //Console.Error.WriteLine("let's go!");
+            WriteErrorLine($"{attached_logs_counter}/{all_logs_counter} attached.");
+            running = true;
 
             while (!ask_to_close)
             {
@@ -114,39 +124,47 @@ namespace events
             switch (keyInfo.Key)
             {
                 case ConsoleKey.D0:
-                    currentLogLevel = 0;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 0 (" + "LogAlways".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 0;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 0 (" + "LogAlways".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D1:
-                    currentLogLevel = 1;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 1 (" + "Critical".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 1;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 1 (" + "Critical".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D2:
-                    currentLogLevel = 2;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 2 (" + "Error".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 2;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 2 (" + "Error".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D3:
-                    currentLogLevel = 3;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 3 (" + "Warning".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 3;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 3 (" + "Warning".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D4:
-                    currentLogLevel = 4;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 4 (" + "Info".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 4;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 4 (" + "Info".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D5:
-                    currentLogLevel = 5;
-                    WriteErrorLine("(" + "!".Pastel(ColorTheme.purple) + ")" + " Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(currentLogLevel)) + ")");
+                    current_log_level = 5;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(current_log_level)) + ")");
+                    break;
+                case ConsoleKey.L:
+                    log_enabled ^= log_enabled;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to file {(log_enabled ? "enabled" : "disabled")}");
                     break;
                 default:
                     break;
             }
         }
 
+        static string GetTempLogFile() {
+            return Path.Combine(Path.GetTempPath(), "events." + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".log");
+        }
+
         static bool TruncateLogFile()
         {
             try
             {
-                FileStream fileStream = new FileStream(fullLogPath, FileMode.Truncate);
+                FileStream fileStream = new FileStream(full_log_path, FileMode.Truncate);
                 //fileStream.SetLength(0);
                 fileStream.Close();
             }
@@ -170,6 +188,8 @@ namespace events
         {
             EventLogSession session = new EventLogSession();
             var allLogs = session.GetLogNames().ToArray();
+            all_logs_counter = allLogs.Length;
+
             /*
             foreach (string name in session.GetLogNames())
             {
@@ -183,6 +203,7 @@ namespace events
 
             foreach (var logSource in logSources)
             {
+                
                 if (!allLogs.Contains(logSource))
                 {
                     WriteErrorLine($"Error: Can't find channel \"{logSource}\"");
@@ -200,6 +221,7 @@ namespace events
                 try
                 {
                     logWatcher.Enabled = true;
+                    attached_logs_counter++;
                 }
                 catch (System.Diagnostics.Eventing.Reader.EventLogException ele)
                 {
@@ -244,9 +266,12 @@ namespace events
 
         private static void LogWatcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
         {
+            if (!running)
+                return;
+
             try
             {
-                if (e.EventRecord.Level > currentLogLevel)
+                if (e.EventRecord.Level > current_log_level)
                     return;
 
 
@@ -296,21 +321,21 @@ namespace events
                         levelText = "Unknown";
                         break;
                 }
-
+                
                 WriteLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}".Pastel(ColorTheme.light_grey));
                 WriteLine($"{description.Pastel(ColorTheme.light_grey)}\n");
                 if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
                 {
                     if (cmd.HasFlag("xml"))
                     {
-                        WriteLogLine(xml, fullLogPath);
+                        WriteLogLine(xml, full_log_path);
                     }
                     else
                     {
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Disable();
 
-                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}\n{description}\n---".Pastel(ColorTheme.light_grey), fullLogPath);
+                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}\n{description}\n---".Pastel(ColorTheme.light_grey), full_log_path);
                         
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Enable();
@@ -346,14 +371,17 @@ namespace events
 
         static void WriteLogLine(string text, string path)
         {
-            try
+            if (log_enabled)
             {
-                System.IO.File.AppendAllText(path, text + Environment.NewLine);
-            }
-            catch (Exception ex)
-            {
-                WriteError(ex.Message + Environment.NewLine);
-                Environment.Exit(1);
+                try
+                {
+                    System.IO.File.AppendAllText(path, text + Environment.NewLine);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(ex.Message + Environment.NewLine);
+                    Environment.Exit(1);
+                }
             }
         }
         public enum ConfirmDefault

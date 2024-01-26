@@ -91,6 +91,10 @@ public class ConsoleHelper
         Console.Write(input);
     }
 
+    public static void WriteLine()
+    {
+        Write(Environment.NewLine);
+    }
     public static void WriteLine(string input)
     {
         Write(input + Environment.NewLine);
@@ -355,7 +359,7 @@ public class ConsoleHelper
     }
 
 
-    public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1, OutputMode outputMode = OutputMode.Hex, bool noOffset = false, bool noText = false)
+    public static void HexDump(Blob bytes, int BytesPerLine, bool header = false, ulong largestOffset = 0, bool zeroOffset = false, int highlightOffset = -1, int highlightLength = -1, OutputMode outputMode = OutputMode.Hex, bool noOffset = false, bool noText = false, bool paging = false)
 
     {
         if (!Console.IsOutputRedirected)
@@ -364,7 +368,10 @@ public class ConsoleHelper
             windowWidth = Console.WindowWidth;
         }
 
+
         if (bytes == null) return;
+
+        int pagingCounter = 0;
 
         string spacer = "   ";
         string offsetPrefix = "0x";
@@ -428,14 +435,14 @@ public class ConsoleHelper
                 {
                     Write((j % 16).ToString("X").ToLower().Pastel(ColorTheme.OffsetColor));
                 }
-            Write(Environment.NewLine);
+            WriteLine();
+            pagingCounter++;
         }
-
-        int linecounter = 0;
-
+        int lineCounter = 0;
         for (int i = 0; i < bytesLength; i += bytesPerLine)
         {
-            linecounter++;
+            
+            lineCounter++;
             string offsetPart = string.Empty;
             string hexPart = string.Empty;
             string asciiPart = string.Empty;
@@ -519,8 +526,19 @@ public class ConsoleHelper
 
                 }
             }
-            WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(linecounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
+            WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(lineCounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
+            pagingCounter++;
+            if (paging && (pagingCounter >= Console.WindowHeight - 1))
+            {
+                PagingWait();
+                pagingCounter = 0;
+            }
         }
+    }
+    public static string PagingWait()
+    {
+        var key = Console.ReadKey(true);
+        return null;
     }
 }
 

@@ -41,7 +41,7 @@ namespace hexe
 
         static string color1 = "#e01e37";
         static string color2 = "#a71e34";
-
+        static bool paging = false;
 
         static void Main(string[] args)
         {
@@ -142,6 +142,8 @@ namespace hexe
                 { "output", "O", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.STRING, null }
                     }, "Output file" },
+                
+                { "paging", "P", CmdCommandTypes.FLAG, "Simple `more`-like paging." },
 
             };
 
@@ -158,8 +160,8 @@ namespace hexe
                     ShowVersion();
                     Environment.Exit(0);
                 }
-                
 
+                paging = cmd.HasFlag("paging");
                 noText = cmd.HasFlag("no-ascii");
                 noOffset = cmd.HasFlag("no-offset");
 
@@ -445,7 +447,7 @@ namespace hexe
                                 if(counter != 0)
                                     WriteLine("...".Pastel(ColorTheme.HighLight2));
 
-                                ConsoleHelper.HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode, noOffset, noText);
+                                ConsoleHelper.HexDump(blob, bytesPerLine, counter++ == 0, (ulong)(data.Last().Offset + data.Last().Length), false, offset, needle.Length, outputMode, noOffset, noText, paging);
                                 //ConsoleHelper.HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode, noOffset, noText);
                             }
                                     
@@ -457,7 +459,7 @@ namespace hexe
 
                     else
                     {
-                        ConsoleHelper.HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode, noOffset, noText);
+                        ConsoleHelper.HexDump(data[i], bytesPerLine, !cmd.HasFlag("no-header") && (i != 1), (ulong)(data.Last().Offset + data.Last().Length), (cmd.HasFlag("zero")) && (data.Count > 1), -1, -1, outputMode, noOffset, noText, paging);
                     }
                     if(i != data.Count - 1)
                         WriteLine("...".Pastel(ColorTheme.HighLight2));
@@ -722,8 +724,10 @@ namespace hexe
 
         public static void StringDump(byte[] bytes, Encoding encoding)
         {
+            
             // TODO Linenumbers + Gremlins
             if (bytes == null) return;
+            int pagingCounter = 0;
             string output = encoding.GetString(bytes);
             
             //Console.WriteLine(output);
@@ -825,6 +829,14 @@ namespace hexe
                     //(cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber} (0x{lastOffset.ToString("X2").ToLower()}): ") + $"{newLine}\n"
                     (cmd.HasFlag("no-line-numbers") || cmd.HasFlag("plain") ? "" : $"{strLineNumber}: ") + $"{newLine}\n"
                    );
+
+                pagingCounter++;
+
+                if (paging && (pagingCounter >= Console.WindowHeight - 1))
+                {
+                    ConsoleHelper.PagingWait();
+                    pagingCounter = 0;
+                }
             }
                 /*
             if(lineNumber == 0)

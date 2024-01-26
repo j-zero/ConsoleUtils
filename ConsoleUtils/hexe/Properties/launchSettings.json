@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "hexe": {
+      "commandName": "Project",
+      "commandLineArgs": "-S -P c:\\temp\\zpsdesktop.exe"
+    }
+  }
+}

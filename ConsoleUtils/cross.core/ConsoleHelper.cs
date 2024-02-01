@@ -528,6 +528,7 @@ public class ConsoleHelper
             }
             WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(lineCounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
             pagingCounter++;
+
             if (paging && (pagingCounter >= Console.WindowHeight - 1))
             {
                 PagingWait();

@@ -90,26 +90,40 @@ namespace consoleutils.update
 
         static bool CheckForNewVersion(out string LocalVersion, out string RemoteVersion) 
         {
-            RemoteVersion = new WebClient().DownloadString(VersionURL).Replace("v", "").Trim();
-            string versionFile = Path.Combine(AssemblyDirectory, "VERSION");
+            RemoteVersion = "";
+            LocalVersion = "";
+            try
+            {
+                RemoteVersion = new WebClient().DownloadString(VersionURL).Replace("v", "").Trim();
+                string versionFile = Path.Combine(AssemblyDirectory, "VERSION");
 
 
-            if (File.Exists(versionFile)) {
-                LocalVersion = File.ReadAllText(versionFile).Replace("v", "").Trim().Split('-').First();
+                if (File.Exists(versionFile))
+                {
+                    LocalVersion = File.ReadAllText(versionFile).Replace("v", "").Trim().Split('-').First();
+                }
+                else
+                    LocalVersion = "0.0.0.0";
+
+                var version1 = new Version(LocalVersion);
+                var version2 = new Version(RemoteVersion);
+
+                var result = version1.CompareTo(version2);
+                if (result > 0)
+                    return false; // Console.WriteLine("version1 is greater");
+                else if (result < 0)
+                    return true;//Console.WriteLine("version2 is greater");
+                else
+                    return false; // Console.WriteLine("versions are equal");
             }
-            else
-                LocalVersion = "0.0.0.0";
-
-            var version1 = new Version(LocalVersion);
-            var version2 = new Version(RemoteVersion);
-
-            var result = version1.CompareTo(version2);
-            if (result > 0)
-                return false; // Console.WriteLine("version1 is greater");
-            else if (result < 0)
-                return true;//Console.WriteLine("version2 is greater");
-            else
-                return false; // Console.WriteLine("versions are equal");
+            catch (System.Net.WebException)
+            {
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
 
         }
 

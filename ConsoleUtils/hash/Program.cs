@@ -55,6 +55,7 @@ namespace hash
                 HashAlgo = HashAlgorithm.Create("MD5");
             else if (cmd.HasFlag("crc32"))
                 HashAlgo = DamienG.Security.Cryptography.Crc32.Create();
+
             /*
             else if (cmd.HasFlag("crc64"))
                 HashAlgo = DamienG.Security.Cryptography.Crc64.Create(0xC96C5795D7870F42);

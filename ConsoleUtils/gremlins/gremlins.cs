@@ -378,13 +378,13 @@ namespace gremlins
                         newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor));
 
                     else if (i == 0x09 && (lineEndsWithSpace && currentCharIndex >= 0 && currentCharIndex >= SpaceEndIndex))  //    <TAB> at end of line
-                        newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : $"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.Warning1));
+                        newLine += ((cmd.HasFlag("no-tab") || cmd.HasFlag("plain") ? "\t" : ($"\\t{nonPrintableChar}{nonPrintableChar}").Pastel(ColorTheme.DarkColor)).PastelBg(ColorTheme.Warning1));
 
                     else if (i == 0x20 && !(lineEndsWithSpace && currentCharIndex >= 0 && currentCharIndex >= SpaceEndIndex))    // Spaces in line
-                        newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.DarkColor));
+                        newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : " ").Pastel(ColorTheme.DarkColor));
 
                     else if (char.IsWhiteSpace(c) && (lineEndsWithSpace && currentCharIndex >= 0 && currentCharIndex >= SpaceEndIndex)) // other whitespace at end of line
-                        newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : "_").Pastel(ColorTheme.Warning1));
+                        newLine += ((cmd.HasFlag("no-space") || cmd.HasFlag("plain") ? " " : " ").PastelBg(ColorTheme.Warning1));
 
                     else if (charIsGremlin || !ConsoleHelper.IsPrintable(c)) // Unprintable (control chars (except <LF>, <TAB>), UTF-8, etc.)
                     {    

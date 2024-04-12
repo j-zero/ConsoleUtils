@@ -75,11 +75,23 @@ public class ColorTheme
         else if (b == 0x0d || b == 0x0a)    // CR LF
             color = isOdd ? SpecialChar1 : SpecialChar2;
         else if (b < 32)
+<<<<<<< HEAD
             color = isOdd ? HighLight2 : HighLight1;
         else if (b > 127 && b <= 254)                   // US-ASCII
             color = isOdd ? OffsetColorHighlight : OffsetColor;
         else if (b > 254)
+=======
+            color = isOdd ? OffsetColorHighlight : OffsetColorHighlight2;
+        else if (b > 127 && b <= 254)                   // US-ASCII
+            color = isOdd ? OffsetColor : OffsetColor2;
+        else if (b == 0xff)                   // US-ASCII
+            color = isOdd ? Warning1 : Warning2;
+        else if (b > 255)
+>>>>>>> b752018c0d9214bb61f45b95416ebbe765048abd
             color = isOdd ? Red1 : Red2;
+        else
+            color = isOdd ? Default1 : Default2;
+
 
         return color;
     }

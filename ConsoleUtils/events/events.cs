@@ -22,6 +22,7 @@ namespace events
         static long current_log_level = 5;
         static bool log_enabled = true;
         static bool running = false;
+
         static int all_logs_counter = 0;
         static int attached_logs_counter = 0;
 
@@ -113,10 +114,18 @@ namespace events
 
             while (!ask_to_close)
             {
-                //System.Threading.Thread.Sleep(50);
-                KeyPressEvent(Console.ReadKey(true));
-                ;
+                try
+                {
+                    //System.Threading.Thread.Sleep(50);
+                    KeyPressEvent(Console.ReadKey(true));
+                    ;
+                }
+                catch
+                {
+
+                }
             }
+
         }
 
         static void KeyPressEvent(ConsoleKeyInfo keyInfo)
@@ -148,8 +157,19 @@ namespace events
                     WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.L:
-                    log_enabled ^= log_enabled;
+                    log_enabled = !log_enabled;
                     WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to file {(log_enabled ? "enabled" : "disabled")}");
+                    break;
+                case ConsoleKey.Enter:
+                    Console.WriteLine();
+                    break;
+                case ConsoleKey.Spacebar:
+                    Console.WriteLine("".PadLeft(Console.BufferWidth, '-'));
+                    break;
+                case ConsoleKey.P:
+                case ConsoleKey.Pause:
+                    running = !running;
+                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"{(running ? "Started." : "Stopped.")}");
                     break;
                 default:
                     break;

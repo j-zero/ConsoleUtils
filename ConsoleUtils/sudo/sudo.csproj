@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{B7F2C32F-4ECF-4D81-84B6-F420AA639413}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>sudo</RootNamespace>
-    <AssemblyName>sudo</AssemblyName>
+    <RootNamespace>iddqd</RootNamespace>
+    <AssemblyName>iddqd</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

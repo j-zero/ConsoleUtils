@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ namespace hash
             cmd.Parse();
 
             //string HashAlgo = "SHA256";
-            HashAlgorithm HashAlgo = HashAlgorithm.Create("SHA256");
+            HashAlgorithm HashAlgo = HashAlgorithm.Create("SHA1");
 
             if (cmd.HasFlag("sha1"))
                 HashAlgo = HashAlgorithm.Create("SHA1");
@@ -54,6 +55,7 @@ namespace hash
                 HashAlgo = HashAlgorithm.Create("MD5");
             else if (cmd.HasFlag("crc32"))
                 HashAlgo = DamienG.Security.Cryptography.Crc32.Create();
+
             /*
             else if (cmd.HasFlag("crc64"))
                 HashAlgo = DamienG.Security.Cryptography.Crc64.Create(0xC96C5795D7870F42);
@@ -84,10 +86,9 @@ namespace hash
                     Pastel.ConsoleExtensions.Disable();
                     using (Stream s = Console.OpenStandardInput())
                     {
-                        using (StreamReader reader = new StreamReader(s))
-                        {
-                            
-                        }
+
+                            var hash = HashAlgo.ComputeHash(s);
+                            Console.WriteLine(BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant());
                     }
                 }
                 else
@@ -120,7 +121,6 @@ namespace hash
                 var hash = hashAlgorithm.ComputeHash(stream);
                 return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
             }
-
         }
 
         static void ShowHelp()

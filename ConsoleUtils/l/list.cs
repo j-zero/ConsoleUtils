@@ -207,7 +207,7 @@ namespace list
             }
             catch (Exception ex)
             {
-                Die("Guru Meditation: " + ex.Message, 1);
+                Die("Guru Meditation: " + ex.Message + Environment.NewLine + ex.StackTrace, 1);
             }
 
             if (isStartedFromExplorer)

@@ -76,9 +76,9 @@ public class ColorTheme
             color = isOdd ? SpecialChar1 : SpecialChar2;
         else if (b < 32)
             color = isOdd ? HighLight2 : HighLight1;
-        else if (b > 127 && b <= 255)                   // US-ASCII
+        else if (b > 127 && b <= 254)                   // US-ASCII
             color = isOdd ? OffsetColorHighlight : OffsetColor;
-        else if (b > 255)
+        else if (b > 254)
             color = isOdd ? Red1 : Red2;
 
         return color;

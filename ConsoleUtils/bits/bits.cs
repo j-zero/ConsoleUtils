@@ -88,19 +88,41 @@ namespace bits
             if (data.ToLower().StartsWith("0x") || data.ToLower().StartsWith("#") || (IsHex(data) && data.ToLower().Any(c => new char[] { 'a', 'b', 'c', 'd', 'e', 'f' }.Contains(c))))
             {
                 // hex
-                
 
-                if (data.ToLower().StartsWith("0x"))
+                if ((data.ToLower().StartsWith("0b") && data.Substring(2).All(c => c == '0' || c == '1')))
+                {
+                    if (data.ToLower().StartsWith("0b"))
+                        data = data.Substring(2);
+                    // dual
+                    Console.WriteLine($"{"interpretation".Pastel(color1)}: binary number");
+                    try
+                    {
+                        value = Convert.ToInt64(data, 2);
+                        success = true;
+                    }
+                    catch
+                    {
+                        success = false;
+                    }
+                }
+                else if (data.ToLower().StartsWith("0x"))
                 {
                     string hexdata = data.Substring(2);
                     ulong va = 0;
                     success = ulong.TryParse(hexdata, System.Globalization.NumberStyles.HexNumber, null, out va);
-                    if(success)
+                    if (success)
                         Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
                     value = (double)va;
                 }
                 else if (data.ToLower().StartsWith("#"))
-                    success = double.TryParse(data.Substring(1), System.Globalization.NumberStyles.HexNumber, null, out value);
+                {
+                    string hexdata = data.Substring(2);
+                    ulong va = 0;
+                    success = ulong.TryParse(hexdata, System.Globalization.NumberStyles.HexNumber, null, out va);
+                    if (success)
+                        Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
+                    value = (double)va;
+                }
                 else
                 {
                     long long_Val;
@@ -184,22 +206,12 @@ namespace bits
                     success = false;
                 }
             }
-            else if ((data.ToLower().StartsWith("0b") && data.Substring(2).All(c => c == '0' || c == '1')) || data.Length >= 8 && data.All(c => c == '0' || c == '1'))
+            
+            else if ((data.ToLower().StartsWith("0i") && data.Substring(2).All(Char.IsDigit)) || data.All(Char.IsDigit) || (data.StartsWith("-") && data.Substring(1).All(Char.IsDigit)))
             {
-                // dual
-                Console.WriteLine($"{"interpretation".Pastel(color1)}: binary number");
-                try
-                {
-                    value = Convert.ToInt64(data, 2);
-                    success = true;
-                }
-                catch
-                {
-                    success = false;
-                }
-            }
-            else if (data.All(Char.IsDigit) || (data.StartsWith("-") && data.Substring(1).All(Char.IsDigit)))
-            {
+                if(data.ToLower().StartsWith("0i"))
+                    data = data.Substring(2);
+
                 // decimal/octal
                 Console.WriteLine($"{"interpretation".Pastel(color1)}: decimal number");
                 try
@@ -535,7 +547,7 @@ namespace bits
         static void ShowHelp(bool more = true)
         {
             ShowVersion();
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}] {{\"file\"|{"-i".Pastel(color2)} \"input string\"}}\n");
+            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}] {{\"file\"}}\n");
             if (more)
                 Console.WriteLine($"For more options, use {"--help".Pastel(color1)}");
         }

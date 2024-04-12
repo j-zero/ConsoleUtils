@@ -51,6 +51,7 @@ namespace bits
             catch (ArgumentException ex)
             {
                 ConsoleHelper.WriteError(ex.Message);
+                Exit(1);
             }
 
             if (cmd.HasFlag("help"))

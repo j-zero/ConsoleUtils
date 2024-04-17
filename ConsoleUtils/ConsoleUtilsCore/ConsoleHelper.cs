@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Pastel;
 using System.Drawing;
 using ConsoleUtilsCore;
 using System.Globalization;
+using System.Collections;
+using System.Reflection;
 
 public class ConsoleHelper
 {
@@ -528,5 +529,9 @@ public class ConsoleHelper
             WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(linecounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
         }
     }
+
+
+
+
 }
 

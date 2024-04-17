@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "certy": {
+      "commandName": "Project",
+      "commandLineArgs": "-h example.com -P http"
+    }
+  }
+}

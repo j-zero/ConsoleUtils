@@ -32,8 +32,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "free", "free\free.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "download", "download\download.csproj", "{6C88477B-F044-40E0-A6D7-2928CE81DB9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "certy", "certy\certy.csproj", "{B4DD530E-0063-46ED-932E-F963A4F7E3DD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hekate", "hekate\hekate.csproj", "{A9FC1E1D-69CE-4C54-A8B8-30F68F40041A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unpack", "unpack\unpack.csproj", "{8D00C6A5-DB54-4632-B0CD-4D0E6EE00B09}"
@@ -69,6 +67,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "windows.core", "windows.core\windows.core.csproj", "{A13C59AC-D103-4848-A98A-6B8CC481BF3B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "d", "d\d.csproj", "{B8FA4BBA-9831-4362-AAFB-D6B6BB22A957}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "certy", "certy\certy.csproj", "{37A0EC89-6672-4704-B65A-AE6379419DE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -196,14 +196,6 @@ Global
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Release|x64.ActiveCfg = Release|x64
 		{6C88477B-F044-40E0-A6D7-2928CE81DB9F}.Release|x64.Build.0 = Release|x64
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Debug|x64.ActiveCfg = Debug|x64
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Debug|x64.Build.0 = Debug|x64
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Release|x64.ActiveCfg = Release|x64
-		{B4DD530E-0063-46ED-932E-F963A4F7E3DD}.Release|x64.Build.0 = Release|x64
 		{A9FC1E1D-69CE-4C54-A8B8-30F68F40041A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A9FC1E1D-69CE-4C54-A8B8-30F68F40041A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9FC1E1D-69CE-4C54-A8B8-30F68F40041A}.Debug|x64.ActiveCfg = Debug|x64
@@ -348,6 +340,14 @@ Global
 		{B8FA4BBA-9831-4362-AAFB-D6B6BB22A957}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B8FA4BBA-9831-4362-AAFB-D6B6BB22A957}.Release|x64.ActiveCfg = Release|Any CPU
 		{B8FA4BBA-9831-4362-AAFB-D6B6BB22A957}.Release|x64.Build.0 = Release|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Debug|x64.Build.0 = Debug|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Release|x64.ActiveCfg = Release|Any CPU
+		{37A0EC89-6672-4704-B65A-AE6379419DE8}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -247,6 +247,15 @@ namespace Pastel
             _enabled = false;
         }
 
+        /// <summary>
+        /// Returns a string unwrapped in an ANSI foreground color code using the specified color.
+        /// </summary>
+        /// <param name="input">The string to color.</param>
+        public static string Plain(this string input)
+        {
+            return Regex.Replace(input, @"\u001b\[\d{1,3};2;\d{1,3};\d{1,3};\d{1,3}m(.*?)\u001b\[0m","$1");
+        }
+
 
         /// <summary>
         /// Returns a string wrapped in an ANSI foreground color code using the specified color.

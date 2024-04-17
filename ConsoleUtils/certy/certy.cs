@@ -1,7 +1,6 @@
 ﻿using Pastel;
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using static System.Net.Mime.MediaTypeNames;
+using static certy.Program;
 
 
 namespace certy
@@ -24,6 +25,8 @@ namespace certy
         static System.Drawing.Color WarnColor2 = System.Drawing.Color.Yellow;
         static System.Drawing.Color BadColor2 = System.Drawing.Color.Firebrick;
         static string HeaderColor = ColorTheme.OffsetColorHighlight;
+        static string HeaderColor2 = ColorTheme.OffsetColorHighlight2;
+
         public enum SANType
         {
             otherName, rfc822Name, dNSName, x400Address, directoryName, ediPartyName, uniformResourceIdentifier, IPAddress, registeredID
@@ -58,12 +61,22 @@ namespace certy
                 { "port", "p", CmdCommandTypes.PARAMETER, new CmdParameters() {
                         { CmdParameterTypes.INT, 443 }
                     }, "Timeout" },
-                { "no-proxy", "P", CmdCommandTypes.FLAG, new CmdParameters() {
+                { "no-proxy", "", CmdCommandTypes.FLAG, new CmdParameters() {
                         { CmdParameterTypes.BOOL, false }
                     }, "Disable proxy" },
-                { "http", "H", CmdCommandTypes.FLAG, new CmdParameters() {
+                { "protocol", "P", CmdCommandTypes.PARAMETER, new CmdParameters() {
+                    { CmdParameterTypes.STRING, "tcp" }
+                }, "Protocol. Can be: tcp/ssl, http, smtp" },
+                { "extended", "e", CmdCommandTypes.FLAG, new CmdParameters() {
                         { CmdParameterTypes.BOOL, false }
-                    }, "Use HTTP-mode (for HTTP proxy, etc.)" },
+                    }, "Shows extended informations" },
+                { "chain", "c", CmdCommandTypes.FLAG, new CmdParameters() {
+                        { CmdParameterTypes.BOOL, false }
+                    }, "Shows certificate chain" },
+                { "pem", "", CmdCommandTypes.FLAG, new CmdParameters() {
+                        { CmdParameterTypes.BOOL, false }
+                    }, "Show PEM format only" },
+
             };
 
             cmd.DefaultParameter = "host";
@@ -77,14 +90,28 @@ namespace certy
             if (cmd.HasFlag("help") || host == null)
                 ShowHelp();
 
-            if (cmd.HasFlag("http"))
+            if (cmd["protocol"].String == "http")
             {
-                var task = ShowHTTPCertificate(host);
-                task.Wait();
 
+                Task.Run(async () =>
+                {
+                    await ShowHTTPCertificate(host);
+                }).GetAwaiter().GetResult();
+                //await task;
+            }
+            else if (cmd["protocol"].String == "smtp")
+            {
+                ShowSMTPCertificate(host, port);
+            }
+            else if (cmd["protocol"].String == "tcp" || cmd["protocol"].String == "ssl")
+            {
+                ShowTCPCertificate(host, port, timeout);
             }
             else
-                ShowTCPCertificate(host, port, timeout);
+            {
+                ConsoleHelper.WriteError($"Unknown protocol: {cmd["protocol"].String}");
+                Exit(1);
+            }
             /*
             TcpClient client = new TcpClient(host, port);
 
@@ -101,7 +128,7 @@ namespace certy
 
         static void ShowHelp()
         {
-            Console.WriteLine($"certy, {ConsoleHelper.GetVersionString()}");
+            Console.WriteLine($"certy, {ConsoleHelper.GetVersionString("9CDCFE", "569CD6")}");
             Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [Options] {{[--host|-h] [--port|-p]}}");
             Console.WriteLine($"Options:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
@@ -115,10 +142,10 @@ namespace certy
 
         static void Exit(int exitCode)
         {
-            string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
+            //string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
+            if (System.Diagnostics.Debugger.IsAttached) // is debugger attached or started by double-click/file-drag
             {
                 Console.WriteLine("\nPress any key to exit.");
                 Console.ReadKey();
@@ -126,19 +153,61 @@ namespace certy
 
             Environment.Exit(exitCode);
         }
+
+        static void ShowSMTPCertificate(string host, int port, int timeout = 2000)
+        {
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(ValidateServerCertificate);
+            using (System.Net.Mail.SmtpClient S = new System.Net.Mail.SmtpClient(host,port))
+            {
+                S.EnableSsl = true;
+                using (System.Net.Mail.MailMessage M = new System.Net.Mail.MailMessage("test@example.com", "test@example.com", "Test", "Test"))
+                {
+                    try
+                    {
+                        S.Send(M);
+                    }
+                    catch (System.Net.Mail.SmtpException sex)
+                    {
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleHelper.WriteError(ex.GetType().ToString());
+                        ConsoleHelper.WriteError(ex);
+                        if (ex.InnerException != null)
+                            ConsoleHelper.WriteError(ex.InnerException);
+                    }
+                }
+            }
+        }
+
         static void ShowTCPCertificate(string host, int port, int timeout = 2000)
         {
             TcpClient client = new TcpClient();
+
             try
             {
                 if (client.ConnectAsync(host, port).Wait(timeout)) // 2000ms timeout
                 {
-                    using (SslStream sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null))
+                    //Console.WriteLine("Foobar!");
+                    using (SslStream sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null,EncryptionPolicy.RequireEncryption))
                     {
-                        sslStream.AuthenticateAsClient(host);
-                        // do nothing with the data
+                        
+                        try
+                        {
+                            //sslStream.SslProtocol = System.Security.Authentication.SslProtocols.Tls13;
+                            //sslStream.AuthenticateAsClient(host,null,System.Security.Authentication.SslProtocols.Tls11, false);
+                            sslStream.AuthenticateAsClient(host);
+                            // do nothing with the data
+                        }
+                        catch (Exception ex)
+                        {
+                            ConsoleHelper.WriteError(ex);
+                            if (ex.InnerException != null)
+                                ConsoleHelper.WriteError(ex.InnerException);
+                            Console.WriteLine(ConsoleHelper.VarDump(sslStream));
+                        }
                     }
-                    client.Close();
                 }
                 else
                 {
@@ -155,6 +224,7 @@ namespace certy
             {
                 client.Close();
             }
+
         }
 
 
@@ -165,13 +235,23 @@ namespace certy
             if (!URL.StartsWith("https://"))
                 EndPoint = "https://" + URL;
 
-            string proxy = GetProxyForUrlStatic(EndPoint);
+            //HttpWebRequest httpWReq = (HttpWebRequest)WebRequest.Create(EndPoint);
+            //var p = WebRequest.DefaultWebProxy;
 
-            if (proxy != null)
-                Console.Error.WriteLine($"Using proxy: {proxy}");
+            //string proxy = GetProxyForUrlStatic(EndPoint);
+
+            //if (proxy != null)
+            //    Console.Error.WriteLine($"Using proxy: {proxy}");
 
 
-            HttpClientHandler handler = new HttpClientHandler();
+            var handler = new HttpClientHandler
+            {
+                // Use system proxy settings
+                UseProxy = !cmd["no-proxy"].Bool,
+                // Use default credentials for proxy authentication if required
+                UseDefaultCredentials = true
+            };
+
             handler.ServerCertificateCustomValidationCallback = ValidateServerCertificate;
             HttpClient client = new HttpClient(handler);
             try
@@ -181,7 +261,7 @@ namespace certy
             catch (HttpRequestException ex)
             {
                 ConsoleHelper.WriteError(ex);
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                     ConsoleHelper.WriteError(ex.InnerException);
             }
             handler.Dispose();
@@ -190,7 +270,9 @@ namespace certy
 
         public static string GetProxyForUrlStatic(string url)
         {
-            WebProxy proxy = (WebProxy)WebProxy.GetDefaultProxy();
+           // WebProxy proxy = (WebProxy)WebProxy.GetDefaultProxy();
+           var proxy = System.Net.WebRequest.GetSystemWebProxy();
+
             Uri resource = new Uri(url);
             // Display the proxy's properties.
             //DisplayProxyProperties(proxy);
@@ -199,7 +281,7 @@ namespace certy
             Uri resourceProxy = proxy.GetProxy(resource);
 
             // Test to see whether a proxy was selected.
-            if (resourceProxy == resource)
+            if (resourceProxy == null || resourceProxy == resource)
             {
                 return null;
             }
@@ -214,17 +296,60 @@ namespace certy
             if (certificate == null || chain == null)
                 return false;
 
+
+
+            if(cmd.HasFlag("chain") && !cmd.HasFlag("pem"))
+                Console.WriteLine($"Certificate:\n".Pastel(HeaderColor));
+
             X509Certificate2 X5092 = new X509Certificate2(certificate);
 
+            // Certificate
+            PrintCertificateInfo(X5092, cmd.HasFlag("extended"));
 
+            if(cmd.HasFlag("chain"))
+            // Chain
+            if (chain.ChainElements.Count > 0)
+            {
+                int chainCount = 2;
+                if (!cmd.HasFlag("pem"))
+                    Console.WriteLine($"\nChain:".Pastel(HeaderColor));
+
+                foreach (var c in chain.ChainElements.Skip(1))
+                {
+                    if (!cmd.HasFlag("pem")) Console.WriteLine($"\n#{chainCount++}".Pastel(HeaderColor));
+                    PrintCertificateInfo(c.Certificate, cmd.HasFlag("extended"));
+                }
+            }
+
+            ;
+            return true;
+        }
+
+        static void PrintCertificateInfo(X509Certificate2 X5092, bool extendedInformations = false) {
+
+            if (cmd.HasFlag("pem"))
+            {
+                string PEM = X5092.ExportCertificatePem();
+                Console.WriteLine(PEM);
+                return;
+            }
+            
+            int maxDescLength = Console.WindowWidth - 2;
+            int padding = 21;
             var ecdsa = X5092.GetECDsaPublicKey();
             var rsa = X5092.GetRSAPublicKey();
             var dsa = X5092.GetDSAPublicKey();
 
             string keyAlgo = "";
             int bits = 0;
+            string keyAlgoString = "";
+            string bitsString = "";
+
             DateTime notBefore = X5092.NotBefore;
             DateTime notAfter = X5092.NotAfter;
+
+            string cn = X5092.GetNameInfo(X509NameType.SimpleName, false);
+            string keystring = "";
 
             //string notBeforeString = "";
             //string notAfterString = "";
@@ -246,21 +371,54 @@ namespace certy
                 bits = dsa.KeySize;
             }
 
-            //int pos = 3;
-
-            int maxDescLength = Console.WindowWidth - 8;
 
 
-            Console.WriteLine($"Subject:".Pastel(HeaderColor));
-            ConsoleHelper.WriteSplittedText(X5092.SubjectName.Name, maxDescLength, "", 3, ColorTheme.OffsetColor);
+
+            //SAN
+            var SAN = X5092.Extensions["2.5.29.17"];
+
+            
+
+            ConsoleHelper.WriteSplittedKeyValue("Common names: ".Pastel(HeaderColor2), cn, maxDescLength, padding);
             Console.WriteLine();
-            Console.WriteLine($"Issuer:".Pastel(HeaderColor));
-            ConsoleHelper.WriteSplittedText(X5092.Issuer, maxDescLength, "", 3, ColorTheme.OffsetColor);
-            Console.WriteLine();
-            Console.WriteLine($"Public key:".Pastel(HeaderColor));
 
-            string keyAlgoString = "";
-            string bitsString = "";
+            if (SAN != null)
+            {
+                //File.WriteAllBytes("2.5.29.17.dmp", SAN.RawData);
+                //Console.WriteLine($"{SAN.Oid.FriendlyName} ({SAN.Oid.Value}):".Pastel(HeaderColor2));
+
+                List<string> str_sans = new List<string>();
+                foreach (var san in ParseSubjectAltName(SAN.RawData))
+                {
+
+                    if (san.SanType == SANType.dNSName)
+                    {
+                        if (InetHelper.IsFqdn(san.Value))
+                            str_sans.Add($"{san.Value.Pastel(GoodColor)}{(extendedInformations ? " (DNS)" : "")}");
+                        else
+                            str_sans.Add($"{san.Value.Pastel(WarnColor2)}{(extendedInformations ? " (DNS)" : "")}");
+                    }
+                    else if (san.SanType == SANType.IPAddress)
+                    {
+                        str_sans.Add($"{san.Value.Pastel(BadColor)}{(extendedInformations ? " (IP)" : "")}");
+                    }
+                    else
+                    {
+                        str_sans.Add($"{san.Value.Pastel(BadColor)}{(extendedInformations ? $" ({san.SanType.ToString()})" : "")}");
+                    }
+                }
+                ConsoleHelper.WriteSplittedKeyValue("Alternate names: ".Pastel(HeaderColor2), str_sans.ToArray(), ", ", maxDescLength, padding);
+                Console.WriteLine();
+            }
+
+            Console.Write($"Issuer: ".PadRight(padding).Pastel(HeaderColor2));
+            ConsoleHelper.WriteSplittedText(X5092.GetNameInfo(X509NameType.SimpleName, true), maxDescLength, "", 0, ColorTheme.Text);
+            Console.WriteLine();
+
+
+            Console.Write($"Public key:".PadRight(padding).Pastel(HeaderColor2));
+
+
 
             if (keyAlgo == "RSA")
             {
@@ -283,59 +441,67 @@ namespace certy
                 keyAlgoString = keyAlgo.Pastel(BadColor);
             }
 
-            Console.WriteLine($"   {keyAlgoString}, {bitsString} bits");
+            Console.WriteLine($"{keyAlgoString}, {bitsString} bits");
 
 
-            Console.WriteLine($"Serial number:".Pastel(HeaderColor));
-            Console.WriteLine($"   {X5092.SerialNumber}");
+            Console.Write($"Serial number:".PadRight(padding).Pastel(HeaderColor2));
+            Console.WriteLine($"{X5092.SerialNumber.ToLower()}");
 
-            Console.WriteLine($"Thumbprint:".Pastel(HeaderColor));
-            Console.WriteLine($"   {X5092.Thumbprint}");
-            Console.WriteLine($"Signature Algorhitm:".Pastel(HeaderColor));
-            Console.WriteLine($"   {X5092.SignatureAlgorithm.FriendlyName}");
+            Console.Write($"Thumbprint:".PadRight(padding).Pastel(HeaderColor2));
+            Console.WriteLine($"{X5092.Thumbprint.ToLower()}");
+            Console.Write($"Signature Algorhitm:".PadRight(padding).Pastel(HeaderColor2));
+            Console.WriteLine($"{X5092.SignatureAlgorithm.FriendlyName}");
 
-            Console.WriteLine($"Not Before:".Pastel(HeaderColor));
+            Console.Write($"Not before:".PadRight(padding).Pastel(HeaderColor2));
 
 
             if (notBefore > DateTime.Now)
-                Console.WriteLine($"   {notBefore.ToShortDateString().Pastel(BadColor)} {notBefore.ToShortTimeString().Pastel(BadColor2)}");
+                Console.WriteLine($"{notBefore.ToShortDateString().Pastel(BadColor)} {notBefore.ToShortTimeString().Pastel(BadColor2)}");
             else
-                Console.WriteLine($"   {notBefore.ToShortDateString().Pastel(ColorTheme.Default1)} {notBefore.ToShortTimeString().Pastel(ColorTheme.Default2)}");
+                Console.WriteLine($"{notBefore.ToShortDateString().Pastel(ColorTheme.Default1)} {notBefore.ToShortTimeString().Pastel(ColorTheme.Default2)}");
 
-            Console.WriteLine($"Not after:".Pastel(HeaderColor));
+            Console.Write($"Not after:".PadRight(padding).Pastel(HeaderColor2));
             if (notAfter < DateTime.Now)
-                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(BadColor)} {notAfter.ToShortTimeString().Pastel(BadColor2)}");
+                Console.WriteLine($"{notAfter.ToShortDateString().Pastel(BadColor)} {notAfter.ToShortTimeString().Pastel(BadColor2)}");
             else if (notAfter < DateTime.Now.AddDays(30))
-                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(WarnColor)} {notAfter.ToShortTimeString().Pastel(WarnColor2)}");
+                Console.WriteLine($"{notAfter.ToShortDateString().Pastel(WarnColor)} {notAfter.ToShortTimeString().Pastel(WarnColor2)}");
             else
-                Console.WriteLine($"   {notAfter.ToShortDateString().Pastel(ColorTheme.Default1)} {notAfter.ToShortTimeString().Pastel(ColorTheme.Default2)}");
+                Console.WriteLine($"{notAfter.ToShortDateString().Pastel(ColorTheme.Default1)} {notAfter.ToShortTimeString().Pastel(ColorTheme.Default2)}");
 
             /*
             Console.WriteLine($"Not Before:                 {X5092.NotBefore.ToLongDateString()} {X5092.NotBefore.ToLongTimeString()}");
             Console.WriteLine($"Not After:                  {X5092.NotAfter.ToLongDateString()} {X5092.NotAfter.ToLongTimeString()}");
             */
-            var SAN = X5092.Extensions["2.5.29.17"];        //SAN
-
-            //File.WriteAllBytes("2.5.29.17.dmp", SAN.RawData);
-
-            Console.WriteLine($"{SAN.Oid.FriendlyName}:".Pastel(HeaderColor));
 
 
-            foreach (var san in ParseSubjectAltName(SAN.RawData))
+
+            if (extendedInformations)
             {
-                if (san.SanType == SANType.dNSName )
-                {
-                    if(InetHelper.IsFqdn(san.Value))
-                        Console.WriteLine($"   DNS: {san.Value.Pastel(GoodColor)}");
-                    else
-                        Console.WriteLine($"   DNS: {san.Value.Pastel(WarnColor)}");
-                }
-                else if (san.SanType == SANType.IPAddress)
-                {
-                    Console.WriteLine($"   IP:  {san.Value.Pastel(BadColor)}");
-                }
-            }
+                Console.Write($"Subject:".Pastel(HeaderColor2));
+                ConsoleHelper.WriteSplittedText(X5092.SubjectName.Name, maxDescLength, "", padding - 8, ColorTheme.Text);
+                Console.WriteLine();
 
+                Console.Write($"Issuer (CN):".Pastel(HeaderColor2));
+                ConsoleHelper.WriteSplittedText(X5092.Issuer, maxDescLength, "", padding - 12, ColorTheme.Text);
+                Console.WriteLine();
+
+                Console.WriteLine($"\nPublic key (binary):".Pastel(HeaderColor2));
+                SimpleHexDump(X5092.GetPublicKey());
+
+                foreach (var ext in X5092.Extensions)
+                {
+                    if (ext.Oid.Value != "2.5.29.17")
+                    {
+                        Console.WriteLine($"\n{ext.Oid.FriendlyName} ({ext.Oid.Value}):".Pastel(HeaderColor2));
+                        SimpleHexDump(ext.RawData, "", 16);
+                    }
+                    //Console.WriteLine($"   {ext.}:");
+                }
+                string PEM = X5092.ExportCertificatePem();
+                Console.WriteLine($"\nPEM:".Pastel(HeaderColor2));
+                Console.WriteLine(PEM);
+
+            }
             // extended information
             //Console.WriteLine($"Version:                    {X5092.Version}");
             /*
@@ -388,9 +554,6 @@ namespace certy
             DumpProperties(X5092);
             Console.WriteLine("--- DUMP ---");
             */
-
-            ;
-            return true;
         }
 
         static void GetExtensionContent(X509Extension ext)
@@ -402,7 +565,7 @@ namespace certy
 
         static string GetExtensionContentString(X509Extension ext, bool MultiLine = true)
         {
-           
+
             var data = new AsnEncodedData(ext.Oid, ext.RawData).Format(true);
             return data;
         }
@@ -428,7 +591,7 @@ namespace certy
             string sanValue = null;
             byte[] arr = null;
             int i = 2;
-            
+
             while (i < rawData.Length)
             {
                 byte b = rawData[i];
@@ -467,7 +630,7 @@ namespace certy
             return result;
         }
 
-        public static void SimpleHexDump(byte[] bytes, int bytesPerLine = 16)
+        public static void SimpleHexDump(byte[] bytes, string prefix = "", int bytesPerLine = 16)
         {
             if (bytes == null)
             {
@@ -493,7 +656,7 @@ namespace certy
 
             char[] line = (new String(' ', lineLength - Environment.NewLine.Length) + Environment.NewLine).ToCharArray();
             int expectedLines = (bytesLength + bytesPerLine - 1) / bytesPerLine;
-            StringBuilder result = new StringBuilder(expectedLines * lineLength);
+            //StringBuilder result = new StringBuilder(expectedLines * lineLength);
 
             for (int i = 0; i < bytesLength; i += bytesPerLine)
             {
@@ -528,9 +691,10 @@ namespace certy
                     hexColumn += 3;
                     charColumn++;
                 }
-                result.Append(line);
+                //result.Append(line);
+                Console.Write(prefix + new string(line));
             }
-            Console.WriteLine(result.ToString());
+            //Console.WriteLine(result.ToString());
         }
     }
 }

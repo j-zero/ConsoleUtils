@@ -1,3 +1,4 @@
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
 if(Get-Command "list" -erroraction 'silentlycontinue'){

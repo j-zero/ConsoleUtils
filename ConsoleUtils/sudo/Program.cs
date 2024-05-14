@@ -16,7 +16,9 @@ namespace sudo
             if(args.Length == 0)
             {
                 //Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} {{command line}}\n  If no parameter is given, the parent process will be startet as administrator");
+
                 var pid = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().Id;
+                
                 string arguments = GetCommandLine(pid);
 
                 var parts = Regex.Matches(arguments, @"[\""].+?[\""]|[^ ]+")

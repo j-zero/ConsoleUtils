@@ -68,7 +68,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "windows.core", "windows.cor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "d", "d\d.csproj", "{B8FA4BBA-9831-4362-AAFB-D6B6BB22A957}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "certy", "certy\certy.csproj", "{37A0EC89-6672-4704-B65A-AE6379419DE8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "certy", "certy\certy.csproj", "{37A0EC89-6672-4704-B65A-AE6379419DE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -118,8 +118,8 @@ Global
 		{24621B6B-1ACA-46D5-B5AC-54AA012C7968}.Release|x64.Build.0 = Release|x64
 		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|x64.ActiveCfg = Debug|x64
-		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|x64.Build.0 = Debug|x64
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D4D77C73-4649-43F2-A898-1B410D61386B}.Debug|x64.Build.0 = Debug|Any CPU
 		{D4D77C73-4649-43F2-A898-1B410D61386B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4D77C73-4649-43F2-A898-1B410D61386B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D4D77C73-4649-43F2-A898-1B410D61386B}.Release|x64.ActiveCfg = Release|x64

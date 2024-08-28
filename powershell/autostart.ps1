@@ -16,6 +16,18 @@ function rdp([string]$server){
     mstsc.exe /prompt /v:$server
 }
 
+function killall([string]$process){
+    get-process $process | stop-process
+}
+
+function grep([string]$pattern)
+{
+	process
+	{
+        $_ | Select-String -Pattern $pattern
+    }
+}
+
 # powershell ssh tools
 . "$PSScriptRoot\profile-snippet-sshtools.ps1"
 

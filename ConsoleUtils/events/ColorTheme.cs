@@ -21,6 +21,7 @@
         public readonly static string coral = "#f08080";
         public readonly static string grey = "#5b5e5a";
         public readonly static string light_grey = "#838781";
+        public readonly static string lighter_grey = "#bbbbbb";
         public readonly static string dark_cyan = "#2b5d63";
         public readonly static string dark_red = "#833b3b";
         public readonly static string dark_yellow = "#7c5c20";

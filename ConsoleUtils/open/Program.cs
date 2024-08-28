@@ -44,8 +44,18 @@ static class Program
                         {
                             try
                             {
-                                System.IO.File.Create(f);
-                                Start(Environment.CurrentDirectory, openWith);
+                                string fullPath = Path.GetFullPath(f);
+                                string directory = Path.GetDirectoryName(fullPath);
+
+                                if (!File.Exists(fullPath))
+                                {
+                                    Directory.CreateDirectory(directory);
+                                    File.Create(fullPath).Close();
+                                }
+
+                                File.SetLastWriteTimeUtc(fullPath, DateTime.UtcNow);
+
+                                Start(fullPath, openWith);
                             }
                             catch(Exception ex2)
                             {

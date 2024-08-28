@@ -26,6 +26,20 @@ namespace events
         static int all_logs_counter = 0;
         static int attached_logs_counter = 0;
 
+        static void ShowVersion()
+        {
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string version_string = ("" + ver.Major + "." + ver.Minor + "").PadLeft(7);
+
+            Console.WriteLine(@"███████ ██    ██ ███████ ███    ██ ████████ ███████".Pastel("#f25c54"));
+            Console.WriteLine(@"██      ██    ██ ██      ████   ██    ██    ██      ".Pastel("#f27059"));
+            Console.WriteLine(@"█████   ██    ██ █████   ██ ██  ██    ██    ███████ ".Pastel("#f4845f"));
+            Console.WriteLine(@"██       ██  ██  ██      ██  ██ ██    ██         ██ ".Pastel("#f79d65"));
+            Console.WriteLine((@"███████   ████   ███████ ██   ████    ██    " + (version_string).PastelBg("#f7b267").Pastel("#f25c54")).Pastel("#f7b267")); //███████ " + version_string).PastelBg("#f7b267"));
+            Console.WriteLine("Part of " + GetURL());
+
+
+        }
 
         public static void MainCore(string[] args)
         {
@@ -71,12 +85,26 @@ namespace events
 
             if (args is null) throw new ArgumentNullException(nameof(args));
 
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string version_string = ("" + ver.Major + "." + ver.Minor + "." + ver.Revision).PadLeft(7);
+
+            WriteLine(("E".Pastel("#f25c54") +"V".Pastel("#f27059") + "E".Pastel("#f4845f") + "N".Pastel("#f79d65") + "T".Pastel("#f7b267") + "S".Pastel("#f7b267") + " " + version_string.Pastel("#f7b267") + " is part of " + GetURL()));
+            
+
+            WriteLine(($"Keys: " 
+                + $"{(" 0..5".Pastel(color1) + " log level ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
+                + $"{(" P".Pastel(color1) + " pause ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
+                + $"{(" F".Pastel(color1) + " toggle > file ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
+                + $"{(" SPC".Pastel(color1) + " print line ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "));
+
+
             if (!cmd.HasFlag("disable-logging") && cmd["file"].StringIsNotNull)
             {
                 var filePath = cmd["file"].String;
                 full_log_path = Path.GetFullPath(filePath);
                 if(!File.Exists(full_log_path))
                     File.Create(full_log_path);
+
                 else
                 {
                     if (!cmd.HasFlag("overwrite") && !cmd.HasFlag("append"))
@@ -96,7 +124,7 @@ namespace events
                 }
                 WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to \"{filePath}\"");
             }
-
+            
             string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
@@ -110,6 +138,8 @@ namespace events
             //Console.Error.Write("Getting logs  ... ");
             LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
             WriteErrorLine($"{attached_logs_counter}/{all_logs_counter} attached.");
+            WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging started: {DateTime.Now.ToString("yyyy-MM-dd HH\\:mm\\:ss.fff", CultureInfo.InvariantCulture).Pastel(ColorTheme.cyan)}\n");
+
             running = true;
 
             while (!ask_to_close)
@@ -156,12 +186,16 @@ namespace events
                     current_log_level = 5;
                     WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
-                case ConsoleKey.L:
+                case ConsoleKey.F:
                     log_enabled = !log_enabled;
                     WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to file {(log_enabled ? "enabled" : "disabled")}");
                     break;
                 case ConsoleKey.Enter:
                     Console.WriteLine();
+                    break;
+                case ConsoleKey.C:
+                    Console.WriteLine("".PadLeft(Console.BufferWidth, '-'));
+                    Console.Clear();
                     break;
                 case ConsoleKey.Spacebar:
                     Console.WriteLine("".PadLeft(Console.BufferWidth, '-'));
@@ -200,7 +234,8 @@ namespace events
         {
             //throw new NotImplementedException();
             ask_to_close = true;
-            //WriteErrorLine("Goodbye!");
+            WriteError("[" + "!".Pastel(ColorTheme.purple) + "] " + $"User interrupt. Closing ...");
+
             Environment.Exit(0);
         }
 
@@ -294,8 +329,8 @@ namespace events
                 if (e.EventRecord.Level > current_log_level)
                     return;
 
-
-
+               
+                var hostname = System.Net.Dns.GetHostName();
                 var time = e.EventRecord.TimeCreated.Value.ToString("yyyy-MM-dd HH\\:mm\\:ss.fff", CultureInfo.InvariantCulture);
                 var source = e.EventRecord.ProviderName;
 
@@ -342,7 +377,7 @@ namespace events
                         break;
                 }
                 
-                WriteLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}".Pastel(ColorTheme.light_grey));
+                WriteLine($"{time.Pastel(ColorTheme.cyan)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}:".Pastel(ColorTheme.lighter_grey));
                 WriteLine($"{description.Pastel(ColorTheme.light_grey)}\n");
                 if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
                 {
@@ -355,7 +390,7 @@ namespace events
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Disable();
 
-                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}\n{description}\n---".Pastel(ColorTheme.light_grey), full_log_path);
+                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}:\n{description}\n---".Pastel(ColorTheme.lighter_grey), full_log_path);
                         
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Enable();
@@ -374,7 +409,7 @@ namespace events
 
         static void Write(string text)
         {
-            Console.Write(text);
+            Console.Write(text.Pastel(ColorTheme.lighter_grey));
         }
 
         static void WriteLine(string text)
@@ -384,7 +419,7 @@ namespace events
 
         static void WriteError(string text)
         {
-            Console.Error.Write(text);
+            Console.Error.Write(text.Pastel(ColorTheme.lighter_grey));
         }
 
         static void WriteErrorLine(string text) { WriteError(text + Environment.NewLine); }
@@ -454,10 +489,13 @@ namespace events
         static void ShowHelp()
         {
             ShowVersion();
-            Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}]");
+            Console.WriteLine($"\nUsage: {AppDomain.CurrentDomain.FriendlyName.Pastel(color1)} [{"Options".Pastel(color2)}]");
             Console.WriteLine($"{"Options".Pastel(color2)}:");
             foreach (CmdOption c in cmd.OrderBy(x => x.Name))
             {
+                if (c.CmdType == CmdCommandTypes.HIDDEN_FLAG) 
+                    continue;
+
                 string l = $"  --{c.Name}".Pastel(color1) + (!string.IsNullOrEmpty(c.ShortName) ? $", {("-" + c.ShortName).Pastel(color1)}" : "") + (c.Parameters.Count > 0 && c.CmdType != CmdCommandTypes.FLAG ? " <" + string.Join(", ", c.Parameters.Select(x => x.Type.ToString().ToLower().Pastel(color2)).ToArray()) + ">" : "") + ": " + c.Description;
                 Console.WriteLine(l);
             }
@@ -465,18 +503,12 @@ namespace events
             System.Environment.Exit(0);
         }
 
-        static void ShowVersion()
+        static string GetURL()
         {
-            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            string version_string = ("" + ver.Major + "." + ver.Minor + "." + ver.Revision + "").PadLeft(7);
-
-            Console.WriteLine(@"███████ ██    ██ ███████ ███    ██ ████████ ███████".Pastel("#f25c54"));
-            Console.WriteLine(@"██      ██    ██ ██      ████   ██    ██    ██      ".Pastel("#f27059"));
-            Console.WriteLine(@"█████   ██    ██ █████   ██ ██  ██    ██    ███████ ".Pastel("#f4845f"));
-            Console.WriteLine(@"██       ██  ██  ██      ██  ██ ██    ██         ██ ".Pastel("#f79d65"));
-            Console.WriteLine((@"███████   ████   ███████ ██   ████    ██    " + (version_string).PastelBg("#f7b267").Pastel("#f25c54")).Pastel("#f7b267")); //███████ " + version_string).PastelBg("#f7b267"));
-
+            return ("ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")");
         }
+
+
 
         private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {

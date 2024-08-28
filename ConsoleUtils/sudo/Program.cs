@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 
@@ -9,6 +10,19 @@ namespace sudo
 {
     internal class Program
     {
+
+        [DllImport("advapi32", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, out IntPtr TokenHandle);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, ref IntPtr DuplicateTokenHandle);
+
+        [DllImport("advapi32", SetLastError = true)]
+        public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
+
+        [DllImport("kernel32", SetLastError = true)]
+        public static extern bool CloseHandle(IntPtr hObject);
+
         static void Main(string[] args)
         {
             var fileName = "";
@@ -56,6 +70,28 @@ namespace sudo
             WindowsIdentity identity = WindowsIdentity.GetCurrent();
             WindowsPrincipal principal = new WindowsPrincipal(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        public static void GetSystem()
+        {
+            if (IsAdministrator())
+            {
+                IntPtr hToken = IntPtr.Zero;
+
+                Process[] processes = Process.GetProcessesByName("winlogon");
+                IntPtr handle = processes[0].Handle;
+                Console.WriteLine("[+] WinLogon handle: " + handle.ToString());
+                bool success = OpenProcessToken(handle, 0x0002, out hToken);
+                Console.WriteLine("[+] OpenProcessToken: " + success.ToString());
+                IntPtr hDupToken = IntPtr.Zero;
+                success = DuplicateToken(hToken, 2, ref hDupToken);
+                Console.WriteLine("[+] DuplicateToken: " + success.ToString());
+                success = ImpersonateLoggedOnUser(hDupToken);
+                Console.WriteLine("[+] ImpersonateLoggedOnUser: " + success.ToString());
+                CloseHandle(hToken);
+                CloseHandle(hDupToken);
+
+            }
         }
 
         private static bool RunAsAdmin(string file, string arguments)

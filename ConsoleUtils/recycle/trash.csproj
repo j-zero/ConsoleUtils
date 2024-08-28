@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1AEDFF96-36F1-4317-A21D-43A0FAFE712C}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>trash</RootNamespace>
-    <AssemblyName>trash</AssemblyName>
+    <RootNamespace>rip</RootNamespace>
+    <AssemblyName>rip</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

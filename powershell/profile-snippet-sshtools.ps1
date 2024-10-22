@@ -53,9 +53,7 @@ function ssh-find-known-host([string]$wordToComplete) {
 
 function ssh-copy-id([string]$pubkey, [string]$server)
 {
-    #ssh-save-bookmark($server)
-    #ssh-find-known-host($server)
-    Get-Content $env:USERPROFILE\.ssh\$pubkey | ssh $server "mkdir ~/.ssh/ > /dev/null 2>&1; cat >> ~/.ssh/authorized_keys"
+    Get-Content $env:USERPROFILE\.ssh\$pubkey.pub | ssh $server "mkdir ~/.ssh/ > /dev/null 2>&1; chmod 700 ~/.ssh; touch ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys; cat >> ~/.ssh/authorized_keys"
 }
 
 Register-ArgumentCompleter -CommandName 'ssh-copy-id' -ParameterName 'pubkey' -ScriptBlock {

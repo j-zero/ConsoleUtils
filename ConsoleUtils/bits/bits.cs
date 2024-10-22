@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Buffers.Binary;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 [assembly: System.Reflection.AssemblyVersion("0.3.*")]
 namespace bits
 {
     internal class bits
     {
-       // static long firstTick = 621355968000000000;
+        // static long firstTick = 621355968000000000;
 
         static double value = 0;
         //static long int_value = 0;
@@ -21,6 +24,7 @@ namespace bits
         static bool isBits = false;
         static string color1 = "#2dc653";
         static string color2 = "#208b3a";
+        static int padRight = 16;
 
         enum DataTypes
         {
@@ -95,7 +99,7 @@ namespace bits
                     if (data.ToLower().StartsWith("0b"))
                         data = data.Substring(2);
                     // dual
-                    Console.WriteLine($"{"interpretation".Pastel(color1)}: binary number");
+                    Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: binary number");
                     try
                     {
                         value = Convert.ToInt64(data, 2);
@@ -112,7 +116,7 @@ namespace bits
                     ulong va = 0;
                     success = ulong.TryParse(hexdata, System.Globalization.NumberStyles.HexNumber, null, out va);
                     if (success)
-                        Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
+                        Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: hex number");
                     value = (double)va;
                 }
                 else if (data.ToLower().StartsWith("#"))
@@ -121,7 +125,7 @@ namespace bits
                     ulong va = 0;
                     success = ulong.TryParse(hexdata, System.Globalization.NumberStyles.HexNumber, null, out va);
                     if (success)
-                        Console.WriteLine($"{"interpretation".Pastel(color1)}: hex number");
+                        Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: hex number");
                     value = (double)va;
                 }
                 else
@@ -139,7 +143,7 @@ namespace bits
                     int l = Array.FindIndex(UnitHelper.SizeSuffixes, x => x.ToLower() == suffix.ToLower());
 
                     string unit_name = UnitHelper.SISuffixNames[suffix.ToLower()];
-                    Console.WriteLine($"{"interpretation".Pastel(color1)}: {si_interpret_val} {unit_name}, Number with SI Prefix");
+                    Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: {si_interpret_val} {unit_name}, Number with SI Prefix");
 
                     for (int i = 0; i < l; i++)
                         si_interpret_val *= 1000;
@@ -172,12 +176,12 @@ namespace bits
                         c = 1024;
                         //isBin = true;
                         unit_name = UnitHelper.BinSuffixNames[unit.ToLower()];
-                        Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
+                        Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (binary unit prefix, base 2)");
                     }
                     else
                     {
                         unit_name = UnitHelper.SISuffixNames[unit.ToLower()];
-                        Console.WriteLine($"{"interpretation".Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
+                        Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: {byte_interpret_value} {unit_name}" + (isBits ? "bits" : "bytes") + " (SI unit prefix, base 10)");
                     }
 
                     //Console.WriteLine($"Assuming {val} {unit_name}" + (isBits ? "bits" : "Bytes"));
@@ -196,7 +200,7 @@ namespace bits
 
             else if (data.All(Char.IsDigit) && data.StartsWith("0") && data.All(c => c >= '0' && c <= '7'))
             {
-                Console.WriteLine($"{"interpretation".Pastel(color1)}: octal number");
+                Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: octal number");
                 try
                 {
                     value = Convert.ToInt64(data, 8);
@@ -214,7 +218,7 @@ namespace bits
                     data = data.Substring(2);
 
                 // decimal/octal
-                Console.WriteLine($"{"interpretation".Pastel(color1)}: decimal number");
+                Console.WriteLine($"{"interpretation".PadRight(padRight).Pastel(color1)}: decimal number");
                 try
                 {
                     value = Convert.ToInt64(data, 10);
@@ -262,21 +266,25 @@ namespace bits
 
             Console.WriteLine();
 
-            Console.WriteLine($"{"decimal".Pastel(color1)}: {value} ({decimalValue})");
+            Console.WriteLine($"{"decimal".PadRight(padRight).Pastel(color1)}: {value} ({decimalValue})");
 
             if (value % 1 == 0)
             {
                 string hexValue = int_value.ToString("X").ToLower();
                 string hexString = StringHelper.PadLeftToBlocks(hexValue, 2, '0', " ");
+                string revEndian = BinaryPrimitives.ReverseEndianness(int_value).ToString("X").ToLower();
+                string revEndhexString = StringHelper.PadLeftToBlocks(revEndian, 2, '0', " ");
+
                 string binaryValue = StringHelper.PadLeftToBlocks(Convert.ToString(int_value, 2), 4, '0', " ");
                 string octalValue = Convert.ToString(int_value, 8);
-                Console.WriteLine($"{"hex".Pastel(color1)}    : {hexString} ({hexValue})");
-                Console.WriteLine($"{"octal".Pastel(color1)}  : {octalValue}");
-                Console.WriteLine($"{"binary".Pastel(color1)} : {binaryValue}");
+                Console.WriteLine($"{"hex".PadRight(padRight).Pastel(color1)}: {hexString} ({hexValue})");
+                Console.WriteLine($"{"hex rev. endian".PadRight(padRight).Pastel(color1)}: {revEndhexString} ({revEndian})");
+                Console.WriteLine($"{"octal".PadRight(padRight).Pastel(color1)}: {octalValue}");
+                Console.WriteLine($"{"binary".PadRight(padRight).Pastel(color1)}: {binaryValue}");
             }
 
 
-            Console.WriteLine($"{"bits".Pastel(color1)}   : {bitsValue} (2^{bitsValue} = {maxBits}, +{maxBits - (double)value})");
+            Console.WriteLine($"{"bits".PadRight(padRight).Pastel(color1)}: {bitsValue} (2^{bitsValue} = {maxBits}, +{maxBits - (double)value})");
 
 
 
@@ -294,12 +302,12 @@ namespace bits
 
                 string hexRGB = int_value.ToString("X").ToLower().PadLeft((value > 0xffffff ? 8 : 6), '0');
 
-                Console.WriteLine($"{"color".Pastel(color1)}  : HEX #{hexRGB}; RGB {r}, {g}, {b} (Alpha {a}); {"██████".Pastel(Color.FromArgb(r, g, b))}");
+                Console.WriteLine($"{"color".PadRight(padRight).Pastel(color1)}: {hexRGB}; RGB {r}, {g}, {b} (Alpha {a}); {"██████".Pastel(Color.FromArgb(r, g, b))}");
             }
 
             if (value % 1 == 0 && value > 0 && (value > DateTime.MinValue.Ticks && value < DateTime.MaxValue.Ticks))
             {
-                Console.Write($"{"ticks".Pastel(color1)}  : ");
+                Console.Write($"{"ticks".PadRight(padRight).Pastel(color1)}: ");
 
                 DateTime dt = new DateTime(int_value);
                 TimeSpan ts = new TimeSpan(int_value);
@@ -311,7 +319,7 @@ namespace bits
                 DateTime unixTime = UnixTimeStampToDateTime(int_value);
                 if (unixTime.Ticks != 0)
                 {
-                    Console.Write($"{"unix".Pastel(color1)}   : ");
+                    Console.Write($"{"unix".PadRight(padRight).Pastel(color1)}: ");
                     Console.WriteLine($"{unixTime.ToShortDateString()} {unixTime.ToLongTimeString()}");
                 }
 
@@ -358,12 +366,12 @@ namespace bits
 
                 if (i == 0)
                 {
-                    Console.WriteLine($"{"size".Pastel(color1)}   : {sizeValue} Bytes, {bit_sizeValue} bits");
+                    Console.WriteLine($"{"size".PadRight(padRight).Pastel(color1)}: {sizeValue} Bytes, {bit_sizeValue} bits");
                 }
                 else
                 {
 
-                    Console.WriteLine($"         {sizeValue} {UnitHelper.SISuffixNames[sizeSuffix.ToLower()]}bytes, {sizeIValue} {UnitHelper.BinSuffixNames[sizeISuffix.ToLower()]}bytes, {bit_sizeValue} {UnitHelper.SISuffixNames[bit_sizeSuffix.ToLower()]}bits, {bit_sizeIValue} {UnitHelper.BinSuffixNames[bit_sizeSuffix.ToLower()]}bits");
+                    Console.WriteLine($"{"".PadRight(padRight)}  {sizeValue} {UnitHelper.SISuffixNames[sizeSuffix.ToLower()]}bytes, {sizeIValue} {UnitHelper.BinSuffixNames[sizeISuffix.ToLower()]}bytes, {bit_sizeValue} {UnitHelper.SISuffixNames[bit_sizeSuffix.ToLower()]}bits, {bit_sizeIValue} {UnitHelper.BinSuffixNames[bit_sizeSuffix.ToLower()]}bits");
                 }
             }
             return success;

@@ -119,7 +119,9 @@ namespace list
                     found.AddRange(files);
 
                     if (found.Count == 0)
-                        ConsoleHelper.WriteError($"No files found in \"{path}\"");
+                    {
+                        //ConsoleHelper.WriteError($"No files found in \"{path}\"");
+                    }
 
                     //found.AddRange(files);
                 }
@@ -172,6 +174,10 @@ namespace list
                         else if (cmd.HasFlag("oneline"))
                         {
                             OneLinerList(list, showRelativePath);
+                        }
+                        else if (list.Count == 1)
+                        {
+                            LongList(list, false);
                         }
                         else
                         {

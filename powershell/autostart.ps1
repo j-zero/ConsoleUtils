@@ -28,6 +28,10 @@ function grep([string]$pattern)
     }
 }
 
+function commit() {
+    git commit -a -m "$($args -join ' ')"	
+}
+
 # powershell ssh tools
 . "$PSScriptRoot\profile-snippet-sshtools.ps1"
 

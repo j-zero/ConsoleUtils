@@ -32,6 +32,10 @@ function commit() {
     git commit -a -m "$($args -join ' ')"	
 }
 
+function which { 
+    (get-command $args).source 
+}
+
 # powershell ssh tools
 . "$PSScriptRoot\profile-snippet-sshtools.ps1"
 

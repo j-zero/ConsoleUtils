@@ -48,14 +48,25 @@ public class FileDefinitions
 
 
 
+    private static readonly Dictionary<string, FileTypes> ExtensionLookup = BuildExtensionLookup();
+
+    private static Dictionary<string, FileTypes> BuildExtensionLookup()
+    {
+        // first definition wins (same behaviour as iterating FileTypeExtensions in order)
+        var lookup = new Dictionary<string, FileTypes>(StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<FileTypes, string[]> kv in FileTypeExtensions)
+            foreach (string ext in kv.Value)
+                if (!lookup.ContainsKey(ext))
+                    lookup.Add(ext, kv.Key);
+        return lookup;
+    }
+
     public static FileTypes GetFileTypeByExtension(string Extension)
     {
         if (Extension == null)
             return FileTypes.Unknown;
-        FileTypes result = FileTypes.Unknown;
-        foreach (KeyValuePair<FileTypes, string[]> kv in FileTypeExtensions)
-            if (kv.Value.Contains(Extension.ToLower())) return kv.Key;
-        return result;
+        FileTypes result;
+        return ExtensionLookup.TryGetValue(Extension, out result) ? result : FileTypes.Unknown;
     }
 
 

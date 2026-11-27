@@ -7,6 +7,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using NtfsDataStreams;
 using System.Security.Cryptography.X509Certificates;
 
@@ -42,7 +43,8 @@ public class FilesystemEntryInfo
     public string Name { get; private set; }
     public string FullPath { get; private set; }
     public bool CanRead { get { return _CanRead(); } }
-    public bool CanWrite { get { return _HasWritePermission(this.FullPath); } }
+    public bool CanWrite { get { if (!_canWrite.HasValue) _canWrite = _HasWritePermission(this.FullPath); return _canWrite.Value; } }
+    private bool? _canWrite;
     public bool Exists { get; private set; }
     public string Owner { get { return this._GetOwner(false); } }
     public bool CanReadSecurity { get {  return this.Owner != null ; } }
@@ -62,15 +64,14 @@ public class FilesystemEntryInfo
         {
             return !IsLink ? null : GetFinalPathName(this.FullPath).Replace(@"\\?\",""); 
         } }
-    public string ColorString {  get { return _GetColorString(); } }
+    public string ColorString {  get { return _colorString ?? (_colorString = _GetColorString()); } }
+    private string _colorString;
     public string BaseDirectory { 
         get {
             if (this.IsShare)
                 return "\\\\" + this.Server + "\\";
-            else if (this.IsDirectory)
-                return new DirectoryInfo(this.FullPath).Parent.FullName;
-            else if (this.IsFile)
-                return new FileInfo(this.FullPath).Directory.FullName;
+            else if (this.IsDirectory || this.IsFile)
+                return this._parentDirectory; // empty for root directories
             else
                 return null;
         } 
@@ -177,16 +178,18 @@ public class FilesystemEntryInfo
     public DateTime LastAccessTime { get; private set; }
     public DateTime LastWriteTime { get; private set; }
 
-    public FileTypes FileType 
-    { 
+    public FileTypes FileType
+    {
         get
         {
             if (this.IsDirectory)
                 return FileTypes.Directory;
-            else
-                return FileDefinitions.GetFileTypeByExtension(this.Extension);
-        } 
+            if (!_fileType.HasValue)
+                _fileType = FileDefinitions.GetFileTypeByExtension(this.Extension);
+            return _fileType.Value;
+        }
     }
+    private FileTypes? _fileType;
 
     public IEnumerable<NtfsDataStreams.FileDataStream> AlternateDataStreams
     {
@@ -247,17 +250,64 @@ public class FilesystemEntryInfo
     private string _parentDirectory = string.Empty;
     //private string _humanReadableLastAccessTime = String.Empty;
 
-    public FilesystemEntryInfo(string path)
+    private static bool _cultureInitialized = false;
+
+    private static void InitCulture()
     {
+        if (_cultureInitialized)
+            return;
         System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
         customCulture.NumberFormat.NumberDecimalSeparator = ".";
         System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+        _cultureInitialized = true;
+    }
+
+    /// <summary>
+    /// Creates an entry from an already queried FileSystemInfo (e.g. from an enumeration),
+    /// which avoids additional File.Exists/Directory.Exists calls.
+    /// </summary>
+    public FilesystemEntryInfo(FileSystemInfo info)
+    {
+        InitCulture();
+
+        _attributes = info.Attributes;
+        this.Exists = true;
+        this.Name = info.Name;
+        this.FullPath = info.FullName;
+        _lastWriteTime = info.LastWriteTime;
+        this.CreationTime = info.CreationTime;
+        this.LastAccessTime = info.LastAccessTime;
+        this.LastWriteTime = _lastWriteTime;
+
+        if ((_attributes & System.IO.FileAttributes.Directory) != 0)
+        {
+            _directoryInfo = info as DirectoryInfo ?? new DirectoryInfo(info.FullName);
+            this.IsDirectory = true;
+            if (_directoryInfo.Parent != null)
+                this._parentDirectory = _directoryInfo.Parent.FullName;
+        }
+        else
+        {
+            _fileInfo = info as FileInfo ?? new FileInfo(info.FullName);
+            this.IsFile = true;
+            CalculateHumanReadableSize(_fileInfo.Length);
+            if (_fileInfo.DirectoryName != null)
+                this._parentDirectory = _fileInfo.DirectoryName;
+        }
+    }
+
+    private System.IO.FileAttributes _attributes;
+
+    public FilesystemEntryInfo(string path)
+    {
+        InitCulture();
 
        
 
         if (File.Exists(path))
         {
             _fileInfo = new FileInfo(path);
+            _attributes = _fileInfo.Attributes;
             this.Exists = true;
             this.IsFile = true;
             this.Name = _fileInfo.Name;
@@ -275,6 +325,7 @@ public class FilesystemEntryInfo
         else if (Directory.Exists(path))
         {
             _directoryInfo = new DirectoryInfo(path);
+            _attributes = _directoryInfo.Attributes;
             this.Exists = true;
             this.IsDirectory = true;
             this.Name = _directoryInfo.Name;
@@ -304,9 +355,7 @@ public class FilesystemEntryInfo
 
     public FilesystemEntryInfo(string server, string share, string shareDescription, uint shareType)
     {
-        System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
-        customCulture.NumberFormat.NumberDecimalSeparator = ".";
-        System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+        InitCulture();
 
         this.ShareName = share;
         this.IsShare = true;
@@ -351,44 +400,90 @@ public class FilesystemEntryInfo
 
     public bool HasFlag(Enum flag)
     {
-        if(this.IsFile)
-            return _fileInfo.Attributes.HasFlag(flag);
-        else if(this.IsDirectory && !this.IsShare)
-            return _directoryInfo.Attributes.HasFlag(flag);
+        if (this.IsFile || (this.IsDirectory && !this.IsShare))
+            return _attributes.HasFlag(flag);
         return false;
+    }
+
+    private string _shortOwner = null;
+
+    // SID -> account name cache, most files in a directory share the same few owners
+    private static readonly ConcurrentDictionary<string, string> _ownerNameCache = new ConcurrentDictionary<string, string>();
+
+    private static string _ResolveOwnerName(SecurityIdentifier sid)
+    {
+        string key = sid.Value;
+        string name;
+        if (_ownerNameCache.TryGetValue(key, out name))
+            return name;
+
+        try
+        {
+            name = sid.Translate(typeof(NTAccount)).ToString();
+        }
+        catch (Exception) // not mappable (deleted account, offline domain, ...)
+        {
+            name = string.Empty;
+        }
+        _ownerNameCache.TryAdd(key, name);
+        return name;
+    }
+
+    private FileSystemSecurity _security;
+    private bool _securityLoaded;
+
+    // owner + access rules in a single call (the ACL read is the most expensive part of a long listing)
+    private FileSystemSecurity _GetSecurity()
+    {
+        if (!_securityLoaded)
+        {
+            _securityLoaded = true;
+            const AccessControlSections sections = AccessControlSections.Owner | AccessControlSections.Access;
+            if (this.IsFile)
+                _security = System.IO.File.GetAccessControl(this.FullPath, sections);
+            else if (this.IsDirectory || this.IsShare)
+                _security = System.IO.Directory.GetAccessControl(this.FullPath, sections);
+        }
+        return _security;
+    }
+
+    /// <summary>Reads owner and write permission, can be called from several threads for different entries.</summary>
+    public void Prefetch()
+    {
+        _ReadOwner();
+        var ignore = this.CanWrite;
+    }
+
+    private void _ReadOwner()
+    {
+        if (this._longOwner != null)
+            return;
+
+        string longOwner = string.Empty;
+
+        try
+        {
+            // only read the owner section, reading the complete ACL is much slower
+            var security = _GetSecurity();
+            var sid = security?.GetOwner(typeof(SecurityIdentifier)) as SecurityIdentifier;
+            if (sid != null)
+                longOwner = _ResolveOwnerName(sid);
+        }
+        catch (Exception ex)
+        {
+            this.LastException = ex;
+        }
+
+        this._longOwner = longOwner;
+        // owner may be without domain (e.g. "Everyone")
+        int sep = longOwner.IndexOf('\\');
+        this._shortOwner = sep >= 0 ? longOwner.Substring(sep + 1) : longOwner;
     }
 
     private string _GetOwner(bool ShortOwner)
     {
-        string longOwner = string.Empty;
-        string shortOwner = string.Empty;
-
-        if (this._longOwner != null)
-            longOwner = this._longOwner;
-
-        else
-        {
-            try
-            {
-                if (this.IsFile)
-                    longOwner = System.IO.File.GetAccessControl(this.FullPath).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
-                else if (this.IsDirectory || this.IsShare)
-                    longOwner = System.IO.Directory.GetAccessControl(this.FullPath).GetOwner(typeof(System.Security.Principal.NTAccount)).ToString();
-            }
-            catch (Exception ex)
-            {
-                this.LastException = ex;
-                this.Error = true;
-            }
-        }
-
-        if(longOwner != string.Empty)
-            shortOwner = longOwner.Split('\\')[1]; // TODO: Errorhandling
-
-        if (ShortOwner)
-            return shortOwner;
-        else
-            return longOwner;
+        _ReadOwner();
+        return ShortOwner ? _shortOwner : _longOwner;
     }
     private bool _CanRead()
     {
@@ -426,23 +521,64 @@ public class FilesystemEntryInfo
         }
         return false;
     }
+    private static WindowsPrincipal _currentUser;
+    private static readonly ConcurrentDictionary<string, bool> _writeCache = new ConcurrentDictionary<string, bool>();
+    private static readonly ConcurrentDictionary<SecurityIdentifier, bool> _inRoleCache = new ConcurrentDictionary<SecurityIdentifier, bool>();
+    private static readonly object _principalLock = new object();
+
+    private static bool _IsCurrentUserInRole(SecurityIdentifier sid)
+    {
+        bool inRole;
+        if (_inRoleCache.TryGetValue(sid, out inRole))
+            return inRole;
+
+        lock (_principalLock)
+        {
+            var currentuser = _currentUser ?? (_currentUser = new WindowsPrincipal(WindowsIdentity.GetCurrent()));
+            try
+            {
+                inRole = currentuser.IsInRole(sid);
+            }
+            catch (Exception)
+            {
+                inRole = false;
+            }
+        }
+        _inRoleCache.TryAdd(sid, inRole);
+        return inRole;
+    }
+
     private bool _HasWritePermission(string FilePath)
     {
         try
         {
             FileSystemSecurity security;
-            if (File.Exists(FilePath))
+            if (this.IsFile)
             {
-                security = File.GetAccessControl(FilePath);
+                try { security = _GetSecurity(); }
+                catch (Exception) { return false; }
+                if (security == null)
+                    return false;
+            }
+            else if (File.Exists(FilePath))
+            {
+                security = File.GetAccessControl(FilePath, AccessControlSections.Access);
             }
             else
             {
-                security = Directory.GetAccessControl(Path.GetDirectoryName(FilePath));
+                security = Directory.GetAccessControl(Path.GetDirectoryName(FilePath), AccessControlSections.Access);
             }
-            var rules = security.GetAccessRules(true, true, typeof(NTAccount));
 
-            var currentuser = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            // files inheriting the same ACL share the result
+            string sddl = security.GetSecurityDescriptorSddlForm(AccessControlSections.Access);
+            bool cached;
+            if (_writeCache.TryGetValue(sddl, out cached))
+                return cached;
+
+            // SIDs instead of NTAccount: no (slow) account name lookup for every rule
+            var rules = security.GetAccessRules(true, true, typeof(SecurityIdentifier));
             bool result = false;
+            bool denied = false;
             foreach (FileSystemAccessRule rule in rules)
             {
                 if (0 == (rule.FileSystemRights &
@@ -451,27 +587,20 @@ public class FilesystemEntryInfo
                     continue;
                 }
 
-                if (rule.IdentityReference.Value.StartsWith("S-1-"))
-                {
-                    var sid = new SecurityIdentifier(rule.IdentityReference.Value);
-                    if (!currentuser.IsInRole(sid))
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (!currentuser.IsInRole(rule.IdentityReference.Value))
-                    {
-                        continue;
-                    }
-                }
+                if (!_IsCurrentUserInRole((SecurityIdentifier)rule.IdentityReference))
+                    continue;
 
                 if (rule.AccessControlType == AccessControlType.Deny)
-                    return false;
+                {
+                    denied = true;
+                    break;
+                }
                 if (rule.AccessControlType == AccessControlType.Allow)
                     result = true;
             }
+
+            result = result && !denied;
+            _writeCache.TryAdd(sddl, result);
             return result;
         }
         catch

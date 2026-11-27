@@ -13,22 +13,20 @@ public class FileAndDirectoryFilter
     {
         var base_pat = SplitBaseDirAndPattern(filter);
 
-        //
-
         if (!isUNCServer)
             return GetMatchingItems(base_pat[1].Split(Path.DirectorySeparatorChar), base_pat[0]);
         else
             return GetShares(base_pat[0]);
-
-
-
-
     }
 
     private static string[] SplitBaseDirAndPattern(string InputPath)
     {
         isUNCServer = false;
+        InputPath = InputPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         string[] path_arr = InputPath.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (path_arr.Length == 0) // "", "\" or "\\" => root of the current drive
+            return new string[] { Path.GetPathRoot(Environment.CurrentDirectory), "" };
 
         string base_directory = "";
         int i = 1;
@@ -46,15 +44,13 @@ public class FileAndDirectoryFilter
         else
             base_directory = path_arr[0];
 
-        if(!Directory.Exists(base_directory))
+        if (!Directory.Exists(base_directory))
             return new string[] { Environment.CurrentDirectory, InputPath };
-
-        
 
         while (i < path_arr.Length)
         {
             string combined_path = base_directory + Path.DirectorySeparatorChar.ToString() + path_arr[i];
-            if (Directory.Exists(combined_path) && !combined_path.Contains('*') && !combined_path.Contains('?'))
+            if (!combined_path.Contains('*') && !combined_path.Contains('?') && Directory.Exists(combined_path))
                 base_directory = combined_path;
             else
                 break;
@@ -68,159 +64,111 @@ public class FileAndDirectoryFilter
         return new string[] { base_directory, pattern };
     }
 
-    //private static FilesystemEntryInfo[] GetShares(string[] pattern, string base_directory)
     private static FilesystemEntryInfo[] GetShares(string server)
     {
         // todo pattern
         List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
-        
-        var shares = NetworkShareHelper.EnumNetShares(server);
-        // Todo exception
-        foreach (var share in shares)
+
+        try
         {
-            var fei = new FilesystemEntryInfo(server, share.Name, share.Description, share.Type);
-            entries.Add(fei);
+            var shares = NetworkShareHelper.EnumNetShares(server);
+            foreach (var share in shares)
+                entries.Add(new FilesystemEntryInfo(server, share.Name, share.Description, share.Type));
+        }
+        catch (Exception)
+        {
+            // server not reachable / access denied => no shares
         }
 
         return entries.ToArray();
+    }
+
+    private static FilesystemEntryInfo ErrorEntry(string path, Exception ex)
+    {
+        FilesystemEntryInfo fei = new FilesystemEntryInfo(path);
+        fei.LastException = ex;
+        fei.Error = true;
+        return fei;
     }
 
     private static FilesystemEntryInfo[] GetMatchingItems(string[] pattern, string base_directory)
     {
         string current_pattern = pattern[0];
+        Regex matcher = BuildMatcher(current_pattern); // null => everything matches
         List<FilesystemEntryInfo> entries = new List<FilesystemEntryInfo>();
 
-        if (pattern.Length > 1) // mitten im pfad können keinen dateien stehen (außer archive)
+        if (pattern.Length > 1) // mitten im pfad können keine dateien stehen (außer archive)
         {
-            SearchOption so = SearchOption.TopDirectoryOnly;
-            if (current_pattern == "**")
-                so = SearchOption.AllDirectories;
-
+            SearchOption so = current_pattern == "**" ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
             string[] new_pattern = pattern.Skip(1).ToArray();
-            string[] dirs = new string[] { };
 
-                dirs = Directory.GetDirectories(base_directory, "*", so).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
-            foreach (string d in dirs)
+            try
             {
-                entries.AddRange(GetMatchingItems(new_pattern, d));
+                foreach (string d in Directory.EnumerateDirectories(base_directory, "*", so))
+                {
+                    if (!IsMatching(matcher, Path.GetFileName(d)))
+                        continue;
+                    entries.AddRange(GetMatchingItems(new_pattern, d));
+                }
+            }
+            catch (Exception ex)
+            {
+                entries.Add(ErrorEntry(base_directory, ex));
             }
         }
         else
         {
-            string[] dirs = new string[] {};
-            string[] files = new string[] { };
+            bool expandDirectories = current_pattern == "*" || current_pattern == "**";
+
             try
             {
-                    dirs = Directory.GetDirectories(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
-                    files = Directory.GetFiles(base_directory).Where(d => FileOrDirNameIsMatching(d, current_pattern)).ToArray();
+                foreach (FileSystemInfo info in new DirectoryInfo(base_directory).EnumerateFileSystemInfos())
+                {
+                    if (!IsMatching(matcher, info.Name))
+                        continue;
+
+                    bool isDir = (info.Attributes & FileAttributes.Directory) != 0;
+
+                    if (isDir && expandDirectories)
+                    {
+                        // "list *" shows the content of the directories instead of the directories itself
+                        try
+                        {
+                            foreach (FileSystemInfo sub in ((DirectoryInfo)info).EnumerateFileSystemInfos())
+                                if (IsMatching(matcher, sub.Name))
+                                    entries.Add(new FilesystemEntryInfo(sub));
+                        }
+                        catch (Exception ex)
+                        {
+                            entries.Add(ErrorEntry(info.FullName, ex));
+                        }
+                    }
+                    else
+                    {
+                        entries.Add(new FilesystemEntryInfo(info));
+                    }
+                }
             }
             catch (Exception ex)
             {
-                FilesystemEntryInfo fei = new FilesystemEntryInfo(base_directory);
-                fei.LastException = ex;
-                fei.Error = true;
-                entries.Add(fei);
+                entries.Add(ErrorEntry(base_directory, ex));
             }
-            
-
-
-            foreach (string d in dirs)
-            {  // todo, do something??
-                FilesystemEntryInfo fei = new FilesystemEntryInfo(d);
-
-                if (current_pattern == "*")
-                {
-                    //entries.AddRange(GetMatchingItems(new string[] { current_pattern }, d));
-                    try
-                    {
-                        string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-                        string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-
-                        foreach (string ssd in sub_dirs)
-                            entries.Add(new FilesystemEntryInfo(ssd));
-                        foreach (string ssf in sub_files)
-                            entries.Add(new FilesystemEntryInfo(ssf));
-
-                    }
-                    catch (UnauthorizedAccessException uaae)
-                    {
-                        fei.LastException = uaae;
-                        fei.Error = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        fei.LastException = ex;
-                        fei.Error = true;
-                    }
-                }
-                else if (current_pattern == "**")
-                {
-                    //entries.AddRange(GetMatchingItems(new string[] { current_pattern }, d));
-                    try
-                    {
-                        string[] sub_dirs = Directory.GetDirectories(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-                        string[] sub_files = Directory.GetFiles(d).Where(sd => FileOrDirNameIsMatching(sd, current_pattern)).ToArray();
-
-                        foreach (string ssd in sub_dirs)
-                            entries.Add(new FilesystemEntryInfo(ssd));
-                        foreach (string ssf in sub_files)
-                            entries.Add(new FilesystemEntryInfo(ssf));
-
-                    }
-                    catch (UnauthorizedAccessException uaae)
-                    {
-                        fei.LastException = uaae;
-                        fei.Error = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        fei.LastException = ex;
-                        fei.Error = true;
-                    }
-                }
-                else
-                {
-
-                    entries.Add(fei);
-                }
-            }
-            foreach (string f in files) // todo, do something??{
-                entries.Add(new FilesystemEntryInfo(f));
-            
-
-        
-
-
         }
 
         return entries.ToArray();
     }
 
-    private static bool FileOrDirNameIsMatching(string FullPath, string Pattern)
+    private static bool IsMatching(Regex matcher, string name)
     {
-        bool match = false;
-        string Name = null;
-        if (Pattern == string.Empty)
-            return true;
-
-
-        DirectoryInfo directoryInfo = new DirectoryInfo(FullPath);
-        if (directoryInfo.Exists)
-            Name = directoryInfo.Name;
-        FileInfo fileInfo = new FileInfo(FullPath);
-        if (fileInfo.Exists)
-            Name = fileInfo.Name;
-
-        if (Name != null)
-            match = MatchWildCard(Pattern, Name);
-
-        return match;
+        return matcher == null || matcher.IsMatch(name);
     }
 
-    private static bool MatchWildCard(string pattern, string value)
+    private static Regex BuildMatcher(string pattern)
     {
+        if (string.IsNullOrEmpty(pattern))
+            return null;
+
         string p = "^" + Regex.Escape(pattern).Replace("\\?", ".").Replace("\\*", ".*") + "$";
-        return Regex.IsMatch(value, p, RegexOptions.IgnoreCase);
+        return new Regex(p, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline);
     }
-
 }

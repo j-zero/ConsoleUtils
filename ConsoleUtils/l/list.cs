@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
 using Pastel;
@@ -28,16 +29,53 @@ namespace list
         static bool ShowHeader = false;
         static bool ShowStreams = false;
 
-        static bool isStartedFromExplorer = false;
-
         static bool ShowLongOwner = false;
+
+        static StreamWriter stdout;
+
+        static void FlushOutput()
+        {
+            try { stdout?.Flush(); } catch { }
+        }
+
+        static int GetConsoleWidth()
+        {
+            try
+            {
+                int w = Console.WindowWidth;
+                return w > 0 ? w : 80;
+            }
+            catch (IOException) // output redirected
+            {
+                return 80;
+            }
+        }
+
+        // started by double-click/file-drag? (only evaluated at the end, the process lookup is slow)
+        static bool IsStartedFromExplorer()
+        {
+            if (System.Diagnostics.Debugger.IsAttached)
+                return true;
+            try
+            {
+                return ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer");
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
 
         static void Main(string[] args)
         {
             Console.InputEncoding = encoding;
             Console.OutputEncoding = encoding;
-            isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
+
+            // buffered output: one write call instead of hundreds of tiny console writes
+            stdout = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false), 64 * 1024) { AutoFlush = false };
+            Console.SetOut(stdout);
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) => FlushOutput();
 
             if (System.Diagnostics.Debugger.IsAttached)
             {
@@ -105,126 +143,71 @@ namespace list
             try
             {
 
-                Dictionary<string, List<FilesystemEntryInfo>> entries = new Dictionary<string, List<FilesystemEntryInfo>>();
                 List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
 
                 foreach (string path in paths)
+                    found.AddRange(FileAndDirectoryFilter.GetFilesFromFilter(path));
+
+                if (found.Count == 0)
                 {
-                    bool isDir = Directory.Exists(path);
-                    bool isFile = File.Exists(path);
-
-                    //List<FilesystemEntryInfo> found = new List<FilesystemEntryInfo>();
-
-                    var files = FileAndDirectoryFilter.GetFilesFromFilter(path);
-                    found.AddRange(files);
-
-                    if (found.Count == 0)
-                    {
-                        //ConsoleHelper.WriteError($"No files found in \"{path}\"");
-                    }
-
-                    //found.AddRange(files);
+                    foreach (string path in paths)
+                        if (!Directory.Exists(path))
+                            ConsoleHelper.WriteError($"No files found for \"{path}\"");
                 }
-
-                var notHiddenCount = found.Where(file => !file.HasHiddenAttribute).ToArray().Length;
-
-                if (found.Count > 0 && (ShowHidden ||(notHiddenCount > 0)))
+                else if (found.Count == 1 && found[0].Error)
                 {
-                    if(found.Count == 1 && found[0].Error)
-                    {
-                        ConsoleHelper.WriteError($"Access denied: \"{found[0].FullPath}\"");
-                        return;
-                    }
-
-                    /*
-                    foreach (FilesystemEntryInfo e in found)
-                    {
-                        if (!entries.ContainsKey(e.BaseDirectory))
-                            entries.Add(e.BaseDirectory, new List<FilesystemEntryInfo>());
-                        entries[e.BaseDirectory].Add(e);
-                    }
-
-                    bool showRelativePath = false;
-
-                    if (entries.Count > 1)
-                        showRelativePath = true;
-                    else
-                    {
-                       
-                    }
-                    */
-
-                    bool showRelativePath = false;
-                    //showRelativePath = entries.Any(e => e.Value.Any(x => x.BaseDirectory != Environment.CurrentDirectory)); // if any file entry is not in current dir, enable full pathes
-                    showRelativePath = found.Any(x => x.BaseDirectory != Environment.CurrentDirectory); // if any file entry is not in current dir, enable full pathes
-
-                    //foreach (KeyValuePair<string, List<FilesystemEntryInfo>> ei in entries)
-                    //{
-                    //FilesystemEntryInfo d = new FilesystemEntryInfo(ei.Key);
-                    //var list = ShowHidden ? ei.Value : ei.Value.Where(e => e.HasHiddenAttribute == false).ToList();
-                    var list = ShowHidden ? found : found.Where(e => e.HasHiddenAttribute == false).ToList();
-
-                        if (cmd.HasFlag("only-dirs"))
-                            list = list.Where(e => e.IsDirectory).ToList();
-
-                        if (cmd.HasFlag("long") || cmd.HasFlag("info") || cmd.HasFlag("full") || ShowStreams || ShowHeader || ShowEncoding)
-                        {
-                            LongList(list, showRelativePath);
-                        }
-                        else if (cmd.HasFlag("oneline"))
-                        {
-                            OneLinerList(list, showRelativePath);
-                        }
-                        else if (list.Count == 1)
-                        {
-                            LongList(list, false);
-                        }
-                        else
-                        {
-                            GridList(list, showRelativePath);
-                        }
-                    //}
-                    //LongList();
+                    ConsoleHelper.WriteError($"Access denied: \"{found[0].FullPath}\"");
+                    return;
                 }
                 else
                 {
-                
-                    try
+                    var list = ShowHidden ? found : found.Where(e => !e.HasHiddenAttribute).ToList();
+
+                    if (cmd.HasFlag("only-dirs"))
+                        list = list.Where(e => e.IsDirectory).ToList();
+
+                    // if any file entry is not in current dir, show the parent directories
+                    string cwd = Environment.CurrentDirectory.TrimEnd('\\');
+                    bool showRelativePath = found.Any(x => !string.Equals((x.BaseDirectory ?? "").TrimEnd('\\'), cwd, StringComparison.OrdinalIgnoreCase));
+
+                    if (list.Count == 0)
                     {
-                        /*
-                        if(!path.StartsWith("\\\\"))
-                            filepath = Path.GetFullPath(path);
-
-                        if(found.Count == 0)
-                            ConsoleHelper.WriteError($"No files found in \"{filepath}\"");
-                        else
-                            ConsoleHelper.WriteError($"No files found in \"{filepath}\", but there are hidden files! Use -a to show them.");
-                        */
+                        // nothing to show (e.g. only hidden files, or no directories with --only-dirs)
                     }
-                    catch
+                    else if (cmd.HasFlag("long") || cmd.HasFlag("info") || cmd.HasFlag("full") || ShowStreams || ShowHeader || ShowEncoding)
                     {
-                        ConsoleHelper.WriteError($"\"{"??"}\" does not exist.");
+                        LongList(list, showRelativePath);
                     }
-                
-
-
+                    else if (cmd.HasFlag("oneline"))
+                    {
+                        OneLinerList(list, showRelativePath);
+                    }
+                    else if (list.Count == 1)
+                    {
+                        LongList(list, false);
+                    }
+                    else
+                    {
+                        GridList(list, showRelativePath);
+                    }
                 }
-                
             }
             catch (Exception ex)
             {
                 Die("Guru Meditation: " + ex.Message + Environment.NewLine + ex.StackTrace, 1);
             }
 
-            if (isStartedFromExplorer)
+            if (IsStartedFromExplorer())
             {
                 Console.WriteLine("\nPress any key to exit.");
+                FlushOutput();
                 Console.ReadKey();
             }
 
         }
         public static void Die(string msg, int errorcode)
         {
+            FlushOutput();
             ConsoleHelper.WriteError(msg);
             Environment.Exit(errorcode);
         }
@@ -299,12 +282,10 @@ namespace list
 
         static void Exit(int exitCode)
         {
-            string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
+            if (IsStartedFromExplorer())
             {
                 Console.WriteLine("\nPress any key to exit.");
+                FlushOutput();
                 Console.ReadKey();
             }
 
@@ -322,7 +303,9 @@ namespace list
             else if (cmdSortString == ".Name")
                 cmdSortString = "Dotname";
 
-            OrderBy orderBy = (OrderBy)Enum.Parse(typeof(OrderBy), cmdSortString);
+            OrderBy orderBy;
+            if (!Enum.TryParse(cmdSortString, false, out orderBy))
+                Die($"Unknown sort field \"{cmdSortString}\". Use one of: name, Name, .name, .Name, size, extension, modified, accessed, created, type", 1);
 
             if (cmd.HasFlag("group-directories-first") || cmd.HasFlag("full"))
             {
@@ -387,64 +370,65 @@ namespace list
 
         static void OneLinerList(List<FilesystemEntryInfo> ei, bool printParentDiretory = false)
         {
-
-            var longest_parent_dir = ei.Max(r => (r.GetRelativeParent(Environment.CurrentDirectory)).Length + 3);
-            int width = Console.WindowWidth;
-            var longest_name = ei.Max(r => r.Name.Length) + 2;
-            int columns = width / longest_name;
-
-            int chunk_size = (int)Math.Ceiling(((double)ei.Count / (double)columns));
-
-            var chunks = SortFileSystemList(ei).ChunkBy(chunk_size);
-
             foreach (FilesystemEntryInfo e in SortFileSystemList(ei))
             {
                 if (!e.HasHiddenAttribute || ShowHidden)
                 {
-
-
                     var parent_directory = "." + Path.DirectorySeparatorChar + e.GetRelativeParent(Environment.CurrentDirectory) + Path.DirectorySeparatorChar;
-                    var name = string.Empty;
-
-                    name = (printParentDiretory ? (parent_directory).Pastel(ColorTheme.Directory) : "") + e.Name.Pastel(e.ColorString) + Environment.NewLine;
-
-                    Console.Write(name);
+                    Console.WriteLine((printParentDiretory ? parent_directory.Pastel(ColorTheme.Directory) : "") + e.Name.Pastel(e.ColorString));
                 }
-                
             }
         }
-        
+
 
         static void GridList(List<FilesystemEntryInfo> ei, bool printParentDiretory = false)
         {
-            
+            if (ei.Count == 0)
+                return;
 
-            var longest_parent_dir = ei.Max(r => (r.GetRelativeParent(Environment.CurrentDirectory)).Length+3);
-            int width = Console.WindowWidth;
-            var longest_name = ei.Max(r => r.Name.Length)+2;
-            int columns = width / longest_name;
+            var sorted = SortFileSystemList(ei);
+            int width = GetConsoleWidth();
+            string separator = Path.DirectorySeparatorChar.ToString();
 
-            int chunk_size = (int)Math.Ceiling(((double)ei.Count / (double)columns));
-
-            var chunks = SortFileSystemList(ei).ChunkBy(chunk_size);
-
-            for (int i = 0; i < chunk_size; i++) 
+            var prefixes = new string[sorted.Count];
+            int cellWidth = 0;
+            for (int i = 0; i < sorted.Count; i++)
             {
-                for(int c = 0; c < columns; c++)
+                string prefix = "";
+                if (printParentDiretory)
+                {
+                    string parent = sorted[i].GetRelativeParent(Environment.CurrentDirectory);
+                    prefix = parent + (parent.EndsWith(separator) ? "" : separator);
+                }
+                prefixes[i] = prefix;
+                cellWidth = Math.Max(cellWidth, prefix.Length + sorted[i].Name.Length);
+            }
+            cellWidth += 2;
 
-                    if(c < chunks.Count && i < chunks[c].Count)
-                    {
-                        var e = chunks[c][i];
-                        var parent_directory = "";
+            // at least one column, even if a name is wider than the console
+            int columns = Math.Max(1, Math.Min(sorted.Count, (width + 1) / cellWidth));
+            int rows = (int)Math.Ceiling((double)sorted.Count / columns);
+            columns = (int)Math.Ceiling((double)sorted.Count / rows); // no empty trailing columns
 
-                        
-                        //parent_directory = "." + Path.DirectorySeparatorChar + e.GetRelativeParent(Environment.CurrentDirectory, true) + Path.DirectorySeparatorChar;
-                        parent_directory = e.GetRelativeParent(Environment.CurrentDirectory);
-                        var name = (printParentDiretory ? (parent_directory + (parent_directory.EndsWith(Path.DirectorySeparatorChar.ToString()) ? "" : Path.DirectorySeparatorChar.ToString())).Pastel(ColorTheme.Directory) : "") + e.Name.PadRight(longest_name).Pastel(e.ColorString);
+            var line = new StringBuilder();
+            for (int row = 0; row < rows; row++)
+            {
+                line.Clear();
+                for (int col = 0; col < columns; col++)
+                {
+                    int index = col * rows + row;
+                    if (index >= sorted.Count)
+                        break;
 
-                        Console.Write(name);
-                    }
-                Console.WriteLine("");
+                    var e = sorted[index];
+                    if (prefixes[index].Length > 0)
+                        line.Append(prefixes[index].Pastel(ColorTheme.Directory));
+                    line.Append(e.Name.Pastel(e.ColorString));
+
+                    if (index + rows < sorted.Count) // padding is not needed behind the last cell of a row
+                        line.Append(' ', cellWidth - prefixes[index].Length - e.Name.Length);
+                }
+                Console.WriteLine(line.ToString());
             }
         }
 
@@ -458,8 +442,12 @@ namespace list
                 s - System
                 l - Reparse point, symlink, etc.ls 
             */
-            int width = Console.WindowWidth;
-            //foreach (KeyValuePair<string, List<EntryInfo>> ei in entries)
+            if (ei.Count == 0)
+                return;
+
+            // read owners/permissions of all entries in parallel (the console output stays sequential)
+            if (ei.Count > 16)
+                Parallel.ForEach(ei, e => { try { e.Prefetch(); } catch { } });
 
             int longestName = ei.Max(r => r.Name.Length);
             int longestShortOwner = ei.Max(r => r.ShortOwner.Length);
@@ -493,8 +481,6 @@ namespace list
             {
                 if (!e.HasHiddenAttribute || ShowHidden)
                 {
-                    if (Console.CursorLeft + e.Name.Length > width) Console.WriteLine(); // line break to not cut file names
-
                     /*
                     if(e.IsDirectory && !e.CanRead) { 
                         Console.WriteLine("Access to '".Pastel("#ff4500") + $"{e.FullPath}".Pastel(ColorTheme.Default1) + "' is denied!".Pastel("#ff4500"));
@@ -531,22 +517,26 @@ namespace list
                     string encoding = "";
                     string lastWriteTime = "";
 
+                    // visible width of everything written so far (console cursor position can't be used with buffered output)
+                    sizepos = 9 + (ShowLongOwner || !e.IsShare ? longestShortOwner : longestLongOwner) + 1;
+
                     if (!e.IsShare)
                     {
                         lastWriteTime = $"{e.HumanReadableLastWriteTime.Pastel("#4169e1")} ";
                         Console.Write(lastWriteTime);
+                        sizepos += e.HumanReadableLastWriteTime.Length + 1;
 
                         if (ShowEncoding)
                         {
                             encoding = $"{e.Encoding.PadRight(longestEncoding + 1).Pastel(ColorTheme.Comment)}";
                             Console.Write(encoding);
+                            sizepos += longestEncoding + 1;
                         }
 
                         if(cmd.HasFlag("bytes"))
                             size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.Length.ToString().PadLeft(longestSize).Pastel(ColorTheme.Default1);
                         else
                             size = e.IsDirectory ? "-".PadLeft(longestSize + 1).Pastel(ColorTheme.DarkColor) : e.HumanReadbleSize.PadLeft(e.Length == 0 || e.HumanReadbleSizeSuffix == string.Empty ? longestSize + 1 : longestSize).Pastel(ColorTheme.Default1) + e.HumanReadbleSizeSuffix.Pastel(ColorTheme.Default2);
-                        sizepos = Console.CursorLeft;
                         Console.Write($"{size} ");
                     }
 
@@ -569,7 +559,7 @@ namespace list
                     int filepos = 0;
                     string prefix = "";
                     //int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
-                    int maxDescLength = Console.WindowWidth - 4;
+                    int maxDescLength = Math.Max(20, GetConsoleWidth() - 4);
 
                     /*
                     string spaces = "";
@@ -581,11 +571,18 @@ namespace list
 
 
 
-                    if (e.LinkTarget != null)
+                    if (e.IsLink)
                     {
                         //string target = (" -> " + PathHelper.GetRelativePath(path, e.LinkTarget));
-                        string target = (" -> " + PathHelper.GetRelativePath(e.FullPath, e.LinkTarget));
-                        Console.Write(target);
+                        try
+                        {
+                            string target = (" -> " + PathHelper.GetRelativePath(e.FullPath, e.LinkTarget));
+                            Console.Write(target);
+                        }
+                        catch
+                        {
+                            ; // unresolvable reparse point (broken link, cloud placeholder, ...)
+                        }
                     }
 
 

@@ -17,6 +17,29 @@ dotnet build ConsoleUtils.sln --configuration Release -p:Platform=x64
 All executables end up in `bin\` in the repository root. Add that folder to your `PATH`.
 The PowerShell helpers in [`powershell/`](powershell/README.md) can be loaded from your `$PROFILE`.
 
+## Updating
+
+`consoleutils.update` installs the newest release from GitHub:
+
+```powershell
+consoleutils.update            # check and ask
+consoleutils.update check      # only check, exit code 10 = update available (for scripts)
+consoleutils.update upgrade -y # install without asking
+```
+
+The download is verified with its SHA-256 checksum, files that are in use are renamed and replaced, and everything is
+restored if the update fails. See `consoleutils.update help`.
+
+## Releases
+
+A release is made from `main` with a tag. The GitHub workflow builds, tests and publishes
+`ConsoleUtils.zip`, `ConsoleUtils.zip.sha256` and `VERSION`:
+
+```powershell
+.\release.ps1 0.15.0          # checks, builds, tests and creates the tag v0.15.0
+.\release.ps1 0.15.0 -Push    # ... and pushes branch and tag, which starts the release build
+```
+
 ## Tools
 
 | Tool | Description |

@@ -1,0 +1,17 @@
+# Keeps the NuGet packages (Directory.Packages.props) and the GitHub actions up to date through pull requests.
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/ConsoleUtils"
+    schedule:
+      interval: "monthly"
+    groups:
+      dotnet-runtime-packages:
+        patterns:
+          - "System.*"
+          - "Microsoft.*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

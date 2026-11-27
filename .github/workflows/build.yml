@@ -1,76 +1,111 @@
-name: dotnet package
+name: build
 
+# Every push to main and every pull request is built and tested.
+# A tag like v0.11.0 additionally creates a GitHub release with the files that consoleutils.update installs:
+#   ConsoleUtils.zip, ConsoleUtils.zip.sha256 and VERSION
 on:
   push:
     branches: [ main ]
-  create:
-      tags:
-        - v*
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# a newer push replaces a running build of the same branch, but a release build is never cancelled
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+permissions:
+  contents: read
 
 jobs:
-
-  # build_run_linux_sp:
-
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: make
-  #     run: make FOO=-fno-stack-protector
-  #   - name: run
-  #     run: ./main
-
-  upload-release:
-
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: startsWith(github.ref, 'refs/tags/')
-
-    steps:
-    - uses: actions/download-artifact@v4
-      with:
-        name: Kompilat
-    - name: Zip artifacts
-      run: zip ConsoleUtils.zip ./* -r
-    - name: Display structure of downloaded files
-      run: ls -R
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: | 
-            ConsoleUtils.zip
-            VERSION
-
   build:
-
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # git describe --tags needs the tags
-      - name: Setup .NET Core SDK
+          fetch-depth: 0   # git describe needs the tags
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Make dir
-        run: mkdir bin
-      - name: Install dependencies
+
+      - name: Restore
         run: dotnet restore ConsoleUtils.sln
         working-directory: ./ConsoleUtils
+
       - name: Build
         run: dotnet build ConsoleUtils.sln --configuration Release --no-restore -p:Platform=x64
         working-directory: ./ConsoleUtils
+
       - name: Test
-        run: dotnet test cross.core.tests --configuration Release
+        run: dotnet test cross.core.tests --configuration Release --no-restore
         working-directory: ./ConsoleUtils
-      - name: Show Builddir
-        run: ls ./bin
-      - name: Create Version File
-        run: git describe --tags > ./bin/VERSION
-      - name: 'Upload Artifact'
+
+      - name: Smoke test
+        run: |
+          foreach ($t in 'list', 'hexe', 'gremlins', 'chaos', 'hash', 'kb2', 'consoleutils.update') {
+            & ".\bin\$t.exe" --help | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "$t --help failed with exit code $LASTEXITCODE" }
+          }
+          $out = & .\bin\subnet.exe 192.168.0.1/24 | Out-String
+          if ($LASTEXITCODE -ne 0 -or $out -notmatch '192\.168\.0\.1') { throw "subnet did not calculate: $out" }
+
+      - name: Create version file
+        run: git describe --tags --always | Set-Content -NoNewline -Path bin/VERSION
+
+      - name: Package
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          # no debug symbols and no debug build in the release
+          Get-ChildItem bin -Recurse -Filter *.pdb | Remove-Item -Force
+          if (Test-Path bin/Debug) { Remove-Item bin/Debug -Recurse -Force }
+          Compress-Archive -Path bin/* -DestinationPath dist/ConsoleUtils.zip -CompressionLevel Optimal
+          $hash = (Get-FileHash dist/ConsoleUtils.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  ConsoleUtils.zip" | Set-Content -Path dist/ConsoleUtils.zip.sha256
+          Copy-Item bin/VERSION dist/VERSION
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Kompilat
-          path: bin
+          path: dist
           retention-days: 7
+
+  release:
+    # only for tags, with the only job that may write to the repository
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Kompilat
+          path: dist
+
+      - name: Check the files
+        run: |
+          ls -l dist
+          test "$(cat dist/VERSION)" = "${GITHUB_REF_NAME}" || { echo "VERSION ($(cat dist/VERSION)) does not match the tag ${GITHUB_REF_NAME}"; exit 1; }
+          (cd dist && sha256sum -c ConsoleUtils.zip.sha256)
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # a tag with a suffix (v1.0.0-rc1) is a pre-release, which the updater does not offer
+          flags=""
+          case "${GITHUB_REF_NAME}" in *-*) flags="--prerelease" ;; esac
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/ConsoleUtils.zip dist/ConsoleUtils.zip.sha256 dist/VERSION \
+            --repo "${GITHUB_REPOSITORY}" --title "${GITHUB_REF_NAME}" --generate-notes ${flags}

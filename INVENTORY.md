@@ -13,8 +13,9 @@ How finished each tool is, and what is left to do, is in [STATUS.md](STATUS.md).
 | `ConsoleUtils/Directory.Packages.props` | central NuGet package versions |
 | `ConsoleUtils/build.cmd`, `build.sh` | local build helpers |
 | `powershell/` | PowerShell helpers (profile snippets, autostart, update check) |
-| `.github/workflows/build.yml` | CI: build (Windows), artifact `Kompilat`, release zip on `v*` tags |
-| `release.cmd`, `write-version.cmd` | write the `VERSION` file from `git describe --tags` |
+| `.github/workflows/build.yml` | CI: build, test and smoke test on every push/PR; on a `v*` tag it publishes the release (`ConsoleUtils.zip`, `.sha256`, `VERSION`) |
+| `.github/dependabot.yml` | monthly pull requests for NuGet packages and GitHub actions |
+| `release.ps1` | checks, tests and tags a release (`.\release.ps1 0.15.0 [-Push]`) |
 | `bin/` | build output (not versioned, every project builds into it) |
 
 Every project folder has the name of its executable, the project file has the same name (`list/list.csproj` → `list.exe`).
@@ -31,7 +32,7 @@ The solution is organised in the solution folders *Libraries*, *Tools* and *Prot
 | `certy` | show the TLS certificate (and chain) of `host:port` | any | cross | 700 |
 | `chaos` | shuffle, sort and de-duplicate lines of text | any | cross | 322 |
 | `coffee` | keep the system awake, optionally while running a command | win | cross, win | 196 |
-| `consoleutils.update` | self-updater, downloads the latest GitHub release | win | cross | 508 |
+| `consoleutils.update` | self-updater: checks the latest GitHub release, verifies its SHA-256, replaces files in use, rolls back on errors | win | cross | 470 |
 | `d` | date/time overview: week, day of year, UTC, Unix time, Swatch beats, calendar | any | cross | 77 |
 | `download` | download a URL, optionally show headers | win | cross, win | 328 |
 | `ed` | line viewer for text files, planned as a simple console editor (parked) | win | cross, win | 276 |
@@ -99,7 +100,7 @@ Run with `dotnet test ConsoleUtils/cross.core.tests`; the CI workflow runs them 
 | File | Purpose |
 |---|---|
 | `autostart.ps1` | profile setup (dot-source from `$PROFILE`): tab menu completion, replaces the `ls` alias with `list`, small helper functions such as `mkd` |
-| `check_updates.ps1` | compares a hard-coded version (`v0.5.0`) with the latest GitHub release |
+| `check_updates.ps1` | `Test-ConsoleUtilsUpdate`: asks `consoleutils.update check` if a newer release exists |
 | `profile-snippet-sshtools.ps1` | tab completion for `ssh`/`scp`/`sftp` from `~/.ssh/config`, SSH bookmark helpers (`ssh-copy-id`, …) |
 
 ## Remaining technical debt
@@ -109,6 +110,5 @@ Run with `dotnet test ConsoleUtils/cross.core.tests`; the CI workflow runs them 
 * **"Press any key" when started from Explorer** is copy-pasted into about ten tools (parent process check + `ReadKey`).
 * **Redirected output:** several tools read `Console.WindowWidth`, `CursorVisible` or `Clear()` unguarded and throw when stdout/stdin is redirected (`tulpn`, `ed`, `log`, …). `list` is already fixed.
 * **Command line handling:** `mk`, `path` and `open` use the raw command line as one path instead of the parsed arguments.
-* **`powershell/check_updates.ps1`** has the installed version hard-coded instead of reading `VERSION`.
 * **Few tests:** only `cross.core.tests` exists.
-* **CI:** `.github/workflows/build.yml` was updated to .NET 10 and v4 actions, but has not been run yet.
+* **CI:** the workflow has not run on GitHub yet; the release job in particular is untested.

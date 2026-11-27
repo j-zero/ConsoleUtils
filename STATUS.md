@@ -150,7 +150,7 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | `subnet` | complete. |
 | `kb2` | complete clipboard tool, successor of `kb`: show/info/get, copy/cut/paste/move of files (Explorer compatible cut/copy flag), text/html/rtf/csv/image from file or stdin, save/load, raw/dump of any format, clear. Wildcards, `--force`, `--quiet`, exit codes. `kb` can be removed once `kb2` is accepted (only `kb remove` is not carried over, `rip` does that). |
 | `rmline` | complete: `rmline file.ext:LINE [...]` deletes the line(s), keeps encoding/BOM and line endings, replaces the file atomically, exit code 1 on errors. Also accepts `~/` paths and several lines per file. |
-| `consoleutils.update` | complete; self-update from the GitHub release. Depends on the release zip layout produced by the CI. |
+| `consoleutils.update` | rewritten: GitHub API instead of a VERSION download, SHA-256 verification, zip-slip protection, files in use are renamed, rollback on errors, `check` with exit codes for scripts, `--yes`/`--force`. Tested against a local fake server (success, wrong checksum, zip slip, missing checksum, failure with rollback); not yet against a real release made by the new workflow. |
 
 ---
 

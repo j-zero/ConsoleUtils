@@ -248,12 +248,12 @@ namespace Pastel
         }
 
         /// <summary>
-        /// Returns a string unwrapped in an ANSI foreground color code using the specified color.
+        /// Returns the string without any ANSI escape sequences (see also AnsiText.VisibleLength).
         /// </summary>
-        /// <param name="input">The string to color.</param>
+        /// <param name="input">The string to unwrap.</param>
         public static string Plain(this string input)
         {
-            return Regex.Replace(input, @"\u001b\[\d{1,3};2;\d{1,3};\d{1,3};\d{1,3}m(.*?)\u001b\[0m","$1");
+            return input.Strip();
         }
 
 

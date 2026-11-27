@@ -2,13 +2,22 @@
 
   <!-- Settings shared by all projects. -->
   <PropertyGroup>
+    <!-- same default as the SDK, needed here because the output path below depends on it -->
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- every executable and library ends up in <repo>\bin -->
     <OutputPath>$(MSBuildThisFileDirectory)..\bin\</OutputPath>
+    <!-- Debug builds (e.g. dotnet test) must not overwrite the Release files: the assembly version changes with every build -->
+    <OutputPath Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\bin\Debug\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- GenerateAssemblyInfo=false also drops the SupportedOSPlatform attribute of the -windows target frameworks -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
 </Project>

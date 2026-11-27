@@ -28,7 +28,7 @@ The PowerShell helpers in [`powershell/`](powershell/README.md) can be loaded fr
 | `consoleutils.update` | update ConsoleUtils from the latest GitHub release |
 | `d` | date, time, week number, Unix time and a calendar |
 | `download` | download a URL, optionally show headers |
-| `ed` | interactive line viewer/editor (work in progress) |
+| `ed` | line viewer, planned as a simple console editor (parked) |
 | `events` | read and export the Windows Event Log |
 | `file` | identify file types (magic, MIME type, encoding) |
 | `free` | CPU, RAM and drive usage |
@@ -38,15 +38,15 @@ The PowerShell helpers in [`powershell/`](powershell/README.md) can be loaded fr
 | `hekate` | Windows Credential Manager utility |
 | `hexe` | simple hex viewer |
 | `img` | show an image in the console |
-| `kb` | console clipboard utility |
-| `kb2` | reimplementation of `kb` (does not work yet) |
+| `kb` | console clipboard utility (old, superseded by `kb2`) |
+| `kb2` | clipboard for the console: text, html, rtf, csv, images, files, raw formats |
 | `list` | `ls`-like file listing |
 | `log` | note taking / log book |
 | `mk` | create files (`touch`) |
 | `open` | open a file/folder/URL with the default application |
 | `path` | print the full path and copy it to the clipboard |
 | `rip` | put files in the recycle bin instead of deleting them |
-| `rmline` | remove a line from a file (prototype) |
+| `rmline` | delete a line from a file: `rmline file.ext:LINE` |
 | `seek` | search files with Windows Search |
 | `subnet` | simple subnet calculator |
 | `sudo` | run a command elevated |

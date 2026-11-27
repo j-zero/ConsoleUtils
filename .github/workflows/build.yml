@@ -61,6 +61,9 @@ jobs:
       - name: Build
         run: dotnet build ConsoleUtils.sln --configuration Release --no-restore -p:Platform=x64
         working-directory: ./ConsoleUtils
+      - name: Test
+        run: dotnet test cross.core.tests --configuration Release
+        working-directory: ./ConsoleUtils
       - name: Show Builddir
         run: ls ./bin
       - name: Create Version File

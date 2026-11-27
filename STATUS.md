@@ -10,9 +10,7 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | Tool | State | One-line summary |
 |---|:---:|---|
 | `wiki` | 🔴 | stub, prints "Hello, Wiki!" |
-| `rmline` | 🔴 | prototype, hard-coded paths |
-| `kb2` | 🔴 | rewrite of `kb`, only dumps clipboard formats |
-| `ed` | 🔴 | works as a pager, editing is not wired up |
+| `ed` | 🔴 | parked: works as a pager, meant to become a simple console text editor |
 | `rip` | 🔴 | recycle-bin tool with an argument-loop bug |
 | `hash` | 🟡 | `--crc16` not implemented, `-f` ignored when stdin is redirected |
 | `sudo` | 🟡 | elevated start works, no-argument mode drops the parent's arguments |
@@ -30,7 +28,7 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | `hexe` | 🟡 | very complete, open feature list in the code |
 | `kb` | 🟡 | working clipboard tool, one TODO |
 | `free` | 🟡 | RAM/drives work, **CPU usage is always 0 %** |
-| `gremlins`, `chaos`, `coffee`, `d`, `file`, `list`, `hekate`, `subnet`, `consoleutils.update` | 🟢 | finished |
+| `gremlins`, `chaos`, `coffee`, `d`, `file`, `list`, `hekate`, `subnet`, `rmline`, `kb2`, `consoleutils.update` | 🟢 | finished |
 
 ---
 
@@ -40,16 +38,8 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 * **Does:** prints `Hello, Wiki!` (2 lines).
 * **To do:** decide what it should be (wiki lookup? Wikipedia summary?). Otherwise remove the project from the solution.
 
-### `rmline` – prototype
-* **Does:** copies `C:\input` to `C:\output` and drops line 12. The argument (`file:line`, e.g. a `known_hosts` error message) is read into a variable and never used.
-* **To do:** parse `path:line`, rewrite the file in place (temp file + replace, keep line endings and encoding), validate input, print usage. The intended use is clearly "delete line N from `~/.ssh/known_hosts` as reported by `ssh`".
-
-### `kb2` – rewrite of `kb`
-* **Does:** lists clipboard formats (verb `list`, not declared in the parser) and prints one format as bin/hex/ascii/unicode/utf8 (verb `show`).
-* **Missing:** the default verb is `dump`, but nothing handles it. `--help` throws `unknown parameter`. No copy, paste, save, load, … – everything `kb` can do.
-* **To do:** either finish the rewrite on `cross.core`/`windows.core` (feature parity with `kb`) or delete `kb2` and keep the format dump as a `kb` verb.
-
-### `ed` – line viewer / editor
+### `ed` – line viewer / editor (parked)
+* **Plan:** `ed` is meant to become a simple text editor for the console. It stays as it is for now; nothing is blocked by it.
 * **Does:** shows a text file page-wise (arrows, PageUp/PageDown, space, `q`).
 * **Missing:** the code for changing a line (`lineChanger`) and for writing a modified file exists but is never called; it ends with `TODO: Delete the old file and replace it with the new file here`. Crashes without an argument. Reads the whole file, no encoding handling.
 * **To do:** decide *editor* or *pager*. If editor: cursor, insert/delete, save with atomic replace. If pager: remove the dead editing code and call it `view`/`pg`. In both cases: usage message, redirected-output check, `CursorVisible` restore on exit.
@@ -158,6 +148,8 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | `list` | complete; fixed in this session (redirected output, empty directories, owner parsing, 10× faster). `-i` loads assemblies with `Assembly.LoadFrom` to read the .NET version – better done with `System.Reflection.Metadata`. |
 | `hekate` | complete credential manager tool. `GetWifiCreds.cs` is a separate stand-alone program with its own `Main`; it is **not compiled** (excluded in `hekate.csproj`) and is not part of the tool. |
 | `subnet` | complete. |
+| `kb2` | complete clipboard tool, successor of `kb`: show/info/get, copy/cut/paste/move of files (Explorer compatible cut/copy flag), text/html/rtf/csv/image from file or stdin, save/load, raw/dump of any format, clear. Wildcards, `--force`, `--quiet`, exit codes. `kb` can be removed once `kb2` is accepted (only `kb remove` is not carried over, `rip` does that). |
+| `rmline` | complete: `rmline file.ext:LINE [...]` deletes the line(s), keeps encoding/BOM and line endings, replaces the file atomically, exit code 1 on errors. Also accepts `~/` paths and several lines per file. |
 | `consoleutils.update` | complete; self-update from the GitHub release. Depends on the release zip layout produced by the CI. |
 
 ---
@@ -166,7 +158,8 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 
 1. **Redirected input/output.** `Console.WindowWidth`, `CursorVisible`, `Clear()`, `ReadKey()` throw when stdout/stdin is redirected (`tulpn`, `ed`, `log`, `hash`, …). A shared helper (`ConsoleHelper.GetWidth()`, `IsInteractive`) in `cross.core` would fix all of them – `list` has a local version already.
 2. **"Press any key" when started from Explorer** is copy-pasted into ~10 tools (parent-process check + `ReadKey`). Move it into one helper in `windows.core`.
-3. **Usage on bad input.** `bits`, `img`, `rmline`, `ed`, `download`, `certy`, `unpack` end in stack traces for missing or wrong arguments. A common `try/catch` in the shared `Main` pattern with a readable message and an exit code would unify this.
+3. **Usage on bad input.** `bits`, `img`, `ed`, `download`, `certy`, `unpack` end in stack traces for missing or wrong arguments. A common `try/catch` in the shared `Main` pattern with a readable message and an exit code would unify this.
 4. **Exit codes.** Most tools return 0 even on errors (`seek`, `rip`, `hash`).
-5. **Tests.** There are none. The pure logic (`subnet`, `bits`, `hash`, `chaos`, `CmdParser`, `FileAndDirectoryFilter`, `UnitHelper`) is easy to cover with xUnit.
+5. **Tests.** Only `cross.core.tests` exists (10 tests for `AnsiText`). The pure logic (`subnet`, `bits`, `hash`, `chaos`, `CmdParser`, `FileAndDirectoryFilter`, `UnitHelper`) is easy to cover with xUnit.
 6. **Tool-specific copies** of shared code: `kb` and `rip` (own `FileAndDirectoryFilter`), `events` (`EventColors` palette, own `Loader`).
+7. **Measuring colored text.** Use `AnsiText` from `cross.core` (`VisibleLength`, `PadRightVisible`, `TruncateVisible`, `Strip`) instead of `string.Length`/`PadRight` on strings that went through `.Pastel()`. `list`, `unpack` and `tulpn` still pad before coloring and could use it.

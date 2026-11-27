@@ -13,10 +13,7 @@ namespace file
         static int Main(string[] args)
         {
             int exitCode = 0;
-            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
-            bool isStartedFromExplorer = System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer"); // is debugger attached or started by double-click/file-drag
+            bool isStartedFromExplorer = windows.core.ConsoleWindow.IsStartedFromExplorer();
 
 
             //Magic magic = null;

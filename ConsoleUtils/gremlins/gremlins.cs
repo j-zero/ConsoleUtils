@@ -529,14 +529,7 @@ namespace gremlins
         static void Exit(int exitCode)
         {
             /* Todo Windows/Linux 
-            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
-            {
-                Console.WriteLine("\nPress any key to exit.");
-                Console.ReadKey();
-            }
+            windows.core.ConsoleWindow.PauseIfStartedFromExplorer();
             */
             Environment.Exit(exitCode);
         }

@@ -38,34 +38,6 @@ namespace list
             try { stdout?.Flush(); } catch { }
         }
 
-        static int GetConsoleWidth()
-        {
-            try
-            {
-                int w = Console.WindowWidth;
-                return w > 0 ? w : 80;
-            }
-            catch (IOException) // output redirected
-            {
-                return 80;
-            }
-        }
-
-        // started by double-click/file-drag? (only evaluated at the end, the process lookup is slow)
-        static bool IsStartedFromExplorer()
-        {
-            if (System.Diagnostics.Debugger.IsAttached)
-                return true;
-            try
-            {
-                return windows.core.ParentProcessUtilities.GetParentProcess().ProcessName.ToLower().Contains("explorer");
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
 
         static void Main(string[] args)
         {
@@ -197,7 +169,7 @@ namespace list
                 Die("Guru Meditation: " + ex.Message + Environment.NewLine + ex.StackTrace, 1);
             }
 
-            if (IsStartedFromExplorer())
+            if (windows.core.ConsoleWindow.IsStartedFromExplorer())
             {
                 Console.WriteLine("\nPress any key to exit.");
                 FlushOutput();
@@ -282,7 +254,7 @@ namespace list
 
         static void Exit(int exitCode)
         {
-            if (IsStartedFromExplorer())
+            if (windows.core.ConsoleWindow.IsStartedFromExplorer())
             {
                 Console.WriteLine("\nPress any key to exit.");
                 FlushOutput();
@@ -387,7 +359,7 @@ namespace list
                 return;
 
             var sorted = SortFileSystemList(ei);
-            int width = GetConsoleWidth();
+            int width = ConsoleHelper.Width;
             string separator = Path.DirectorySeparatorChar.ToString();
 
             var prefixes = new string[sorted.Count];
@@ -558,8 +530,8 @@ namespace list
                     //int filepos = Console.CursorLeft;
                     int filepos = 0;
                     string prefix = "";
-                    //int maxDescLength = Console.WindowWidth - Console.CursorLeft - 8;
-                    int maxDescLength = Math.Max(20, GetConsoleWidth() - 4);
+                    //int maxDescLength = ConsoleHelper.Width - Console.CursorLeft - 8;
+                    int maxDescLength = Math.Max(20, ConsoleHelper.Width - 4);
 
                     /*
                     string spaces = "";

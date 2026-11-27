@@ -27,7 +27,9 @@ namespace download
         //static long lastBytes = 0;
         static DateTime _startedAt;
 
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
 
             cmd = new CmdParser(args)
@@ -98,14 +100,7 @@ namespace download
 
         static void Exit(int exitCode)
         {
-            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
-            {
-                Console.WriteLine("\nPress any key to exit.");
-                Console.ReadKey();
-            }
+            windows.core.ConsoleWindow.PauseIfStartedFromExplorer();
 
             Environment.Exit(exitCode);
         }
@@ -197,7 +192,7 @@ namespace download
             string readableBytes = UnitHelper.CalculateHumanReadableSize((ulong)e.BytesReceived);
             string readableBytesTotal = UnitHelper.CalculateHumanReadableSize((ulong)e.TotalBytesToReceive,1024,1,true);
 
-            Console.Write($"\r{filename} -> {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(Console.BufferWidth));
+            Console.Write($"\r{filename} -> {readableBytes}/{readableBytesTotal} ({e.ProgressPercentage}%, {readableBps}/s)".PadRight(ConsoleHelper.Width));
         }
 
         private static void WebClientDownloadCompleted(object sender, AsyncCompletedEventArgs args)

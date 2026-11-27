@@ -35,7 +35,9 @@ namespace bits
         }
 
         static CmdParser cmd;
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
 
 
@@ -593,12 +595,7 @@ namespace bits
                 #elif Windows
                 Console.WriteLine("Built in Windows!"); 
                 #endif
-            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
-            {
-                Console.WriteLine("\nPress any key to exit.");
-                Console.ReadKey();
-            }
+            windows.core.ConsoleWindow.PauseIfStartedFromExplorer();
             */
             Environment.Exit(exitCode);
         }

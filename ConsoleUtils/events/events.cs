@@ -194,11 +194,11 @@ namespace events
                     Console.WriteLine();
                     break;
                 case ConsoleKey.C:
-                    Console.WriteLine("".PadLeft(Console.BufferWidth, '-'));
+                    Console.WriteLine("".PadLeft(ConsoleHelper.Width, '-'));
                     Console.Clear();
                     break;
                 case ConsoleKey.Spacebar:
-                    Console.WriteLine("".PadLeft(Console.BufferWidth, '-'));
+                    Console.WriteLine("".PadLeft(ConsoleHelper.Width, '-'));
                     break;
                 case ConsoleKey.P:
                 case ConsoleKey.Pause:

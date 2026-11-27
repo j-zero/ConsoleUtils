@@ -21,12 +21,10 @@ using System.Linq;
                 if (File.Exists(path) && mode.HasFlag(FileAndDirectoryMode.Files))
                 {
                     result.Add(path);
-                    return result;
                 }
                 else if (Directory.Exists(path) && mode.HasFlag(FileAndDirectoryMode.Directories))
                 {
                     result.Add(path);
-                    return result;
                 }
                 else
                 {

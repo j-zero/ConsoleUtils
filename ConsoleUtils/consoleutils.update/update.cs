@@ -484,7 +484,7 @@ namespace consoleutils.update
                 ? $"[*] progress: {Size(received)}/{Size(total)} ({received * 100 / total}%, {Size((long)speed)}/s)"
                 : $"[*] progress: {Size(received)} ({Size((long)speed)}/s)";
             int width;
-            try { width = Console.WindowWidth - 1; } catch (IOException) { width = 80; }
+            try { width = ConsoleHelper.Width - 1; } catch (IOException) { width = 80; }
             Console.Write("\r" + text.PadRight(Math.Max(width, text.Length)).Replace("[*]", $"[{"*".Pastel(color1)}]"));
         }
 

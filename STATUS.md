@@ -11,15 +11,14 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 |---|:---:|---|
 | `wiki` | 🔴 | stub, prints "Hello, Wiki!" |
 | `ed` | 🔴 | parked: works as a pager, meant to become a simple console text editor |
-| `rip` | 🔴 | recycle-bin tool with an argument-loop bug |
 | `hash` | 🟡 | `--crc16` not implemented, `-f` ignored when stdin is redirected |
 | `sudo` | 🟡 | elevated start works, no-argument mode drops the parent's arguments |
-| `tulpn` | 🟡 | TCP listeners only, blocks at the end |
-| `unpack` | 🟡 | list/extract works, no progress, wrong help text, crashes on unknown archives |
-| `download` | 🟡 | works (with progress), no stdout mode, crashes on bad URL |
-| `img` | 🟡 | works for images, crashes without/with wrong argument |
-| `bits` | 🟡 | works, crashes without arguments, SI prefixes missing |
-| `certy` | 🟡 | works, crashes on unreachable host |
+| `tulpn` | 🟡 | TCP listeners only |
+| `unpack` | 🟡 | list/extract works, no progress, wrong help text, no password option |
+| `download` | 🟡 | works (with progress), no stdout mode, no resume |
+| `img` | 🟡 | works for images, no usage text, no size options |
+| `bits` | 🟡 | works, SI prefixes missing |
+| `certy` | 🟡 | works, no `--timeout`/`--sni` options |
 | `seek` | 🟡 | works, swallows all errors, query built by string concatenation |
 | `log` | 🟡 | works, error handling missing, small command set |
 | `google` | 🟡 | works, search term is not URL-encoded |
@@ -27,8 +26,7 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | `events` | 🟡 | works, pauses on exit, some parts experimental |
 | `hexe` | 🟡 | very complete, open feature list in the code |
 | `kb` | 🟡 | working clipboard tool, one TODO |
-| `free` | 🟡 | RAM/drives work, **CPU usage is always 0 %** |
-| `gremlins`, `chaos`, `coffee`, `d`, `file`, `list`, `hekate`, `subnet`, `rmline`, `kb2`, `consoleutils.update` | 🟢 | finished |
+| `gremlins`, `chaos`, `coffee`, `d`, `file`, `free`, `list`, `hekate`, `subnet`, `rmline`, `rip`, `kb2`, `consoleutils.update` | 🟢 | finished |
 
 ---
 
@@ -43,12 +41,6 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 * **Does:** shows a text file page-wise (arrows, PageUp/PageDown, space, `q`).
 * **Missing:** the code for changing a line (`lineChanger`) and for writing a modified file exists but is never called; it ends with `TODO: Delete the old file and replace it with the new file here`. Crashes without an argument. Reads the whole file, no encoding handling.
 * **To do:** decide *editor* or *pager*. If editor: cursor, insert/delete, save with atomic replace. If pager: remove the dead editing code and call it `view`/`pg`. In both cases: usage message, redirected-output check, `CursorVisible` restore on exit.
-
-### `rip` – recycle bin
-* **Does:** moves files to the recycle bin through the shell API (`FileOperationAPIWrapper`).
-* **Bug:** `foreach (arg in args)` calls the filter with **all** `args` each time, so with N arguments every file is processed N times.
-* **Missing:** no usage text, no confirmation/`-f`, no message about what was moved, no error code when nothing was found. Has its own `FileAndDirectoryFilter` copy with a different API than the one in `windows.core`.
-* **To do:** fix the loop (expand each argument once, support wildcards via `windows.core`), print results, set the exit code.
 
 ---
 
@@ -68,37 +60,32 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 
 ### `tulpn`
 * Lists listening **TCP** ports with the command line of the owning process.
-* **Missing:** UDP, established connections (the code has a commented-out "remote" part), process name/PID column, filtering and sorting. Waits for `Console.ReadLine()` at the end, so it cannot be piped. Throws when stdout is redirected (`Console.WindowWidth`).
-* **To do:** `--udp`, `--all`, `--pid`, drop the `ReadLine`, guard the console width.
+* **Missing:** UDP, established connections (the code has a commented-out "remote" part), process name/PID column, filtering and sorting. (It no longer waits for Enter at the end and works when piped; it only pauses when started from Explorer.)
+* **To do:** `--udp`, `--all`, `--pid`.
 
 ### `unpack`
 * Lists and extracts archives through `7z.dll`.
-* **Rough edges:** the `extract` verb has the help text of `list` ("List entry in archive."); progress percentage is a `todo`; `GetExtension` cuts at the *first* dot (`a.tar.gz` → `.tar.gz`, colors wrong for `my.file.txt`); unknown archive types end in an unhandled `SevenZipException`; no password option (encrypted archives fail), no "extract single file", no `create`.
-* **To do:** fix help/extension, catch errors with a readable message, progress bar, `--password`, `--include` pattern.
+* **Rough edges:** the `extract` verb has the help text of `list` ("List entry in archive."); progress percentage is a `todo`; `GetExtension` cuts at the *first* dot (`a.tar.gz` → `.tar.gz`, colors wrong for `my.file.txt`); unknown or missing archives now give a one-line error; no password option (encrypted archives fail), no "extract single file", no `create`.
+* **To do:** fix help/extension, progress bar, `--password`, `--include` pattern.
 
 ### `download`
 * HTTP download with proxy/timeout/header options.
-* **Missing:** the `TODO Output to STDOUT instead File Download`; a malformed URL ends in `UriFormatException`; no resume of interrupted downloads. Uses the obsolete `WebClient`.
-* **To do:** stdout mode (`-O -`), URL validation, `HttpClient` instead of `WebClient`, resume.
+* **Missing:** the `TODO Output to STDOUT instead File Download`; a malformed URL now gives a one-line error; no resume of interrupted downloads. Uses the obsolete `WebClient`.
+* **To do:** stdout mode (`-O -`), `HttpClient` instead of `WebClient`, resume.
 
 ### `img`
 * Renders an image with background-colored cells, scaled to the console. Uses `System.Drawing` (Windows only, GDI+).
-* **Missing:** crashes without an argument or with a missing/unsupported file; no usage text; no option for width/height or for half-block rendering (2× vertical resolution); no animated GIFs.
-* **To do:** argument handling, `--width/--height`, consider `ImageSharp` to become cross-platform.
-
-### `free`
-* Shows CPU, RAM and drive usage.
-* **Bug:** `PerformanceCounter.NextValue()` always returns `0` on the first call. The CPU value is read once, so it always prints `0%`.
-* **To do:** call `NextValue()`, wait ~500 ms, call it again (or `--watch` for continuous output). The tool also creates the counters even when only drives are wanted, which costs startup time.
+* **Missing:** no usage text (a missing argument or file ends in a one-line error now);  no option for width/height or for half-block rendering (2× vertical resolution); no animated GIFs.
+* **To do:** usage text, `--width/--height`, consider `ImageSharp` to become cross-platform.
 
 ### `bits`
-* Converts numbers/bits. `NullReferenceException` without arguments; the source has `TODO SI niut prefixes`.
-* **To do:** usage text for empty input, SI/IEC prefix handling.
+* Converts numbers/bits. The source has `TODO SI niut prefixes`.
+* **To do:** SI/IEC prefix handling, a clear message for empty input.
 
 ### `certy`
 * Shows TLS certificate, chain and PEM of `host:port`.
-* **Missing:** an unreachable host or a handshake error ends in an unhandled `AggregateException`.
-* **To do:** catch connection/TLS errors with a readable message and a non-zero exit code, `--timeout`, `--sni`.
+* An unreachable host or a handshake error now prints one line and exits with code 1.
+* **To do:** `--timeout`, `--sni`.
 
 ### `seek`
 * Searches the Windows Search index (`SystemIndex` through OleDb).
@@ -149,6 +136,8 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 | `hekate` | complete credential manager tool. `GetWifiCreds.cs` is a separate stand-alone program with its own `Main`; it is **not compiled** (excluded in `hekate.csproj`) and is not part of the tool. |
 | `subnet` | complete. |
 | `kb2` | complete clipboard tool, successor of `kb`: show/info/get, copy/cut/paste/move of files (Explorer compatible cut/copy flag), text/html/rtf/csv/image from file or stdin, save/load, raw/dump of any format, clear. Wildcards, `--force`, `--quiet`, exit codes. `kb` can be removed once `kb2` is accepted (only `kb remove` is not carried over, `rip` does that). |
+| `rip` | complete: every argument and wildcard is expanded once (the old loop moved the first file N times), each file is reported, the exit code is 1 if something was not found or could not be moved, `-q` for no output. |
+| `free` | complete: CPU load is measured over 500 ms (it always showed 0 % before). |
 | `rmline` | complete: `rmline file.ext:LINE [...]` deletes the line(s), keeps encoding/BOM and line endings, replaces the file atomically, exit code 1 on errors. Also accepts `~/` paths and several lines per file. |
 | `consoleutils.update` | rewritten: GitHub API instead of a VERSION download, SHA-256 verification, zip-slip protection, files in use are renamed, rollback on errors, `check` with exit codes for scripts, `--yes`/`--force`. Tested against a local fake server (success, wrong checksum, zip slip, missing checksum, failure with rollback); not yet against a real release made by the new workflow. |
 
@@ -156,10 +145,10 @@ Legend: **🟢 done** (does what it says, only polish left) · **🟡 usable** (
 
 ## Cross-cutting work (all tools)
 
-1. **Redirected input/output.** `Console.WindowWidth`, `CursorVisible`, `Clear()`, `ReadKey()` throw when stdout/stdin is redirected (`tulpn`, `ed`, `log`, `hash`, …). A shared helper (`ConsoleHelper.GetWidth()`, `IsInteractive`) in `cross.core` would fix all of them – `list` has a local version already.
-2. **"Press any key" when started from Explorer** is copy-pasted into ~10 tools (parent-process check + `ReadKey`). Move it into one helper in `windows.core`.
-3. **Usage on bad input.** `bits`, `img`, `ed`, `download`, `certy`, `unpack` end in stack traces for missing or wrong arguments. A common `try/catch` in the shared `Main` pattern with a readable message and an exit code would unify this.
-4. **Exit codes.** Most tools return 0 even on errors (`seek`, `rip`, `hash`).
+1. ~~Redirected input/output~~ **done:** `ConsoleHelper.Width`, `Height`, `IsInteractive`, `TryClear()`, `TrySetCursorVisible()` in `cross.core` never throw; the tools use them. `ed` and `log` say that they need a console instead of crashing.
+2. ~~"Press any key" from Explorer~~ **done:** `windows.core.ConsoleWindow.PauseIfStartedFromExplorer()` replaces the copies (only if a person can press a key).
+3. ~~Stack traces for bad input~~ **done:** `ConsoleHelper.Run(...)` wraps `Main` in `bits`, `img`, `download`, `certy`, `unpack`, `hash`, `free` and `tulpn`: one readable line and exit code 1. `CONSOLEUTILS_DEBUG=1` shows the complete exception. Tools that handle errors themselves are not wrapped yet.
+4. **Exit codes.** Better, but several tools still return 0 on errors (`seek`, `hash`).
 5. **Tests.** Only `cross.core.tests` exists (10 tests for `AnsiText`). The pure logic (`subnet`, `bits`, `hash`, `chaos`, `CmdParser`, `FileAndDirectoryFilter`, `UnitHelper`) is easy to cover with xUnit.
 6. **Tool-specific copies** of shared code: `kb` and `rip` (own `FileAndDirectoryFilter`), `events` (`EventColors` palette, own `Loader`).
 7. **Measuring colored text.** Use `AnsiText` from `cross.core` (`VisibleLength`, `PadRightVisible`, `TruncateVisible`, `Strip`) instead of `string.Length`/`PadRight` on strings that went through `.Pastel()`. `list`, `unpack` and `tulpn` still pad before coloring and could use it.

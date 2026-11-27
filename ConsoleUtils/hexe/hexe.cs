@@ -226,8 +226,8 @@ namespace hexe
 
                 if (!Console.IsOutputRedirected)
                 {
-                    windowHeight = Console.WindowHeight;
-                    windowWidth = Console.WindowWidth;
+                    windowHeight = ConsoleHelper.Height;
+                    windowWidth = ConsoleHelper.Width;
                 }
 
                 if (cmd["encoding"].WasUserSet)
@@ -832,7 +832,7 @@ namespace hexe
 
                 pagingCounter++;
 
-                if (paging && (pagingCounter >= Console.WindowHeight - 1))
+                if (paging && (pagingCounter >= ConsoleHelper.Height - 1))
                 {
                     ConsoleHelper.PagingWait();
                     pagingCounter = 0;

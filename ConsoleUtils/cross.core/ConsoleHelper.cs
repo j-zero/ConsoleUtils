@@ -107,9 +107,12 @@ public class ConsoleHelper
             Console.Error.Write($"{message.Pastel(ColorTheme.Error1)}\n");
     }
 
+    /// <summary>Writes the message of an exception. The stack trace is only shown if CONSOLEUTILS_DEBUG=1.</summary>
     public static void WriteError(Exception ex)
     {
-        Console.Error.Write($"{ex.Message.Pastel(Color.OrangeRed)}\n{ex.StackTrace}\n");
+        Console.Error.Write($"{ex.Message.Pastel(Color.OrangeRed)}\n");
+        if (Environment.GetEnvironmentVariable("CONSOLEUTILS_DEBUG") == "1")
+            Console.Error.Write($"{ex.StackTrace}\n");
     }
 
     public static void WriteErrorDog(string message)
@@ -124,6 +127,86 @@ public class ConsoleHelper
         string doggo = "                      \n           ████████   \n          ███▄███████ \n          ███████████ \n          ███████████ \n          ██████      \n          █████████   \n█       ███████       \n██    ████████████    \n███  ██████████  █    \n███████████████       \n███████████████       \n █████████████        \n  ███████████         \n    ████████          \n     ███  ██          \n     ██    █          \n     █     █          \n     ██    ██         \n                     ";
         string msg = message.Length < 12 ? message.PadLeft(11) : message;
         Console.Error.Write($"\n   {msg.Pastel(Color.OrangeRed)}\n{doggo.Pastel(Color.White)}\n\n");
+    }
+
+    // ---- console environment ----------------------------------------------------------------
+    // Console.WindowWidth, CursorVisible, Clear() ... throw when the output or input is redirected (pipe, file, CI).
+    // These helpers never throw.
+
+    /// <summary>Width of the console. 80 (or $COLUMNS) when there is no console window, e.g. when the output is redirected.</summary>
+    public static int Width
+    {
+        get
+        {
+            try
+            {
+                int width = Console.WindowWidth;
+                if (width > 0)
+                    return width;
+            }
+            catch (IOException) { }
+            catch (PlatformNotSupportedException) { }
+            return int.TryParse(Environment.GetEnvironmentVariable("COLUMNS"), out int columns) && columns > 0 ? columns : 80;
+        }
+    }
+
+    /// <summary>Height of the console. 25 (or $LINES) when there is no console window.</summary>
+    public static int Height
+    {
+        get
+        {
+            try
+            {
+                int height = Console.WindowHeight;
+                if (height > 0)
+                    return height;
+            }
+            catch (IOException) { }
+            catch (PlatformNotSupportedException) { }
+            return int.TryParse(Environment.GetEnvironmentVariable("LINES"), out int lines) && lines > 0 ? lines : 25;
+        }
+    }
+
+    /// <summary>True if a person can interact: neither the input nor the output is redirected.</summary>
+    public static bool IsInteractive => !Console.IsInputRedirected && !Console.IsOutputRedirected;
+
+    /// <summary>Clears the console if there is one.</summary>
+    public static void TryClear()
+    {
+        try { Console.Clear(); }
+        catch (IOException) { }
+    }
+
+    /// <summary>Shows or hides the cursor if there is a console.</summary>
+    public static void TrySetCursorVisible(bool visible)
+    {
+        try { Console.CursorVisible = visible; }
+        catch (IOException) { }
+        catch (PlatformNotSupportedException) { }
+    }
+
+    /// <summary>
+    /// Runs the program of a tool. Errors that are not handled by the tool are shown as one readable line with exit code 1
+    /// instead of a stack trace. Set the environment variable CONSOLEUTILS_DEBUG=1 to see the complete exception.
+    /// </summary>
+    public static int Run(Func<int> main)
+    {
+        try
+        {
+            return main();
+        }
+        catch (Exception ex) when (!System.Diagnostics.Debugger.IsAttached)
+        {
+            Exception error = ex;
+            while ((error is AggregateException || error is System.Reflection.TargetInvocationException) && error.InnerException != null)
+                error = error.InnerException;
+
+            if (Environment.GetEnvironmentVariable("CONSOLEUTILS_DEBUG") == "1")
+                Console.Error.WriteLine(error.ToString().Pastel(ColorTheme.Error1));
+            else
+                WriteError(error.Message);
+            return 1;
+        }
     }
 
     public static string GetVersionString()
@@ -264,7 +347,7 @@ public class ConsoleHelper
 
         public static void BinDump(byte[] bytes, int lineLength = 0)
     {   if(lineLength == 0)
-            lineLength = Console.WindowWidth - (Console.WindowWidth % 2) - 1;
+            lineLength = Width - (Width % 2) - 1;
         if (bytes == null) return;
         for (int i = 0; i < bytes.Length; i += lineLength)
         {
@@ -409,8 +492,8 @@ public class ConsoleHelper
     {
         if (!Console.IsOutputRedirected)
         {
-            windowHeight = Console.WindowHeight;
-            windowWidth = Console.WindowWidth;
+            windowHeight = Height;
+            windowWidth = Width;
         }
 
 
@@ -574,7 +657,7 @@ public class ConsoleHelper
             WriteLine((noOffset ? string.Empty : (offsetPrefix + offsetPart).Pastel(lineCounter % 2  == 0 ? ColorTheme.OffsetColor : ColorTheme.OffsetColor2) + spacer) + hexPart + (noText ? string.Empty : spacer + asciiPart));
             pagingCounter++;
 
-            if (paging && (pagingCounter >= Console.WindowHeight - 1))
+            if (paging && (pagingCounter >= Height - 1))
             {
                 PagingWait();
                 pagingCounter = 0;

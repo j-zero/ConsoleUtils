@@ -17,7 +17,9 @@ namespace free
         static extern bool GetPhysicallyInstalledSystemMemory(out long TotalMemoryInKilobytes);
 
 
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
             long memKb;
             GetPhysicallyInstalledSystemMemory(out memKb);
@@ -27,7 +29,10 @@ namespace free
             PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             float availableRam = ramCounter.NextValue();
             float usedRam = installedRam - availableRam;
-            Console.WriteLine($"CPU Usage:\t{cpuCounter.NextValue()}%");
+            // the first value of a counter is always 0, the load is the difference to a second value a moment later
+            cpuCounter.NextValue();
+            System.Threading.Thread.Sleep(500);
+            Console.WriteLine($"CPU Usage:\t{cpuCounter.NextValue():0.#}%");
             Console.WriteLine($"RAM Usage:\t{usedRam}/{installedRam}MB, {availableRam}MB free");
             Console.WriteLine("Drive Usage:");
             DriveInfo[] drives = DriveInfo.GetDrives();

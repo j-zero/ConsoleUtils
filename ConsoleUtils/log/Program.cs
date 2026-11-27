@@ -29,7 +29,13 @@ namespace lognote
         [STAThread] // needed for clipboard data
         static void Main(string[] args)
         {
-            Console.Clear();
+            if (!ConsoleHelper.IsInteractive)
+            {
+                ConsoleHelper.WriteError("log is interactive, it cannot run when the input or output is redirected.");
+                Environment.Exit(1);
+            }
+
+            ConsoleHelper.TryClear();
             ShowVersion();
             //var f = Environment.CommandLine;
             //Console.WriteLine(f);

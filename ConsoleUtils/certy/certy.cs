@@ -50,7 +50,9 @@ namespace certy
 
         static CmdParser cmd;
 
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
             cmd = new CmdParser(args)
             {
@@ -106,6 +108,8 @@ namespace certy
             else if (cmd["protocol"].String == "tcp" || cmd["protocol"].String == "ssl")
             {
                 ShowTCPCertificate(host, port, timeout);
+                if (_failed != 0)
+                    Exit(_failed);
             }
             else
             {
@@ -181,6 +185,8 @@ namespace certy
             }
         }
 
+        static int _failed = 0; // exit code 1 if a connection or a certificate could not be read
+
         static void ShowTCPCertificate(string host, int port, int timeout = 2000)
         {
             TcpClient client = new TcpClient();
@@ -212,10 +218,12 @@ namespace certy
                 else
                 {
                     ConsoleHelper.WriteError($"Timeout connecting to {host}:{port.ToString()}");
+                    _failed = 1;
                 }
             }
             catch (Exception ex)
             {
+                _failed = 1;
                 ConsoleHelper.WriteError(ex);
                 if (ex.InnerException != null)
                     ConsoleHelper.WriteError(ex.InnerException);
@@ -334,7 +342,7 @@ namespace certy
                 return;
             }
             
-            int maxDescLength = Console.WindowWidth - 2;
+            int maxDescLength = ConsoleHelper.Width - 2;
             int padding = 21;
             var ecdsa = X5092.GetECDsaPublicKey();
             var rsa = X5092.GetRSAPublicKey();

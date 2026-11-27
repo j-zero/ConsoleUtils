@@ -13,7 +13,9 @@ namespace img
     internal class Program
     {
 
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
             
 
@@ -21,11 +23,11 @@ namespace img
 
             Image image_trans = new Bitmap(image, new Size((int)(image.Width * 2), image.Height)); // console font ratio ~ 2/1
 
-            var new_image = ScaleImage(image_trans, Console.WindowWidth - 4, Console.WindowHeight - 8);
+            var new_image = ScaleImage(image_trans, ConsoleHelper.Width - 4, ConsoleHelper.Height - 8);
 
             PrintImageConsole(new_image);
 
-            //Console.WriteLine($"console: {Console.WindowWidth}x{Console.WindowHeight}, image: {image.Width}x{image.Height}, new image: {new_image.Width}x{new_image.Height}");
+            //Console.WriteLine($"console: {ConsoleHelper.Width}x{ConsoleHelper.Height}, image: {image.Width}x{image.Height}, new image: {new_image.Width}x{new_image.Height}");
 
 
             ;
@@ -35,7 +37,7 @@ namespace img
         {
             string pixel = " ";
             StringBuilder sb = new StringBuilder();
-            //Console.WriteLine($"console: {Console.WindowWidth}x{Console.WindowHeight}, image: {image.Width}x{image.Height}, new image: {new_image.Width}x{new_image.Height}");
+            //Console.WriteLine($"console: {ConsoleHelper.Width}x{ConsoleHelper.Height}, image: {image.Width}x{image.Height}, new image: {new_image.Width}x{new_image.Height}");
             for (int y = 0; y < image.Height; y++)
             {
                 for (int x = 0; x < image.Width; x++)

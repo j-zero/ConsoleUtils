@@ -52,7 +52,7 @@ The solution is organised in the solution folders *Libraries*, *Tools* and *Prot
 | `mk` | `touch` – create files | any | – | 83 |
 | `open` | open a file/folder/URL with the default application | win | – | 151 |
 | `path` | print the full path and copy it to the clipboard | win | – | 86 |
-| `rip` | move files to the recycle bin instead of deleting them | win | – | 312 |
+| `rip` | move files to the recycle bin instead of deleting them (wildcards, exit code) | win | – | 330 |
 | `rmline` | delete a line from a file: `rmline file.ext:LINE` | any | – | 168 |
 | `seek` | search files with Windows Search | win | cross, win | 168 |
 | `subnet` | subnet calculator | any | cross | 456 |
@@ -65,8 +65,8 @@ The solution is organised in the solution folders *Libraries*, *Tools* and *Prot
 
 | Library | Purpose | Platform | LOC |
 |---|---|---|---:|
-| `cross.core` | command line parser, console helpers and colors (Pastel), `AnsiText` (measure/pad/truncate colored strings), hashes/CRC (`Crc32/64`, `Elf32`), `Base58`, MIME detection, `ReadLine`, file type definitions, encoding/convert/string/unit helpers | any | 4326 |
-| `windows.core` | file system entries with owner/ACL/links/ADS (`FilesystemEntryInfo`), wildcard file filter, network shares, NTFS data streams, parent process, `PathHelper`, Windows helpers | win | 2162 |
+| `cross.core` | command line parser, console helpers and colors (Pastel), `AnsiText` (measure/pad/truncate colored strings), console helpers (`Width`, `IsInteractive`, `Run` error frame), hashes/CRC (`Crc32/64`, `Elf32`), `Base58`, MIME detection, `ReadLine`, file type definitions, encoding/convert/string/unit helpers | any | 4326 |
+| `windows.core` | file system entries with owner/ACL/links/ADS (`FilesystemEntryInfo`), wildcard file filter, network shares, NTFS data streams, parent process, `ConsoleWindow` (started from Explorer?), `PathHelper`, Windows helpers | win | 2162 |
 | `SevenZipExtractor` | C# wrapper for `7z.dll` (x64 and x86 DLL included) | win (native DLL) | 1824 |
 
 `windows.core` references `cross.core`; tools that reference `windows.core` get `cross.core` through it, but list both explicitly.
@@ -107,8 +107,6 @@ Run with `dotnet test ConsoleUtils/cross.core.tests`; the CI workflow runs them 
 
 * **Tool-specific copies of shared code:** `kb` and `rip` each have their own `FileAndDirectoryFilter.cs` (different API than the one in `windows.core`),
   `kb` also has its own clipboard/HTML helpers; `events` has its own colour palette `EventColors`.
-* **"Press any key" when started from Explorer** is copy-pasted into about ten tools (parent process check + `ReadKey`).
-* **Redirected output:** several tools read `Console.WindowWidth`, `CursorVisible` or `Clear()` unguarded and throw when stdout/stdin is redirected (`tulpn`, `ed`, `log`, …). `list` is already fixed.
 * **Command line handling:** `mk`, `path` and `open` use the raw command line as one path instead of the parsed arguments.
 * **Few tests:** only `cross.core.tests` exists.
 * **CI:** the workflow has not run on GitHub yet; the release job in particular is untested.

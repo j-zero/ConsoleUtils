@@ -1,1 +1,1 @@
-[assembly: System.Reflection.AssemblyVersion("0.1.*")]
+[assembly: System.Reflection.AssemblyVersion("1.0.0.0")] // fixed: the tools reference this library, a changing version breaks them after a partial rebuild

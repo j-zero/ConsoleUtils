@@ -22,7 +22,23 @@ namespace ed
 
         static void Main(string[] args)
         {
-            Console.CursorVisible = false;
+            if (args.Length == 0)
+            {
+                ConsoleHelper.WriteError("Usage: ed <file>");
+                Environment.Exit(1);
+            }
+            if (!File.Exists(args[0]))
+            {
+                ConsoleHelper.WriteError($"File \"{args[0]}\" not found.");
+                Environment.Exit(1);
+            }
+            if (!ConsoleHelper.IsInteractive)
+            {
+                ConsoleHelper.WriteError("ed needs a console, it cannot read keys or draw when the input or output is redirected.");
+                Environment.Exit(1);
+            }
+
+            ConsoleHelper.TrySetCursorVisible(false);
 
             var file_name = args[0];
             lines = File.ReadAllLines(file_name); // ugly
@@ -60,8 +76,8 @@ namespace ed
             {
                 backup_from = from;
                 from++;
-                if (from >= lines.Length - Console.WindowHeight - 1)
-                    from = lines.Length - Console.WindowHeight - 1;
+                if (from >= lines.Length - ConsoleHelper.Height - 1)
+                    from = lines.Length - ConsoleHelper.Height - 1;
                 PrintLines();
             }
             if (cki.Key == ConsoleKey.UpArrow)
@@ -76,14 +92,14 @@ namespace ed
             {
                 backup_from = from;
                 from = current_last_line - 1;
-                if (from >= lines.Length - Console.WindowHeight - 1)
-                    from = lines.Length - Console.WindowHeight - 1;
+                if (from >= lines.Length - ConsoleHelper.Height - 1)
+                    from = lines.Length - ConsoleHelper.Height - 1;
                 PrintLines();
             }
             if (cki.Key == ConsoleKey.PageUp)
             {
 
-                from -= Console.WindowHeight / 2;
+                from -= ConsoleHelper.Height / 2;
                 //backup_from = from;
                 if (from < 0)
                     from = 0;
@@ -105,7 +121,7 @@ namespace ed
             //Console.Clear();
             Console.SetCursorPosition(0, 0);
             
-            int to = from + Console.WindowHeight-1;
+            int to = from + ConsoleHelper.Height-1;
 
             int line_number_max_length = lines.Length.ToString().Length; // even more ugly
             string prefix = "".PadLeft(line_number_max_length + 1) + "│ ".Pastel(ColorTheme.DarkText);
@@ -121,28 +137,28 @@ namespace ed
                 {
 
                     counter_displayed_lines++;
-                    if (counter_displayed_lines > Console.WindowHeight - 1)
+                    if (counter_displayed_lines > ConsoleHelper.Height - 1)
                         break;
                     string line_number = (current_line_number + 1).ToString().PadLeft(line_number_max_length + 1, ' ').Pastel(ColorTheme.Default1);
                     string blank = "".ToString().PadLeft(line_number_max_length + 1, ' ');
                     Console.Write((j == 0 ? (line_number) : blank) + "│ ".Pastel(ColorTheme.DarkText));
                     int pos = Console.CursorLeft;
-                    Console.Write(arr[j].PadRight(Console.WindowWidth - pos,' ').Pastel(ColorTheme.Text));
+                    Console.Write(arr[j].PadRight(ConsoleHelper.Width - pos,' ').Pastel(ColorTheme.Text));
                 }
                 current_line_number++;
                 current_last_line = current_line_number;
                 i += arr.Length;
             }
 
-            Console.SetCursorPosition(0, Console.WindowHeight-1);
-            Console.Write(":".PadRight(Console.WindowWidth, ' ').PastelBg(ColorTheme.Default1));
+            Console.SetCursorPosition(0, ConsoleHelper.Height-1);
+            Console.Write(":".PadRight(ConsoleHelper.Width, ' ').PastelBg(ColorTheme.Default1));
             Console.CursorVisible = false;
             return i;
         }
 
         static string[] GetSplittedText(string input, int padding_left = 4, int padding_right = 1)
         {
-            int max_length = Console.WindowWidth - padding_left - padding_right;
+            int max_length = ConsoleHelper.Width - padding_left - padding_right;
             string tmp = input;
             if (input.Length < max_length)
                 return new string[] { input };

@@ -11,10 +11,12 @@ namespace tulpn
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
             var table = TCPTable.GetAllTcpConnections();
-            int maxDescLength = Console.WindowWidth - Console.CursorLeft;
+            int maxDescLength = ConsoleHelper.Width - Console.CursorLeft;
             foreach (var t in table)
             {
                 var cmdline = GetCommandLine(t.owningPid);
@@ -34,7 +36,7 @@ namespace tulpn
                 }
             }
             
-            Console.ReadLine();
+            windows.core.ConsoleWindow.PauseIfStartedFromExplorer();
         }
 
         public static string GetCommandLine(int pid)
@@ -48,7 +50,7 @@ namespace tulpn
 
         public static string GetShortLine(string text, string suffix = "...")
         {
-            int length = Math.Min(text.Length, Console.WindowWidth - Console.CursorLeft - suffix.Length);
+            int length = Math.Min(text.Length, ConsoleHelper.Width - Console.CursorLeft - suffix.Length);
             return text.Substring(0, length) + (length < text.Length ? suffix : "");
         }
 

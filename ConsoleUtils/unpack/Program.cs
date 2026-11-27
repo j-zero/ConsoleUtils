@@ -18,7 +18,9 @@ namespace unpack
         static int currentIndex = -1;
         static string fullPath = "";
         static string relativePath = "";
-        static void Main(string[] args)
+        static int Main(string[] args) => ConsoleHelper.Run(() => { MainCore(args); return 0; });
+
+        static void MainCore(string[] args)
         {
             cmd = new CmdParser(args)
             {
@@ -192,14 +194,7 @@ namespace unpack
         }
         static void Exit(int exitCode) 
         {
-            string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
-            //Console.WriteLine(parrentProcess);
-
-            if (System.Diagnostics.Debugger.IsAttached || parrentProcess.ToLower().Contains("explorer")) // is debugger attached or started by double-click/file-drag
-            {
-                Console.WriteLine("\nPress any key to exit.");
-                Console.ReadKey();
-            }
+            windows.core.ConsoleWindow.PauseIfStartedFromExplorer();
 
             Environment.Exit(exitCode);
         }

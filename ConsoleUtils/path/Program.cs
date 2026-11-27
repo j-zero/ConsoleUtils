@@ -37,6 +37,11 @@ namespace path
                 var f = GetRawArguments();
                 if (File.Exists(f) || Directory.Exists(f))
                     path = Path.GetFullPath(f);
+                else
+                {
+                    Console.Error.WriteLine($"Not found: {f}");
+                    Environment.Exit(1);
+                }
             }
             else
                 path = Environment.CurrentDirectory;

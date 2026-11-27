@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>list</AssemblyName>
+    <RootNamespace>list</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\cross.core\cross.core.csproj" />
+    <ProjectReference Include="..\windows.core\windows.core.csproj" />
+  </ItemGroup>
+
+</Project>

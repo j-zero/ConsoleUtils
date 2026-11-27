@@ -5,11 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	  <OutputPath>..\..\bin\</OutputPath>
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	  <Copyright>Copyright © 2024 j-zero</Copyright>
-	  <Deterministic>false</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>

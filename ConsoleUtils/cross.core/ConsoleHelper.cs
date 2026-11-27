@@ -126,6 +126,11 @@ public class ConsoleHelper
         Console.Error.Write($"\n   {msg.Pastel(Color.OrangeRed)}\n{doggo.Pastel(Color.White)}\n\n");
     }
 
+    public static string GetVersionString()
+    {
+        return GetVersionString(ColorTheme.Default1, ColorTheme.Default2);
+    }
+
     public static string GetVersionString(string color1, string color2)
     {
         return "ConsoleUtils".Pastel(color1) + " (" + "https://github.com/j-zero/ConsoleUtils".Pastel(color2) + ")";

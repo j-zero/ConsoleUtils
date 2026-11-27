@@ -1,0 +1,14 @@
+<Project>
+
+  <!-- Settings shared by all projects. -->
+  <PropertyGroup>
+    <!-- every executable and library ends up in <repo>\bin -->
+    <OutputPath>$(MSBuildThisFileDirectory)..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Deterministic>false</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

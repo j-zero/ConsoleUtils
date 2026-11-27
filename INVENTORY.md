@@ -1,77 +1,85 @@
 # ConsoleUtils – Inventory
 
-Stand: 2026-11-27 · Target: **.NET 10** (`net10.0` / `net10.0-windows`) · 35 projects (31 executables, 4 libraries)
+Stand: 2026-11-27 · Target: **.NET 10** (`net10.0` / `net10.0-windows`) · 34 projects (31 executables, 3 libraries)
 
-All projects build into the shared `bin\` folder at the repository root (`OutputPath = ..\..\bin\`),
-the solution is `ConsoleUtils\ConsoleUtils.sln` (solution folders: *Libraries*, *Tools*, *Prototypes*).
+How finished each tool is, and what is left to do, is in [STATUS.md](STATUS.md).
 
 ## Repository layout
 
 | Path | Content |
 |---|---|
-| `ConsoleUtils/` | solution `ConsoleUtils.sln` and one folder per project |
+| `ConsoleUtils/` | solution `ConsoleUtils.sln`, one folder per project, shared build files |
+| `ConsoleUtils/Directory.Build.props` | settings shared by all projects (output folder `bin\`, no assembly info, unsafe blocks) |
+| `ConsoleUtils/Directory.Packages.props` | central NuGet package versions |
 | `ConsoleUtils/build.cmd`, `build.sh` | local build helpers |
 | `powershell/` | PowerShell helpers (profile snippets, autostart, update check) |
 | `.github/workflows/build.yml` | CI: build (Windows), artifact `Kompilat`, release zip on `v*` tags |
 | `release.cmd`, `write-version.cmd` | write the `VERSION` file from `git describe --tags` |
-| `bin/` | build output (not versioned) |
+| `bin/` | build output (not versioned, every project builds into it) |
+
+Every project folder has the name of its executable, the project file has the same name (`list/list.csproj` → `list.exe`).
+The solution is organised in the solution folders *Libraries*, *Tools* and *Prototypes*.
 
 ## Tools (alphabetical)
 
-"Core" says which shared library a tool uses. *cross* = `cross.core`, *win* = `windows.core`, *legacy* = `leviathan.core`.
 "Platform": **any** = builds for plain `net10.0`, **win** = `net10.0-windows` (Windows only).
+"Uses": `cross` = `cross.core`, `win` = `windows.core`.
 
-| Executable | Folder / project | Purpose | Platform | Core | LOC |
-|---|---|---|---|---|---:|
-| `bits` | `bits/bits.csproj` | convert numbers / show bits | any | cross | 628 |
-| `certy` | `certy/certy.csproj` | show the TLS certificate (and chain) of `host:port` | any | cross | 700 |
-| `chaos` | `chaos/chaos.csproj` | shuffle, sort and de-duplicate lines of text | any | cross | 322 |
-| `coffee` | `coffee/coffee.csproj` | keep the system awake, optionally while running a command | win | cross + win | 196 |
-| `consoleutils.update` | `consoleutils.update/` | self-updater, downloads the latest GitHub release | win | – | 756 |
-| `d` | `d/d.csproj` | date/time overview: week, day of year, UTC, Unix time, Swatch beats, calendar | any | cross | 77 |
-| `download` | `download/download.csproj` | download a URL, optionally show headers | win | legacy | 328 |
-| `ed` | `ed/ed.csproj` | interactive line viewer/editor for text files (work in progress) | win | legacy | 276 |
-| `events` | `events/events.csproj` | read / export the Windows Event Log (XML, append) | win | own copies | 1788 |
-| `file` | `file/file.csproj` | identify file type: magic description, MIME type, encoding | win | legacy | 105 |
-| `free` | `free/free.csproj` | CPU, RAM and drive usage | win | legacy | 169 |
-| `google` | `google/google.csproj` | web search from the command line | win | – | 82 |
-| `gremlins` | `gremlins/gremlins.csproj` | show strange / invisible characters in text files | any | cross | 558 |
-| `hash` | `hash/hash.csproj` | checksums and hashes (CRC16/32/64, ELF32, MD5, SHA1, SHA256 …) | win | legacy | 185 |
-| `hekate` | `hekate/hekate.csproj` | Windows Credential Manager utility | win | legacy | 661 |
-| `hexe` | `hexe/hexe.csproj` | hex viewer | any | cross | 1013 |
-| `img` | `img/img.csproj` | render an image in the console | win | own copy | 544 |
-| `kb` | `klemmbrett_old/klemmbrett.csproj` | console clipboard utility (old, working) | win | – | 1520 |
-| `kb2` | `klemmbrett/klemmbrett2.csproj` | rewrite of `kb` (does not work yet) | win | legacy | 352 |
-| `list` | `l/list.csproj` | `ls`-like file listing with owner, attributes, MIME info, ADS | win | legacy | 867 |
-| `log` | `lognote/lognote.csproj` | note taking / log book in `Documents\LogNote` | win | legacy | 472 |
-| `mk` | `touch/mk.csproj` | `touch` – create files | any | – | 83 |
-| `open` | `open/open.csproj` | open a file/folder/URL with the default application | win | – | 151 |
-| `path` | `path/path.csproj` | print the full path and copy it to the clipboard | win | – | 86 |
-| `rip` | `recycle/trash.csproj` | move files to the recycle bin instead of deleting them | win | – | 312 |
-| `rmline` | `rmline/rmline.csproj` | remove a line from a file (prototype, hard-coded paths) | any | – | 25 |
-| `seek` | `seek/seek.csproj` | search files with Windows Search | win | legacy | 168 |
-| `subnet` | `subnet/subnet.csproj` | subnet calculator | any | cross | 456 |
-| `sudo` | `sudo/sudo.csproj` | run a command elevated | win | legacy | 163 |
-| `tulpn` | `tulpn/tulpn.csproj` | list listening TCP ports with the owning process command line | win | legacy | 249 |
-| `unpack` | `unpack/unpack.csproj` | list / extract archives (7-Zip) | win | legacy + SevenZipExtractor | 242 |
-| `wiki` | `wiki/wiki.csproj` | stub ("Hello, Wiki!") | any | – | 2 |
+| Executable | Purpose | Platform | Uses | LOC |
+|---|---|---|---|---:|
+| `bits` | convert numbers / show bits | any | cross | 628 |
+| `certy` | show the TLS certificate (and chain) of `host:port` | any | cross | 700 |
+| `chaos` | shuffle, sort and de-duplicate lines of text | any | cross | 322 |
+| `coffee` | keep the system awake, optionally while running a command | win | cross, win | 196 |
+| `consoleutils.update` | self-updater, downloads the latest GitHub release | win | cross | 508 |
+| `d` | date/time overview: week, day of year, UTC, Unix time, Swatch beats, calendar | any | cross | 77 |
+| `download` | download a URL, optionally show headers | win | cross, win | 328 |
+| `ed` | interactive line viewer for text files (editing not finished) | win | cross, win | 276 |
+| `events` | read / export the Windows Event Log (XML, append) | win | cross, win | 620 |
+| `file` | identify file type: magic description, MIME type, encoding | win | cross, win | 105 |
+| `free` | CPU, RAM and drive usage | win | cross, win | 169 |
+| `google` | web search from the command line | any | – | 82 |
+| `gremlins` | show strange / invisible characters in text files | any | cross | 558 |
+| `hash` | checksums and hashes (CRC32/64, ELF32, MD5, SHA1, SHA256 …) | win | cross, win | 185 |
+| `hekate` | Windows Credential Manager utility | win | cross, win | 661 |
+| `hexe` | hex viewer | any | cross | 1013 |
+| `img` | render an image in the console | win | cross | 150 |
+| `kb` | console clipboard utility (working) | win | – | 1520 |
+| `kb2` | rewrite of `kb` (dumps clipboard formats only) | win | cross, win | 352 |
+| `list` | `ls`-like file listing with owner, attributes, MIME info, ADS | win | cross, win | 867 |
+| `log` | note taking / log book in `Documents\LogNote` | win | cross, win | 472 |
+| `mk` | `touch` – create files | any | – | 83 |
+| `open` | open a file/folder/URL with the default application | win | – | 151 |
+| `path` | print the full path and copy it to the clipboard | win | – | 86 |
+| `rip` | move files to the recycle bin instead of deleting them | win | – | 312 |
+| `rmline` | remove a line from a file (prototype) | any | – | 25 |
+| `seek` | search files with Windows Search | win | cross, win | 168 |
+| `subnet` | subnet calculator | any | cross | 456 |
+| `sudo` | run a command elevated | win | cross, win | 163 |
+| `tulpn` | list listening TCP ports with the owning process command line | win | cross, win | 249 |
+| `unpack` | list / extract archives (7-Zip) | win | cross, win, SevenZipExtractor | 242 |
+| `wiki` | stub ("Hello, Wiki!") | any | – | 2 |
 
 ## Libraries
 
-| Library | Folder | Purpose | Platform | LOC |
-|---|---|---|---|---:|
-| `cross.core` | `cross.core/` | command line parser, console helpers, colors (Pastel), file definitions – platform independent | any | 2258 |
-| `windows.core` | `windows.core/` | NTFS data streams, parent process, Windows helpers (`System.Management`) | win | 1029 |
-| `leviathan.core` | `ConsoleUtilsCore/` | **legacy** core, the former .NET Framework library (file system entries, MIME, owner/ACL, Elf/CRC, …) | win | 6372 |
-| `SevenZipExtractor` | `SevenZipExtractor/` | C# wrapper for `7z.dll` (x64 and x86 DLL included) | win (native DLL) | 1824 |
+| Library | Purpose | Platform | LOC |
+|---|---|---|---:|
+| `cross.core` | command line parser, console helpers and colors (Pastel), hashes/CRC (`Crc32/64`, `Elf32`), `Base58`, MIME detection, `ReadLine`, file type definitions, encoding/convert/string/unit helpers | any | 4326 |
+| `windows.core` | file system entries with owner/ACL/links/ADS (`FilesystemEntryInfo`), wildcard file filter, network shares, NTFS data streams, parent process, `PathHelper`, Windows helpers | win | 2162 |
+| `SevenZipExtractor` | C# wrapper for `7z.dll` (x64 and x86 DLL included) | win (native DLL) | 1824 |
 
-## NuGet packages in use
+`windows.core` references `cross.core`; tools that reference `windows.core` get `cross.core` through it, but list both explicitly.
+The former .NET Framework library `leviathan.core` was split into these two and removed.
+
+## NuGet packages
+
+Versions are defined once in `ConsoleUtils/Directory.Packages.props`.
 
 | Package | Used by |
 |---|---|
-| `Mime`, `MimeTypesMap` | `leviathan.core`, `list`, `open` |
-| `System.Management` | `leviathan.core`, `windows.core`, `events`, `sudo`, `tulpn` |
-| `System.Drawing.Common` | `leviathan.core`, `img` |
+| `Mime`, `MimeTypesMap` | `cross.core` (MIME detection), `open` |
+| `System.Management` | `windows.core` |
+| `System.Drawing.Common` | `img` |
 | `System.Diagnostics.EventLog` | `events` |
 | `System.Diagnostics.PerformanceCounter` | `free` |
 | `System.Security.Cryptography.ProtectedData` | `hekate` |
@@ -86,20 +94,13 @@ the solution is `ConsoleUtils\ConsoleUtils.sln` (solution folders: *Libraries*, 
 | `check_updates.ps1` | compares a hard-coded version (`v0.5.0`) with the latest GitHub release |
 | `profile-snippet-sshtools.ps1` | tab completion for `ssh`/`scp`/`sftp` from `~/.ssh/config`, SSH bookmark helpers (`ssh-copy-id`, …) |
 
-## Findings / technical debt
+## Remaining technical debt
 
-* **Three core libraries.** `leviathan.core` (legacy, ~6.4k LOC) duplicates much of `cross.core` + `windows.core`.
-  13 tools still depend on `leviathan.core`: `download`, `ed`, `file`, `free`, `hash`, `hekate`, `kb2`, `list`, `log`, `seek`, `sudo`, `tulpn`, `unpack`.
-  The natural next step is to move them to `cross.core` / `windows.core` and retire `leviathan.core`.
-* **Private copies of core files** in `events` (ColorTheme, CommandLineParser, ConsoleExtensions, ParentProcessHelper), `img` (ConsoleExtensions),
-  `klemmbrett_old` and `recycle` (each with its own `FileAndDirectoryFilter.cs`).
-* **Folder names differ from the executable name:** `l`→`list`, `touch`→`mk`, `recycle`→`rip`, `lognote`→`log`, `klemmbrett`→`kb2`, `klemmbrett_old`→`kb`, `ConsoleUtilsCore`→`leviathan.core`.
-* **Prototypes / stubs:** `wiki` (2 lines), `rmline` (hard-coded paths), `kb2` (not working), `ed` (work in progress).
-* **Redirected output:** several tools read `Console.WindowWidth`, `CursorVisible` or `Clear()` unguarded and throw when stdout/stdin is redirected
-  (`tulpn`, `ed`, `log`, …). `list` is already fixed.
-* **`tulpn`** waits for `Console.ReadLine()` at the end, it cannot be used in pipelines.
-* **`powershell/check_updates.ps1`** has the installed version hard-coded (`v0.5.0`) instead of reading `VERSION`.
-* **`mk`** does not strip quotes around a single path argument.
+* **Tool-specific copies of shared code:** `kb` and `rip` each have their own `FileAndDirectoryFilter.cs` (different API than the one in `windows.core`),
+  `kb` also has its own clipboard/HTML helpers; `events` has its own colour palette `EventColors`.
+* **"Press any key" when started from Explorer** is copy-pasted into about ten tools (parent process check + `ReadKey`).
+* **Redirected output:** several tools read `Console.WindowWidth`, `CursorVisible` or `Clear()` unguarded and throw when stdout/stdin is redirected (`tulpn`, `ed`, `log`, …). `list` is already fixed.
+* **Command line handling:** `mk`, `path` and `open` use the raw command line as one path instead of the parsed arguments.
+* **`powershell/check_updates.ps1`** has the installed version hard-coded instead of reading `VERSION`.
+* **No tests.**
 * **CI:** `.github/workflows/build.yml` was updated to .NET 10 and v4 actions, but has not been run yet.
-* **`bin/`** may contain stale files from the .NET Framework / .NET 8 builds (`*.dll.config`, `Debug/`, `Release/`, old 4.x packages).
-  A clean rebuild after deleting `bin/` gives a tidy output folder.

@@ -92,10 +92,10 @@ namespace events
             
 
             WriteLine(($"Keys: " 
-                + $"{(" 0..5".Pastel(color1) + " log level ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
-                + $"{(" P".Pastel(color1) + " pause ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
-                + $"{(" F".Pastel(color1) + " toggle > file ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "
-                + $"{(" SPC".Pastel(color1) + " print line ".Pastel(Color.Black)).PastelBg(ColorTheme.fg)} "));
+                + $"{(" 0..5".Pastel(color1) + " log level ".Pastel(Color.Black)).PastelBg(EventColors.fg)} "
+                + $"{(" P".Pastel(color1) + " pause ".Pastel(Color.Black)).PastelBg(EventColors.fg)} "
+                + $"{(" F".Pastel(color1) + " toggle > file ".Pastel(Color.Black)).PastelBg(EventColors.fg)} "
+                + $"{(" SPC".Pastel(color1) + " print line ".Pastel(Color.Black)).PastelBg(EventColors.fg)} "));
 
 
             if (!cmd.HasFlag("disable-logging") && cmd["file"].StringIsNotNull)
@@ -122,7 +122,7 @@ namespace events
 
                     
                 }
-                WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to \"{filePath}\"");
+                WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + $"Logging to \"{filePath}\"");
             }
             
             string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
@@ -134,11 +134,11 @@ namespace events
                 //Console.ReadKey();
             }
 
-            WriteError("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Attaching to eventlog channels ... ");
+            WriteError("[" + "!".Pastel(EventColors.purple) + "] " + $"Attaching to eventlog channels ... ");
             //Console.Error.Write("Getting logs  ... ");
             LoadEventLogs(cmd["channel"].Strings, cmd["query"].String);
             WriteErrorLine($"{attached_logs_counter}/{all_logs_counter} attached.");
-            WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging started: {DateTime.Now.ToString("yyyy-MM-dd HH\\:mm\\:ss.fff", CultureInfo.InvariantCulture).Pastel(ColorTheme.cyan)}\n");
+            WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + $"Logging started: {DateTime.Now.ToString("yyyy-MM-dd HH\\:mm\\:ss.fff", CultureInfo.InvariantCulture).Pastel(EventColors.cyan)}\n");
 
             running = true;
 
@@ -164,31 +164,31 @@ namespace events
             {
                 case ConsoleKey.D0:
                     current_log_level = 0;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 0 (" + "LogAlways".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 0 (" + "LogAlways".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D1:
                     current_log_level = 1;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 1 (" + "Critical".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 1 (" + "Critical".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D2:
                     current_log_level = 2;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 2 (" + "Error".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 2 (" + "Error".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D3:
                     current_log_level = 3;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 3 (" + "Warning".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 3 (" + "Warning".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D4:
                     current_log_level = 4;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 4 (" + "Info".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 4 (" + "Info".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.D5:
                     current_log_level = 5;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + "Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(current_log_level)) + ")");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + "Log level set to 5 (" + "Verbose".Pastel(GetLevelColor(current_log_level)) + ")");
                     break;
                 case ConsoleKey.F:
                     log_enabled = !log_enabled;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"Logging to file {(log_enabled ? "enabled" : "disabled")}");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + $"Logging to file {(log_enabled ? "enabled" : "disabled")}");
                     break;
                 case ConsoleKey.Enter:
                     Console.WriteLine();
@@ -203,7 +203,7 @@ namespace events
                 case ConsoleKey.P:
                 case ConsoleKey.Pause:
                     running = !running;
-                    WriteErrorLine("[" + "!".Pastel(ColorTheme.purple) + "] " + $"{(running ? "Started." : "Stopped.")}");
+                    WriteErrorLine("[" + "!".Pastel(EventColors.purple) + "] " + $"{(running ? "Started." : "Stopped.")}");
                     break;
                 default:
                     break;
@@ -234,7 +234,7 @@ namespace events
         {
             //throw new NotImplementedException();
             ask_to_close = true;
-            WriteError("[" + "!".Pastel(ColorTheme.purple) + "] " + $"User interrupt. Closing ...");
+            WriteError("[" + "!".Pastel(EventColors.purple) + "] " + $"User interrupt. Closing ...");
 
             Environment.Exit(0);
         }
@@ -281,7 +281,7 @@ namespace events
                 catch (System.Diagnostics.Eventing.Reader.EventLogException ele)
                 {
                     if (DEBUG)
-                        WriteErrorLine($"Error: Cannot listen to {logSource}".Pastel(ColorTheme.red));
+                        WriteErrorLine($"Error: Cannot listen to {logSource}".Pastel(EventColors.red));
                 }
                 catch (Exception ex)
                 {
@@ -303,19 +303,19 @@ namespace events
             switch (level)
             {
                 case 0: // LogAlways
-                    return ColorTheme.fg;
+                    return EventColors.fg;
                 case 1: // Critical
-                    return ColorTheme.dark_red;
+                    return EventColors.dark_red;
                 case 2: // Error
-                    return ColorTheme.red;
+                    return EventColors.red;
                 case 3: // Warning
-                    return ColorTheme.yellow;
+                    return EventColors.yellow;
                 case 4: // Informational
-                    return ColorTheme.blue;
+                    return EventColors.blue;
                 case 5: // Verbose
-                    return ColorTheme.cyan;
+                    return EventColors.cyan;
                 default:
-                    return ColorTheme.coral;
+                    return EventColors.coral;
             }
         }
 
@@ -377,8 +377,8 @@ namespace events
                         break;
                 }
                 
-                WriteLine($"{time.Pastel(ColorTheme.cyan)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}:".Pastel(ColorTheme.lighter_grey));
-                WriteLine($"{description.Pastel(ColorTheme.light_grey)}\n");
+                WriteLine($"{time.Pastel(EventColors.cyan)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(EventColors.fg)}:{source.Pastel(EventColors.fg)} (Pid: {pid}), Event-ID: {id.Pastel(EventColors.fg)}, User: {user.Pastel(EventColors.fg)}:".Pastel(EventColors.lighter_grey));
+                WriteLine($"{description.Pastel(EventColors.light_grey)}\n");
                 if (cmd.HasFlag("file") && cmd["file"].StringIsNotNull)
                 {
                     if (cmd.HasFlag("xml"))
@@ -390,7 +390,7 @@ namespace events
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Disable();
 
-                        WriteLogLine($"{time.Pastel(ColorTheme.green)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(ColorTheme.fg)}:{source.Pastel(ColorTheme.fg)} (Pid: {pid}), Event-ID: {id.Pastel(ColorTheme.fg)}, User: {user.Pastel(ColorTheme.fg)}:\n{description}\n---".Pastel(ColorTheme.lighter_grey), full_log_path);
+                        WriteLogLine($"{time.Pastel(EventColors.green)}, {hostname}, {levelText.Pastel(levelColor)}, {logname.Pastel(EventColors.fg)}:{source.Pastel(EventColors.fg)} (Pid: {pid}), Event-ID: {id.Pastel(EventColors.fg)}, User: {user.Pastel(EventColors.fg)}:\n{description}\n---".Pastel(EventColors.lighter_grey), full_log_path);
                         
                         if (!cmd.HasFlag("colored-log"))
                             ConsoleExtensions.Enable();
@@ -400,16 +400,16 @@ namespace events
             catch (Exception ex)
             {
                 var time = DateTime.Now.ToString("yyyy-MM-dd HH\\:mm\\:ss.fff", CultureInfo.InvariantCulture);
-                WriteErrorLine($"{time.Pastel(ColorTheme.green)}, {"Exception".Pastel(ColorTheme.purple)}".Pastel(ColorTheme.light_grey));
-                WriteErrorLine($"{ex.Message.Pastel(ColorTheme.light_grey)}");
-                WriteErrorLine($"{ex.StackTrace.Pastel(ColorTheme.grey)}");
+                WriteErrorLine($"{time.Pastel(EventColors.green)}, {"Exception".Pastel(EventColors.purple)}".Pastel(EventColors.light_grey));
+                WriteErrorLine($"{ex.Message.Pastel(EventColors.light_grey)}");
+                WriteErrorLine($"{ex.StackTrace.Pastel(EventColors.grey)}");
             }
 
         }
 
         static void Write(string text)
         {
-            Console.Write(text.Pastel(ColorTheme.lighter_grey));
+            Console.Write(text.Pastel(EventColors.lighter_grey));
         }
 
         static void WriteLine(string text)
@@ -419,7 +419,7 @@ namespace events
 
         static void WriteError(string text)
         {
-            Console.Error.Write(text.Pastel(ColorTheme.lighter_grey));
+            Console.Error.Write(text.Pastel(EventColors.lighter_grey));
         }
 
         static void WriteErrorLine(string text) { WriteError(text + Environment.NewLine); }

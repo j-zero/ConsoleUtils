@@ -142,7 +142,7 @@ namespace certy
 
         static void Exit(int exitCode)
         {
-            //string parrentProcess = ConsoleUtilsCore.ParentProcessUtilities.GetParentProcess().ProcessName;
+            //string parrentProcess = windows.core.ParentProcessUtilities.GetParentProcess().ProcessName;
             //Console.WriteLine(parrentProcess);
 
             if (System.Diagnostics.Debugger.IsAttached) // is debugger attached or started by double-click/file-drag

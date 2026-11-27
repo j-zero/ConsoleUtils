@@ -2,15 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <Deterministic>false</Deterministic>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\bin\</OutputPath>
     <AssemblyTitle>hexe</AssemblyTitle>
     <Product>hexe</Product>
     <Copyright>Copyright ©  2023</Copyright>
     <AssemblyVersion>0.3.%2a</AssemblyVersion>
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\cross.core\cross.core.csproj" />

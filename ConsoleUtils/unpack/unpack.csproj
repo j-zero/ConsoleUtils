@@ -7,18 +7,12 @@
     <RootNamespace>unpack</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Deterministic>false</Deterministic>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\bin\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ConsoleUtilsCore\leviathan.core.csproj" />
+    <ProjectReference Include="..\cross.core\cross.core.csproj" />
+    <ProjectReference Include="..\windows.core\windows.core.csproj" />
     <ProjectReference Include="..\SevenZipExtractor\SevenZipExtractor.csproj" />
   </ItemGroup>
-
 
 </Project>

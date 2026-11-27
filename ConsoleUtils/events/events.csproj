@@ -7,17 +7,15 @@
     <RootNamespace>events</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Deterministic>false</Deterministic>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\bin\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="10.0.0" />
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" />
+    <ProjectReference Include="..\cross.core\cross.core.csproj" />
+    <ProjectReference Include="..\windows.core\windows.core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.EventLog" />
   </ItemGroup>
 
 </Project>

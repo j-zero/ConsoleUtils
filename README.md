@@ -2,7 +2,8 @@
 
 Collection of small console utilities for Windows (.NET 10). Some may not work, or not work for you.
 
-A complete list of all projects, libraries, dependencies and known issues is in [INVENTORY.md](INVENTORY.md).
+* [INVENTORY.md](INVENTORY.md) – all projects, libraries, dependencies and technical debt
+* [STATUS.md](STATUS.md) – how finished each tool is and what is left to do
 
 ## Build
 

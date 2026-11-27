@@ -2,20 +2,15 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Exe</OutputType>
-		<Deterministic>false</Deterministic>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<OutputPath>..\..\bin\</OutputPath>
 		<AssemblyTitle>d</AssemblyTitle>
 		<Product>d</Product>
 		<Copyright>Copyright © 2024</Copyright>
 		<AssemblyVersion>0.3.%2a</AssemblyVersion>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\cross.core\cross.core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="TimeZoneNames" Version="6.0.0" />
+		<PackageReference Include="TimeZoneNames" />
 	</ItemGroup>
 </Project>

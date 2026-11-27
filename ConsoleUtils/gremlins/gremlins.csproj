@@ -2,15 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <Deterministic>false</Deterministic>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputPath>..\..\bin\</OutputPath>
     <AssemblyTitle>gremlins</AssemblyTitle>
     <Product>gremlins</Product>
     <Copyright>Copyright © 2024 j-zero</Copyright>
     <AssemblyVersion>0.3.%2a</AssemblyVersion>
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\cross.core\cross.core.csproj" />

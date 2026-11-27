@@ -18,7 +18,8 @@ public enum CmdCommandTypes
     PARAMETER,
     FLAG,
     MULTIPE_PARAMETER,
-    UNNAMED
+    UNNAMED,
+    HIDDEN_FLAG
 }
 
 public class CmdParameter
@@ -383,7 +384,7 @@ public class CmdParser : KeyedCollection<string, CmdOption>
                 */
 
 
-                if (arg.CmdType == CmdCommandTypes.FLAG)
+                if (arg.CmdType == CmdCommandTypes.FLAG || arg.CmdType == CmdCommandTypes.HIDDEN_FLAG)
                 {
                     CmdParameter cmdParam = new CmdParameter(CmdParameterTypes.BOOL, true);
                     this[currentArgument].Values[0] = cmdParam;

@@ -7,11 +7,11 @@
     <RootNamespace>klemmbrett</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\cross.core\cross.core.csproj" />
-    <ProjectReference Include="..\windows.core\windows.core.csproj" />
   </ItemGroup>
 
 </Project>

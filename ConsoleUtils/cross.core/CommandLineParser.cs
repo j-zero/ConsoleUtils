@@ -365,7 +365,13 @@ public class CmdParser : KeyedCollection<string, CmdOption>
 
             
             bool gotValue = this.TryGetValue(currentArgument, out CmdOption arg);
-            ;
+
+            // A verb is only a verb as the first argument. Further on the same text is a normal argument
+            // (e.g. "get html": "html" is a verb name, but here it is the thing to get).
+            if (gotValue && counter != 1 && arg.CmdType == CmdCommandTypes.VERB
+                && !inputArgument.StartsWith(_longParamPrefix) && !inputArgument.StartsWith(_shortParamPrefix)
+                && this.DefaultParameter != null && this.Dictionary.ContainsKey(DefaultParameter))
+                gotValue = false;
             if (gotValue)     // known command
             {
                 if(arg.IsVerb == false && IsVerb == true) // parse as verb, but is argument (e.g. "--help" vs. "help")

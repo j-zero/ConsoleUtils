@@ -116,7 +116,7 @@ namespace lognote
                 }
                 else if (cmd == ":open")
                 {
-                    Process.Start(Globals.db.GetFolder(thema));
+                    Process.Start(new ProcessStartInfo(Globals.db.GetFolder(thema)) { UseShellExecute = true });
                 }
                 else if (cmd == ":image" || cmd == ":i")
                 {

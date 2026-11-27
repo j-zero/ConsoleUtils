@@ -27,7 +27,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: Kompilat
     - name: Zip artifacts
@@ -46,28 +46,27 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+      - uses: actions/checkout@v4
         with:
-          dotnet-version: '5.0.x'
+          fetch-depth: 0   # git describe --tags needs the tags
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
       - name: Make dir
         run: mkdir bin
       - name: Install dependencies
-        run: dotnet restore
-        working-directory: ./ConsoleUtils
-      - name: Install NuGet dependencies
-        run: nuget restore ConsoleUtils.sln
+        run: dotnet restore ConsoleUtils.sln
         working-directory: ./ConsoleUtils
       - name: Build
-        run: dotnet build --configuration Release --no-restore --output ../bin -p:Platform=x64
+        run: dotnet build ConsoleUtils.sln --configuration Release --no-restore -p:Platform=x64
         working-directory: ./ConsoleUtils
       - name: Show Builddir
         run: ls ./bin
       - name: Create Version File
         run: git describe --tags > ./bin/VERSION
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Kompilat
           path: bin

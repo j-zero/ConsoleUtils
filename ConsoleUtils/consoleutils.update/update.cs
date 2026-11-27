@@ -52,7 +52,7 @@ namespace consoleutils.update
                 {
                     Console.WriteLine($"[{"*".Pastel(color1)}] copying updater to \"{tmpDir}\"");
                     newAsm = Path.Combine(tmpDir, _asm_filename);
-                    File.Copy(Assembly.GetExecutingAssembly().Location, newAsm, true);
+                    File.Copy(Environment.ProcessPath, newAsm, true);
 
                 }
 

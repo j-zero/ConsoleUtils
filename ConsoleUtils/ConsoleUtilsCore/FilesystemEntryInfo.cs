@@ -440,9 +440,9 @@ public class FilesystemEntryInfo
             _securityLoaded = true;
             const AccessControlSections sections = AccessControlSections.Owner | AccessControlSections.Access;
             if (this.IsFile)
-                _security = System.IO.File.GetAccessControl(this.FullPath, sections);
+                _security = new FileInfo(this.FullPath).GetAccessControl(sections);
             else if (this.IsDirectory || this.IsShare)
-                _security = System.IO.Directory.GetAccessControl(this.FullPath, sections);
+                _security = new DirectoryInfo(this.FullPath).GetAccessControl(sections);
         }
         return _security;
     }
@@ -562,11 +562,11 @@ public class FilesystemEntryInfo
             }
             else if (File.Exists(FilePath))
             {
-                security = File.GetAccessControl(FilePath, AccessControlSections.Access);
+                security = new FileInfo(FilePath).GetAccessControl(AccessControlSections.Access);
             }
             else
             {
-                security = Directory.GetAccessControl(Path.GetDirectoryName(FilePath), AccessControlSections.Access);
+                security = new DirectoryInfo(Path.GetDirectoryName(FilePath)).GetAccessControl(AccessControlSections.Access);
             }
 
             // files inheriting the same ACL share the result

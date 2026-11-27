@@ -5,17 +5,29 @@ namespace touch
 {
     internal class mk
     {
+    // raw command line without the program name (.NET: GetCommandLineArgs()[0] is the dll, not the exe)
+    static string GetRawArguments()
+    {
+        string cl = Environment.CommandLine;
+        string rest;
+        if (cl.StartsWith("\""))
+        {
+            int end = cl.IndexOf('"', 1);
+            rest = end >= 0 ? cl.Substring(end + 1) : "";
+        }
+        else
+        {
+            int sp = cl.IndexOf(' ');
+            rest = sp >= 0 ? cl.Substring(sp + 1) : "";
+        }
+        return rest.TrimStart();
+    }
+
         static void Main(string[] args)
         {
             if (args.Length > 0)
             {
-                var cmdArgs = Environment.GetCommandLineArgs();
-                var replaceStr = cmdArgs[0];
-
-                if (Environment.CommandLine.StartsWith("\""))
-                    replaceStr = "\"" + cmdArgs[0] + "\"";
-                
-                var f = Environment.CommandLine.Replace(replaceStr, "").TrimStart();
+                var f = GetRawArguments();
 
                 try
                 {

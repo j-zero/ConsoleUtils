@@ -22,9 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#if NET7_0_OR_GREATER
-[assembly: System.Runtime.CompilerServices.DisableRuntimeMarshalling]
-#endif
 namespace Pastel
 {
 
